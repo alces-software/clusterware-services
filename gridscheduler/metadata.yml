@@ -53,18 +53,6 @@ component-qmaster:
     # unpack /var/spool/gridscheduler
     tar -C / -xzf var-spool-gridscheduler.tar.gz
 
-    # install qmaster init script/unit
-    enable_qmaster
-    # start up qmaster so we can configure it
-    start_qmaster
-
-    # wait for startup
-    c=0
-    while [ $c -lt 10 ] && ! qconf -sm &> /dev/null; do
-      sleep 1
-      c=$(($c+1))
-    done
-
     arch=$($SGE_ROOT/util/arch)
     $SGE_ROOT/utilbin/$arch/spoolinit classic libspoolc \
         "${cw_ROOT}/opt/gridscheduler/etc/conf;/var/spool/gridscheduler/qmaster" init
@@ -73,6 +61,18 @@ component-qmaster:
     chown geadmin:geadmin -R "${cw_ROOT}"/opt/gridscheduler/etc
 
     TEMPLATES_ROOT="${cw_ROOT}"/opt/gridscheduler/etc/templates
+
+    # install qmaster init script/unit
+    enable_qmaster
+    # start up qmaster so we can configure it
+    start_qmaster
+
+    # wait for startup
+    c=0
+    while [ $c -lt 30 ] && ! qconf -sm &> /dev/null; do
+      sleep 1
+      c=$(($c+1))
+    done
 
     qconf -am geadmin
     qconf -as $(hostname)
