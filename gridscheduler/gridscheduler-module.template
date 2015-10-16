@@ -1,0 +1,124 @@
+#%Module1.0#####################################################################
+##
+## Alces HPC Software Stack - Service module file
+## Copyright (c) 2008-2015 Alces Software Ltd
+##
+## path: services/gridscheduler
+################################################################################
+if { [info exists ::env(ALCES_TRACE)] } {
+    puts stderr " -> $::ModulesCurrentModulefile"
+}
+
+if { [namespace exists alces] == 0 } {
+    if { [info exists ::env(MODULES_ALCES_TCL)] } { 
+        source $::env(MODULES_ALCES_TCL)
+    } else {
+        # compatibility mode for module use without availability of Alces tools
+        proc ::process {body} { eval $body }
+        proc ::depend {module {version ""} {_ ""}} { 
+            set req [regsub {\-} $module {/}]/$version
+            if { [catch { prereq $req }] } {
+                puts stderr "Could not satisfy prereq: $req"
+                break
+            }
+        }
+        proc ::alces {_ module} { return $module }
+        proc ::search {_ _ _} { }
+    }
+}
+
+proc ModulesHelp { } {
+    puts stderr "
+                ======== Open Grid Scheduler ========                
+        An open-source batch-queuing system for distributed         
+                         resource management                         
+                =====================================                
+
+This module sets up your environment for the use of the 'gridscheduler'
+service. This module sets up version '2011.11p1_155' of the service.
+
+
+>> SYNOPSIS <<
+
+Open Grid Scheduler/Grid Engine is a free and open-source
+batch-queuing system for distributed resource management. OGS/GE is
+based on Sun Grid Engine, and maintained by the same group of external
+(i.e. non-Sun) developers who started contributing code to Sun Grid
+Engine since 2001.
+
+
+>> LICENSING <<
+
+This package is made available subject to the following license(s):
+
+\t(BSD and LGPLv2+ and MIT and SISSL) and GPLv2+ and 
+	GFDLv3+ and BSD with advertising
+
+Please visit the website for further details regarding licensing.
+
+
+>> FURTHER INFORMATION <<
+
+More information about this software can be found at the website:
+
+\thttp://sourceforge.net/projects/gridscheduler/
+
+For further details regarding this module, including the environment
+modifications it will apply, execute:
+
+\tmodule show services/gridscheduler
+
+
+>> GET STARTED <<
+
+Some common commands include:
+
+	'qstat'  - show summary of running jobs
+	'qsub'   - submit a new job to the scheduler
+	'qsh'    - submit an interactive X-windows session
+	'qlogin' - submit an interactive login session
+	'qrsh'   - submit an interactive rsh session
+	'qalter' - modify a pending or running batch job
+	'qresub' - submit a copy of an existing job
+
+After loading the module, further details can be found in the man
+pages for the service, by executing 'man <command>'.
+"
+}
+
+set     app	gridscheduler
+set     version 2011.11p1_155
+set     appcaps GRIDSCHEDULER
+set     appdir  _cw_ROOT_/opt/gridscheduler
+         
+module-whatis   "
+
+            Title: Open Grid Scheduler
+          Summary: An open-source batch-queuing system for distributed resource management
+          License: (BSD and LGPLv2+ and MIT and SISSL) and GPLv2+ and GFDLv3+ and BSD with advertising
+            Group: Alces/Services
+              URL: http://sourceforge.net/projects/gridscheduler/
+
+             Name: gridscheduler
+          Version: 2011.11p1_155
+           Module: [alces pretty services/gridscheduler]
+      Module path: _cw_ROOT_/etc/modules/services/gridscheduler
+     Package path: _cw_ROOT_/opt/gridscheduler
+
+For further information, execute:
+
+\tmodule help services/gridscheduler
+"
+
+setenv ${appcaps}DIR ${appdir}
+setenv ${appcaps}BIN ${appdir}/bin/linux-x64
+
+prepend-path PATH ${appdir}/bin/linux-x64
+prepend-path MANPATH ${appdir}/man
+prepend-path LD_LIBRARY_PATH ${appdir}/lib/linux-x64
+
+setenv SGE_ROOT ${appdir}
+setenv SGE_CELL etc
+setenv SGE_CLUSTER_NAME cluster
+setenv SGE_QMASTER_PORT 6444
+setenv SGE_EXECD_PORT 6445

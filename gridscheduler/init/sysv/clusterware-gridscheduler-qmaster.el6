@@ -1,0 +1,130 @@
+#!/bin/bash
+################################################################################
+##
+## Alces Clusterware - SysVInit service file
+## Copyright (c) 2015 Alces Software Ltd
+##
+################################################################################
+# chkconfig: 2345 50 50
+# qmaster: start/stop grid scheduler qmaster/shadowd
+# description: start/stop grid scheduler qmaster/shadowd
+### BEGIN INIT INFO
+# Provides:       gridmaster
+# Required-Start: $network $remote_fs
+# Required-Stop:
+# Default-Start:  2 3 4 5
+# Default-Stop: 0 1 6
+# Description:  start/stop grid scheduler qmaster/shadowd
+### END INIT INFO
+
+. /etc/rc.d/init.d/functions
+
+if [ -z "$HOME" ]; then
+  export HOME=/root
+fi
+
+export SGE_ROOT=_cw_ROOT_/opt/gridscheduler
+export SGE_CELL=etc
+
+# XXX - need to factor shadowd support into this init script (or separate one)
+QMASTER_SPOOL_DIR=`grep qmaster_spool_dir $SGE_ROOT/$SGE_CELL/common/bootstrap | awk '{ print $2 }'`
+
+check_config() {
+    if [ "$QMASTER_SPOOL_DIR" = "" ]; then
+        echo -n "Grid Scheduler qmaster; could not find spool directory"
+        failure
+        # using exit 6 for 'unconfigured'
+        exit 6
+    fi
+}
+
+PID_FILE=$QMASTER_SPOOL_DIR/qmaster.pid
+DAEMON_CMD=$SGE_ROOT/sbin/qmasterctl
+CTL_LOG=/var/log/qmasterctl.log
+
+start()
+{
+  check_config
+  $DAEMON_CMD start >> $CTL_LOG 2>&1
+  c=0
+  while ! running; do
+    c=$(($c+1))
+    if [[ c -gt 30 ]]; then
+      failure
+      echo
+      RETVAL=1
+      return
+    else
+      sleep 1
+    fi
+  done
+  success
+  echo
+  RETVAL=0
+}
+
+restart()
+{
+  echo -n Restarting Grid Scheduler qmaster:
+  $DAEMON_CMD stop >> $CTL_LOG 2>&1
+  start
+}
+
+stop()
+{
+  check_config
+  echo -n "Stopping Grid Scheduler qmaster:"
+
+  $DAEMON_CMD stop >> $CTL_LOG 2>&1
+
+  c=0
+  while running; do
+    c=$(($c+1))
+    if [[ c -gt 30 ]]; then
+      failure
+      echo
+      RETVAL=1
+      return
+    else
+      sleep 1
+    fi
+  done
+  rm -f /var/lock/subsys/sgemaster
+  rm -f $PID_FILE
+  success
+  echo
+  RETVAL=0
+}
+
+running()
+{
+  if [ -f $PID_FILE ]; then
+    status -p $PID_FILE sge_qmaster >/dev/null 2>&1
+  else
+    pgrep sge_qmaster >/dev/null 2>&1
+  fi
+}
+
+case "$1" in
+  start)
+    if running; then
+      echo Already started!
+    else
+      echo -n Starting Grid Scheduler qmaster:
+      start
+    fi
+  ;;
+  stop)
+    running && stop || echo Not yet started!
+  ;;
+  restart)
+    restart
+  ;;
+  status)
+    running && echo "RUNNING" || (echo "NOT STARTED"; exit 3)
+  ;;
+  *)
+    echo "Usage: $0 {start|stop|restart|status}"
+esac
+
+exit $RETVAL

@@ -1,0 +1,20 @@
+################################################################################
+##
+## Alces Clusterware - Systemd service unit file
+## Copyright (c) 2015 Alces Software Ltd
+##
+################################################################################
+# GridScheduler execution daemon (systemd service unit)
+[Unit]
+Description=Alces Clusterware GridScheduler execution daemon
+After=syslog.target
+After=network.target
+
+[Service]
+Type=forking
+Environment=SGE_ROOT=_cw_ROOT_/opt/gridscheduler
+Environment=SGE_CELL=etc
+ExecStart=_cw_ROOT_/opt/gridscheduler/bin/linux-x64/sge_execd
+
+[Install]
+WantedBy=multi-user.target

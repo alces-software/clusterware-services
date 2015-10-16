@@ -1,0 +1,121 @@
+---
+install:
+  _: |
+    . "${cw_ROOT}"/etc/distro.vars.sh
+    dist_url=${alces_DIST_URL:-https://s3-eu-west-1.amazonaws.com/packages.alces-software.com/clusterware/dist}
+    curl -# -L "${dist_url}/${cw_DIST}"/gridscheduler.tar.gz | tar -C "${cw_ROOT}" -xz
+
+    getent group geadmin &>/dev/null || groupadd --gid 360 geadmin
+    getent passwd geadmin &>/dev/null || useradd --uid 360 --gid 360 \
+        --shell /sbin/nologin --home-dir "${cw_ROOT}"/opt/gridscheduler geadmin
+
+    # install environment module
+    mkdir -p "${cw_ROOT}"/etc/modules/services
+    sed -e "s,_cw_ROOT_,${cw_ROOT},g" gridscheduler-module.template > "${cw_ROOT}"/etc/modules/services/gridscheduler
+component-qmaster:
+  el6: |
+    enable_qmaster() {
+        sed -e "s,_cw_ROOT_,${cw_ROOT},g" \
+            init/sysv/clusterware-gridscheduler-qmaster.el6 \
+            > /etc/init.d/clusterware-gridscheduler-qmaster
+        chmod 755 /etc/init.d/clusterware-gridscheduler-qmaster
+        chkconfig clusterware-gridscheduler-qmaster on
+    }
+
+    start_qmaster() {
+        service clusterware-gridscheduler-qmaster start
+    }
+
+    restart_qmaster() {
+        service clusterware-gridscheduler-qmaster stop
+        service clusterware-gridscheduler-qmaster start
+    }
+  el7: |
+    enable_qmaster() {
+        sed -e "s,_cw_ROOT_,${cw_ROOT},g" \
+            init/systemd/clusterware-gridscheduler-qmaster.service \
+            > /etc/systemd/system/clusterware-gridscheduler-qmaster.service
+        systemctl enable clusterware-gridscheduler-qmaster.service
+    }
+
+    start_qmaster() {
+        systemctl start clusterware-gridscheduler-qmaster.service
+    }
+
+    restart_qmaster() {
+        systemctl restart clusterware-gridscheduler-qmaster.service
+    }
+  _: |
+    module purge
+    module use "${cw_ROOT}"/etc/modules
+    module load services/gridscheduler
+
+    # unpack /var/spool/gridscheduler
+    tar -C / -xzf var-spool-gridscheduler.tar.gz
+
+    # install qmaster init script/unit
+    enable_qmaster
+    # start up qmaster so we can configure it
+    start_qmaster
+
+    # wait for startup
+    c=0
+    while [ $c -lt 10 ] && ! qconf -sm &> /dev/null; do
+      sleep 1
+      c=$(($c+1))
+    done
+
+    arch=$($SGE_ROOT/util/arch)
+    $SGE_ROOT/utilbin/$arch/spoolinit classic libspoolc \
+        "${cw_ROOT}/opt/gridscheduler/etc/conf;/var/spool/gridscheduler/qmaster" init
+
+    chown geadmin:geadmin -R /var/spool/gridscheduler
+    chown geadmin:geadmin -R "${cw_ROOT}"/opt/gridscheduler/etc
+
+    TEMPLATES_ROOT="${cw_ROOT}"/opt/gridscheduler/etc/templates
+
+    qconf -am geadmin
+    qconf -as $(hostname)
+
+    # for a in ${SGE_ROOT}/etc/templates/host/*; do
+    #     qconf -Ae $a || qconf -Me $a
+    # done
+
+    for a in ${SGE_ROOT}/etc/templates/hostgroup/*; do
+        qconf -Ahgrp $a || qconf -Mhgrp $a
+    done
+
+    for a in ${SGE_ROOT}/etc/templates/pe/*; do
+        qconf -Ap $a || qconf -Mp $a
+    done
+
+    # delete the default queue
+    qconf -dq all.q
+    for a in ${SGE_ROOT}/etc/templates/queue/*; do
+        qconf -Aq $a || qconf -Mq $a
+    done
+
+    #make serial and parallel queues subordinate each other
+    qconf -mattr queue subordinate_list 'serial.q=1 smp.q=1' parallel.q
+    qconf -mattr queue subordinate_list 'parallel.q=1 smp.q=1' serial.q
+    qconf -mattr queue subordinate_list 'serial.q=1 parallel.q=1' smp.q
+
+    restart_qmaster
+component-execd:
+  el6: |
+    enable_execd() {
+        sed -e "s,_cw_ROOT_,${cw_ROOT},g" \
+            init/sysv/clusterware-gridscheduler-execd.el6 \
+            > /etc/init.d/clusterware-gridscheduler-execd
+        chmod 755 /etc/init.d/clusterware-gridscheduler-execd
+        chkconfig clusterware-gridscheduler-execd on
+    }
+  el7: |
+    enable_execd() {
+        sed -e "s,_cw_ROOT_,${cw_ROOT},g" \
+            init/systemd/clusterware-gridscheduler-execd.service \
+            > /etc/systemd/system/clusterware-gridscheduler-execd.service
+        systemctl enable clusterware-gridscheduler-execd.service
+    }
+  _: |
+    enable_execd
