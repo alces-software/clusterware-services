@@ -29,9 +29,9 @@ export SGE_CELL=etc
 # UQHOST is the local host name (unqualified name)
 arch=`$SGE_ROOT/util/arch`
 UQHOST=`$SGE_ROOT/utilbin/$arch/gethostname -name | cut -f1 -d.`
-EXECD_SPOOL_DIR=`qconf -sconf $UQHOST 2>/dev/null | grep execd_spool_dir | awk '{ print $2 }'`
+EXECD_SPOOL_DIR=`$SGE_ROOT/bin/${arch}/qconf -sconf $UQHOST 2>/dev/null | grep execd_spool_dir | awk '{ print $2 }'`
 if [ "$EXECD_SPOOL_DIR" = "" ]; then
-  EXECD_SPOOL_DIR=`qconf -sconf | grep execd_spool_dir | awk '{ print $2 }'`
+  EXECD_SPOOL_DIR=`$SGE_ROOT/bin/${arch}/qconf -sconf | grep execd_spool_dir | awk '{ print $2 }'`
 fi
 
 check_config() {
