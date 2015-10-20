@@ -59,6 +59,7 @@ component-qmaster:
 
     chown geadmin:geadmin -R /var/spool/gridscheduler
     chown geadmin:geadmin -R "${cw_ROOT}"/opt/gridscheduler/etc
+    hostname -f > "${cw_ROOT}"/opt/gridscheduler/etc/common/act_qmaster
 
     TEMPLATES_ROOT="${cw_ROOT}"/opt/gridscheduler/etc/templates
 
@@ -75,7 +76,7 @@ component-qmaster:
     done
 
     qconf -am geadmin
-    qconf -as $(hostname)
+    qconf -as $(hostname -f)
 
     # for a in ${SGE_ROOT}/etc/templates/host/*; do
     #     qconf -Ae $a || qconf -Me $a
