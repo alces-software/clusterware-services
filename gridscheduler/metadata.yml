@@ -2,7 +2,7 @@
 install:
   _: |
     . "${cw_ROOT}"/etc/serviceware.rc
-    . "${cw_ROOT}"/etc/distro.vars.sh
+    . "${cw_ROOT}"/etc/distro.rc
     curl -# -L "${cw_DIST_URL}/${cw_DIST}"/gridscheduler.tar.gz | tar -C "${cw_ROOT}" -xz
 
     getent group geadmin &>/dev/null || groupadd --gid 360 geadmin
@@ -13,9 +13,9 @@ install:
     mkdir -p "${cw_ROOT}"/etc/modules/services
     sed -e "s,_cw_ROOT_,${cw_ROOT},g" gridscheduler-module.template > "${cw_ROOT}"/etc/modules/services/gridscheduler
 
-    cp qdesktop "${cw_ROOT}"/opt/gridscheduler/bin/linux-64
-    cp qdesktop-session "${cw_ROOT}"/opt/gridscheduler/etc/scripts
+    cp -R libexec "${cw_ROOT}"/libexec/gridscheduler
 
+    cp qdesktop "${cw_ROOT}"/opt/gridscheduler/bin/linux-x64
     # install qdesktop configuration file
     if [ ! -f "${cw_ROOT}"/etc/qdesktop.rc ]; then
         cp qdesktop.rc "${cw_ROOT}"/etc/qdesktop.rc
@@ -69,8 +69,6 @@ component-qmaster:
     chown geadmin:geadmin -R "${cw_ROOT}"/opt/gridscheduler/etc
     hostname -f > "${cw_ROOT}"/opt/gridscheduler/etc/common/act_qmaster
 
-    TEMPLATES_ROOT="${cw_ROOT}"/opt/gridscheduler/etc/templates
-
     # install qmaster init script/unit
     enable_qmaster
     # start up qmaster so we can configure it
@@ -86,25 +84,21 @@ component-qmaster:
     qconf -am geadmin
     qconf -as $(hostname -f)
 
-    # for a in ${SGE_ROOT}/etc/templates/host/*; do
-    #     qconf -Ae $a || qconf -Me $a
-    # done
-
-    for a in ${SGE_ROOT}/etc/templates/hostgroup/*; do
+    for a in templates/hostgroup/*; do
         qconf -Ahgrp $a || qconf -Mhgrp $a
     done
 
-    for a in ${SGE_ROOT}/etc/templates/pe/*; do
+    for a in templates/pe/*; do
         qconf -Ap $a || qconf -Mp $a
     done
 
     # delete the default queue
     qconf -dq all.q
-    for a in ${SGE_ROOT}/etc/templates/queue/*; do
+    for a in templates/queue/*; do
         qconf -Aq $a || qconf -Mq $a
     done
 
-    for a in ${SGE_ROOT}/etc/templates/project/*; do
+    for a in templates/project/*; do
         qconf -Aprj $a || qconf -Mprj $a
     done
 
@@ -114,9 +108,9 @@ component-qmaster:
 
     echo "-w w -j y -p -100 -l h_rt=24:0:0" >> "${SGE_ROOT}"/etc/conf/sge_request
 
-    qconf -Mc "${SGE_ROOT}"/etc/templates/complex_attributes
-    qconf -Mrqs "${SGE_ROOT}"/etc/templates/resource_quota_sets
-    qconf -Msconf "${SGE_ROOT}"/etc/templates/scheduler_configuration
+    qconf -Mc templates/complex_attributes
+    qconf -Mrqs templates/resource_quota_sets
+    qconf -Msconf templates/scheduler_configuration
 
     sed -e 's/^\(auto_user_default_project.*\)none/\1default.prj/g' \
       -i "${SGE_ROOT}"/etc/conf/configuration

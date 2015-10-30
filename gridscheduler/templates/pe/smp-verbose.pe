@@ -1,0 +1,11 @@
+pe_name            smp-verbose
+slots              999
+user_lists         NONE
+xuser_lists        NONE
+start_proc_args    /opt/clusterware/libexec/gridscheduler/smp-start 1
+stop_proc_args     /opt/clusterware/libexec/gridscheduler/smp-stop 1
+allocation_rule    $pe_slots
+control_slaves     FALSE
+job_is_first_task  TRUE
+urgency_slots      min
+accounting_summary FALSE

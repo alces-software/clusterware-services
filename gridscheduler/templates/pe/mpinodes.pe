@@ -1,0 +1,11 @@
+pe_name            mpinodes
+slots              999
+user_lists         NONE
+xuser_lists        NONE
+start_proc_args    /opt/clusterware/libexec/gridscheduler/mpi-start 0
+stop_proc_args     /opt/clusterware/libexec/gridscheduler/mpi-stop 0
+allocation_rule    $round_robin
+control_slaves     TRUE
+job_is_first_task  FALSE
+urgency_slots      min
+accounting_summary FALSE

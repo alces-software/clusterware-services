@@ -1,0 +1,75 @@
+#!/bin/bash
+#==============================================================================
+# Copyright (C) 2007-2015 Stephen F. Norledge and Alces Software Ltd.
+#
+# This file/package is part of Alces Clusterware.
+#
+# Alces Clusterware is free software: you can redistribute it and/or
+# modify it under the terms of the GNU Affero General Public License
+# as published by the Free Software Foundation, either version 3 of
+# the License, or (at your option) any later version.
+#
+# Alces Clusterware is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this package.  If not, see <http://www.gnu.org/licenses/>.
+#
+# For more information on the Alces Clusterware, please visit:
+# https://github.com/alces-software/clusterware
+#==============================================================================
+
+#VERBOSE
+if [ -z $1 ]; then
+  VERBOSE=1
+else
+  VERBOSE=$1
+fi
+
+#Determine the nodes
+HOSTS=`cat $PE_HOSTFILE | while read line; do host=\`echo $line | cut -f 1 -d \.\`; echo -n "$host "; done; echo`
+
+header()
+{
+  echo =======================================================
+  echo SGE job submitted on `date`
+  echo $NHOSTS hosts used
+  echo JOB ID: $JOB_ID
+  echo JOB NAME: $JOB_NAME
+  echo PE: $PE
+  echo QUEUE: $QUEUE
+  echo MASTER $HOSTNAME
+  echo Nodes used:
+  echo $HOSTS | fmt -w 35
+  echo =======================================================
+}
+
+job_output_header()
+{
+  echo =======================================================
+  echo If an output file was specified on job submission
+  echo Job Output Follows:
+  echo =======================================================
+  echo 
+}
+
+write_machine_file()
+{
+  MACHINEFILE="/tmp/sge.machines.$JOB_ID"
+  echo $HOSTS | sed 's/ /\n/g' > $MACHINEFILE  
+  if [ $1 -eq 1 ]; then
+    echo
+    echo "** A machine file has been written to $MACHINEFILE on $HOSTNAME **"
+    echo
+  fi
+}
+
+if [ $VERBOSE -eq 1 ];then
+  header
+fi
+write_machine_file $VERBOSE
+if [ $VERBOSE -eq 1 ];then
+  job_output_header
+fi 

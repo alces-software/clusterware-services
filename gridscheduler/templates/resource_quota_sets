@@ -1,0 +1,84 @@
+{
+   name         limit_hvmem
+   description  "Prevent users using too much memory"
+   enabled      FALSE
+   limit        users {username} hosts @hostgroup to h_vmem=4G
+}
+{
+   name         limit_exclusive_users
+   description  "Prevent named users from requesting exclusive resource"
+   enabled      FALSE
+   limit        users {!username} to exclusive=false
+}
+{
+   name         special_user_nodes
+   description  "Limits users from particular nodes"
+   enabled      FALSE
+   limit        users {!username} hosts {hostname.domain} to slots=0
+}
+{
+   name         limit_highmem_usage_hvmem
+   description  "Max usage of the high memory nodes available memory"
+   enabled      FALSE
+   limit        users {username} hosts @hostgroup to h_vmem=2000G
+}
+{
+   name         limit_user_example
+   description  "Limits user example to one node only"
+   enabled      FALSE
+   limit        users {example} hosts {!hostname.domain} to slots=0
+}
+{
+   name         max_group_admin_slots
+   description  "Limit max slots for admin"
+   enabled      FALSE
+   limit        users {@admin.ul} to slots=0
+}
+{
+   name         max_slots_exceptions
+   description  "max use of slots exceptions"
+   enabled      FALSE
+   limit        users {username} queues byslot.q to slots=112
+}
+{
+   name         limit_highmem_usage_nodes
+   description  "Max usage of the high memory nodes"
+   enabled      FALSE
+   limit        users {username} queues bynode.q hosts @hostgroup to slots=12
+}
+{
+   name         max_slots
+   description  "max use of slots"
+   enabled      FALSE
+   limit        users {*,!adminuser} queues byslot.q to slots=100
+}
+{
+   name         limit_highmem_usage_slots
+   description  "Max usage of the high memory slots"
+   enabled      FALSE
+   limit        users {username} queues byslot.q hosts @hostgroup to slots=144
+}
+{
+   name         restrict_nodes_testing_to_admin
+   description  "Used for testing nodes"
+   enabled      FALSE
+   limit        users {!adminuser} hosts {hostname.domain} to slots=0
+}
+{
+   name         max_nodes
+   description  "max use of nodes all users"
+   enabled      FALSE
+   limit        users {!adminuser} queues bynode.q to slots=6
+}
+{
+   name         max_slots_on_every_host
+   description  "Limit number of slots accessible by user"
+   enabled      FALSE
+   limit        users {!adminuser} hosts {*} to slots=$num_proc*2
+}
+{
+   name         test_only
+   description  "Disable standard users"
+   enabled      FALSE
+   limit        users {!adminuser} to slots=0
+}
