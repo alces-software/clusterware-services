@@ -1,0 +1,65 @@
+#!/bin/bash
+#$ -j y
+#$ -notify
+#$ -o qdesktop.$JOB_ID
+#
+#$ -now yes
+#$ -q byslot.q
+#$ -l h_rt=72:0:0 -l h_vmem=4G
+
+setup() {
+    local a xdg_config
+    IFS=: read -a xdg_config <<< "${XDG_CONFIG_HOME:-$HOME/.config}:${XDG_CONFIG_DIRS:-/etc/xdg}"
+    for a in "${xdg_config[@]}"; do
+        if [ -e "${a}"/clusterware/config.vars.sh ]; then
+            source "${a}"/clusterware/config.vars.sh
+            break
+        fi
+    done
+    if [ -z "${cw_ROOT}" ]; then
+        echo "$0: unable to locate clusterware configuration"
+        exit 1
+    fi
+    kernel_load
+}
+
+cleanup () {
+  echo "Cleaning up."
+  alces session kill $SESSIONID
+}
+
+main() {
+  declare -A vnc
+  SESSIONID=$(setsid alces session start --terse $1)
+  eval $(alces session info --vars $SESSIONID)
+  cat <<EOF
+Interactive session started:
+  Identity: ${vnc[ID]}
+      Host: ${vnc[HOST]}
+      Port: ${vnc[PORT]}
+   Display: ${vnc[DISPLAY]}
+  Password: ${vnc[PASSWORD]}
+
+Depending on your client, you can connect to the session using:
+
+  vnc://${USER}:${vnc[PASSWORD]}@${vnc[HOST]}:${vnc[PORT]}
+  ${vnc[HOST]}:${vnc[PORT]}
+  ${vnc[HOST]}:${vnc[DISPLAY]}
+
+If prompted, you should supply the following password: ${vnc[PASSWORD]}
+
+EOF
+  alces session wait $SESSIONID
+  echo "Completed."
+}
+
+if [ -z "$1" ]; then
+    echo "$0: no session type specified"
+    echo "Usage: $0 <session type>"
+    exit 1
+fi
+
+setup
+trap "cleanup" SIGUSR2 SIGUSR1
+PATH="${cw_ROOT}/bin:$PATH"
+main "$@"
