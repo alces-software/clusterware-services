@@ -124,27 +124,13 @@ component-execd:
         chkconfig clusterware-gridscheduler-execd on
     }
   el7: |
-    init_spool_directory() {
-        export SGE_ROOT="${cw_ROOT}"/opt/gridscheduler
-        export SGE_CELL=etc
-
-        # UQHOST is the local host name (unqualified name)
-        arch=$($SGE_ROOT/util/arch)
-        UQHOST=$($SGE_ROOT/utilbin/$arch/gethostname -name | cut -f1 -d.)
-        EXECD_SPOOL_DIR=$($SGE_ROOT/bin/${arch}/qconf -sconf $UQHOST 2>/dev/null | grep execd_spool_dir | awk '{ print $2 }')
-        if [ -z "$EXECD_SPOOL_DIR" ]; then
-            EXECD_SPOOL_DIR=$($SGE_ROOT/bin/${arch}/qconf -sconf | grep execd_spool_dir | awk '{ print $2 }')
-        fi
-        mkdir -p "${EXECD_SPOOL_DIR}"
-        chown geadmin:geadmin "${EXECD_SPOOL_DIR}"
-    }
-
     enable_execd() {
         sed -e "s,_cw_ROOT_,${cw_ROOT},g" \
             init/systemd/clusterware-gridscheduler-execd.service \
             > /etc/systemd/system/clusterware-gridscheduler-execd.service
         systemctl enable clusterware-gridscheduler-execd.service
-        init_spool_directory
     }
   _: |
+    mkdir -p /var/spool/gridscheduler
+    chown geadmin:geadmin /var/spool/gridscheduler
     enable_execd
