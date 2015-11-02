@@ -11,7 +11,7 @@ h_fsize             h_fsize    MEMORY      <=    YES         NO         0       
 h_rss               h_rss      MEMORY      <=    YES         NO         0        0
 h_rt                h_rt       TIME        <=    YES         NO         0:0:0    0
 h_stack             h_stack    MEMORY      <=    YES         NO         0        0
-h_vmem              h_vmem     MEMORY      <=    YES         YES        4G       1000
+h_vmem              h_vmem     MEMORY      <=    YES         YES        1G       1000
 hostname            h          HOST        ==    YES         NO         NONE     1000
 load_avg            la         DOUBLE      >=    NO          NO         0        0
 load_long           ll         DOUBLE      >=    NO          NO         0        0
