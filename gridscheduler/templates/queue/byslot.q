@@ -1,6 +1,6 @@
 qname                 byslot.q
 hostlist              @allhosts
-seq_no                0
+seq_no                1
 load_thresholds       np_load_avg=1.75
 suspend_thresholds    NONE
 nsuspend              1
