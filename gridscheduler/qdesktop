@@ -37,7 +37,8 @@ setup() {
 }
 
 main() {
-    local params
+    local params tmr job_id
+
     if [ -f "${cw_ROOT}/etc/qdesktop.rc" ]; then
         . ${cw_ROOT}/etc/qdesktop.rc
     fi
@@ -47,6 +48,7 @@ main() {
     cw_QDESKTOP_vmem=${cw_QDESKTOP_vmem:-4G}
     cw_QDESKTOP_rt=${cw_QDESKTOP_rt:-72:0:0}
     cw_QDESKTOP_session_type=${cw_QDESKTOP_session_type:-${1:-default}}
+    cw_QDESKTOP_timeout=${cw_QDESKTOP_timeout:-10}
 
     if [ "${cw_QDESKTOP_log}" ]; then
         params="${params} -o \"${cw_QDESKTOP_log}\""
@@ -56,11 +58,24 @@ main() {
         params="${params} -P ${cw_QDESKTOP_project}"
     fi
 
-    qsub -now yes -q ${cw_QDESKTOP_queue} \
+    job_id=$(qsub -terse \
+        -now yes -q ${cw_QDESKTOP_queue} \
         -l h_rt=${cw_QDESKTOP_rt} \
         -l h_vmem=${cw_QDESKTOP_vmem} \
         $params \
-        ${cw_QDESKTOP_script} ${cw_QDESKTOP_session_type}
+        ${cw_QDESKTOP_script} ${cw_QDESKTOP_session_type})
+
+    cw_QDESKTOP_log=${cw_QDESKTOP_log:-${HOME}/qdesktop.${job_id}}
+    tmr=0
+    while [ $tmr -lt $cw_QDESKTOP_timeout] && ! grep -q '^--START--' "${cw_QDESKTOP_log}"; do
+        tmr=$(($tmr+1))
+        sleep 1
+    done
+    if grep -q '^--START--' "${cw_QDESKTOP_log}"; then
+        grep '^!' "${cw_QDESKTOP_log}" | cut -c2-
+    else
+        echo "$0: unable to determine access details - refer to ${cw_QDESKTOP_log}"
+    fi
 }
 
 setup

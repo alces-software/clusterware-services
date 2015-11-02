@@ -8,6 +8,7 @@ cw_QDESKTOP_script="${cw_ROOT}"/libexec/gridscheduler/qdesktop-session
 cw_QDESKTOP_queue=byslot.q
 cw_QDESKTOP_vmem=4G
 cw_QDESKTOP_rt=72:0:0
+cw_QDESKTOP_timeout=10
 #cw_QDESKTOP_session_type=default
 #cw_QDESKTOP_log=qdesktop.out
 #cw_QDESKTOP_project=interactive.prj
