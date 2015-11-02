@@ -14,6 +14,7 @@ After=network.target
 Type=forking
 Environment=SGE_ROOT=_cw_ROOT_/opt/gridscheduler
 Environment=SGE_CELL=etc
+PIDFile=/var/spool/gridscheduler/qmaster/qmaster.pid
 ExecStart=_cw_ROOT_/opt/gridscheduler/bin/linux-x64/sge_qmaster
 
 [Install]
