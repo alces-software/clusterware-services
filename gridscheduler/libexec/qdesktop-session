@@ -33,21 +33,22 @@ main() {
   SESSIONID=$(setsid alces session start --terse $1)
   eval $(alces session info --vars $SESSIONID)
   cat <<EOF
-Interactive session started:
-  Identity: ${vnc[ID]}
-      Host: ${vnc[HOST]}
-      Port: ${vnc[PORT]}
-   Display: ${vnc[DISPLAY]}
-  Password: ${vnc[PASSWORD]}
-
-Depending on your client, you can connect to the session using:
-
-  vnc://${USER}:${vnc[PASSWORD]}@${vnc[HOST]}:${vnc[PORT]}
-  ${vnc[HOST]}:${vnc[PORT]}
-  ${vnc[HOST]}:${vnc[DISPLAY]}
-
-If prompted, you should supply the following password: ${vnc[PASSWORD]}
-
+--START--
+!Interactive session started:
+!  Identity: ${vnc[ID]}
+!      Host: ${vnc[HOST]}
+!      Port: ${vnc[PORT]}
+!   Display: ${vnc[DISPLAY]}
+!  Password: ${vnc[PASSWORD]}
+!
+!Depending on your client, you can connect to the session using:
+!
+!  vnc://${USER}:${vnc[PASSWORD]}@${vnc[HOST]}:${vnc[PORT]}
+!  ${vnc[HOST]}:${vnc[PORT]}
+!  ${vnc[HOST]}:${vnc[DISPLAY]}
+!
+!If prompted, you should supply the following password: ${vnc[PASSWORD]}
+!
 EOF
   alces session wait $SESSIONID
   echo "Completed."
@@ -61,5 +62,5 @@ fi
 
 setup
 trap "cleanup" SIGUSR2 SIGUSR1
-PATH="${cw_ROOT}/bin:$PATH"
+PATH="${cw_ROOT}/bin:$PATH:/sbin:/usr/sbin"
 main "$@"
