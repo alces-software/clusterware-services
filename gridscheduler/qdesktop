@@ -58,23 +58,41 @@ main() {
         params="${params} -P ${cw_QDESKTOP_project}"
     fi
 
-    job_id=$(qsub -terse \
+    echo -n "Starting \"${cw_QDESKTOP_session_type}\" session... "
+    if job_id=$(qsub -terse \
         -now yes -q ${cw_QDESKTOP_queue} \
         -l h_rt=${cw_QDESKTOP_rt} \
         -l h_vmem=${cw_QDESKTOP_vmem} \
         $params \
-        ${cw_QDESKTOP_script} ${cw_QDESKTOP_session_type})
-
-    cw_QDESKTOP_log=${cw_QDESKTOP_log:-${HOME}/qdesktop.${job_id}}
-    tmr=0
-    while [ $tmr -lt $cw_QDESKTOP_timeout] && ! grep -q '^--START--' "${cw_QDESKTOP_log}"; do
-        tmr=$(($tmr+1))
-        sleep 1
-    done
-    if grep -q '^--START--' "${cw_QDESKTOP_log}"; then
-        grep '^!' "${cw_QDESKTOP_log}" | cut -c2-
+        ${cw_QDESKTOP_script} ${cw_QDESKTOP_session_type} 2>/dev/null); then
+        echo "Session request submitted (job ${job_id})."
+        echo -n "Awaiting start... "
+        cw_QDESKTOP_log=${cw_QDESKTOP_log:-${HOME}/qdesktop.${job_id}}
+        tmr=0
+        while [ ! -f "${cw_QDESKTOP_log}" ] || ! egrep -q '^(--START--|--FAIL--)' "${cw_QDESKTOP_log}" && [ $tmr -lt $cw_QDESKTOP_timeout ]; do
+            tmr=$(($tmr+1))
+            sleep 1
+        done
+        if [ -f "${cw_QDESKTOP_log}" ] && grep -q '^--START--' "${cw_QDESKTOP_log}"; then
+            echo "Session started."
+            echo ""
+            grep '^!' "${cw_QDESKTOP_log}" | cut -c2-
+        elif [ -f "${cw_QDESKTOP_log}" ] && grep -q '^--FAIL--' "${cw_QDESKTOP_log}"; then
+            echo "Session failed."
+            echo ""
+            grep '^!' "${cw_QDESKTOP_log}" | cut -c2-
+            grep '^alces ' "${cw_QDESKTOP_log}"
+            echo "$(basename $0): unable to start session - refer to ${cw_QDESKTOP_log}"
+            exit 3
+        else
+            echo "Timed out."
+            echo "$(basename $0): unable to determine access details - refer to ${cw_QDESKTOP_log}"
+            exit 2
+        fi
     else
-        echo "$0: unable to determine access details - refer to ${cw_QDESKTOP_log}"
+        echo "Failed."
+        echo "$(basename $0): unable to request a session - cluster too busy?"
+        exit 1
     fi
 }
 

@@ -30,9 +30,9 @@ cleanup () {
 
 main() {
   declare -A vnc
-  SESSIONID=$(setsid alces session start --terse $1)
-  eval $(alces session info --vars $SESSIONID)
-  cat <<EOF
+  if SESSIONID=$(setsid alces session start --terse $1); then
+      eval $(alces session info --vars $SESSIONID)
+      cat <<EOF
 --START--
 !Interactive session started:
 !  Identity: ${vnc[ID]}
@@ -50,8 +50,15 @@ main() {
 !If prompted, you should supply the following password: ${vnc[PASSWORD]}
 !
 EOF
-  alces session wait $SESSIONID
-  echo "Completed."
+      alces session wait $SESSIONID
+      echo "Completed."
+  else
+      cat <<EOF
+--FAIL--
+!The requested interactive session could not be started.
+!
+EOF
+  fi
 }
 
 if [ -z "$1" ]; then
