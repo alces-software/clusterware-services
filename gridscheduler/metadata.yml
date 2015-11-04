@@ -54,6 +54,18 @@ component-qmaster:
         systemctl restart clusterware-gridscheduler-qmaster.service
     }
   _: |
+    tmr=0
+    hn=$(hostname -f)
+    while [ -z "$hn" -a $tmr -lt 10 ]; do
+        tmr=$(($tmr+1))
+        sleep 1
+        hn=$(hostname -f)
+    done
+    if [ -z "$hn" ]; then
+        echo "Unable to determine hostname."
+        exit 1
+    fi
+
     module purge
     module use "${cw_ROOT}"/etc/modules
     module load services/gridscheduler
@@ -67,7 +79,7 @@ component-qmaster:
 
     chown geadmin:geadmin -R /var/spool/gridscheduler
     chown geadmin:geadmin -R "${cw_ROOT}"/opt/gridscheduler/etc
-    hostname -f > "${cw_ROOT}"/opt/gridscheduler/etc/common/act_qmaster
+    echo "$hn" > "${cw_ROOT}"/opt/gridscheduler/etc/common/act_qmaster
     echo 'geadmin' >> /var/spool/gridscheduler/qmaster/managers
 
     # install qmaster init script/unit
@@ -82,7 +94,7 @@ component-qmaster:
       c=$(($c+1))
     done
 
-    qconf -as $(hostname -f)
+    qconf -as $hn
 
     for a in templates/hostgroup/*; do
         qconf -Ahgrp $a || qconf -Mhgrp $a
