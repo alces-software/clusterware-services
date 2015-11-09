@@ -25,6 +25,8 @@ install:
     printf "%-25s - %s\n" "'qstat'" "show summary of running jobs" >> "${cw_ROOT}"/etc/motd
     printf "%-25s - %s\n" "'qsub'" "submit a job script" >> "${cw_ROOT}"/etc/motd
     printf "%-25s - %s\n" "'qdesktop'" "submit an interactive session request" >> "${cw_ROOT}"/etc/motd
+
+    sed -e 's,^module load \(.*\),module load services/gridscheduler \1,g' -i "${cw_ROOT}"/etc/skel/modules
 component-qmaster:
   el6: |
     enable_qmaster() {
