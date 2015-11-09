@@ -20,6 +20,11 @@ install:
     if [ ! -f "${cw_ROOT}"/etc/qdesktop.rc ]; then
         cp qdesktop.rc "${cw_ROOT}"/etc/qdesktop.rc
     fi
+
+    echo "" >> "${cw_ROOT}"/etc/motd
+    printf "%-25s - %s\n" "'qstat'" "show summary of running jobs" >> "${cw_ROOT}"/etc/motd
+    printf "%-25s - %s\n" "'qsub'" "submit a job script" >> "${cw_ROOT}"/etc/motd
+    printf "%-25s - %s\n" "'qdesktop'" "submit an interactive session request" >> "${cw_ROOT}"/etc/motd
 component-qmaster:
   el6: |
     enable_qmaster() {
