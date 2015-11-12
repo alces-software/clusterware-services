@@ -1,0 +1,6 @@
+---
+install:
+  _: |
+    . "${cw_ROOT}"/etc/serviceware.rc
+    . "${cw_ROOT}"/etc/distro.rc
+    curl -# -L "${cw_DIST_URL}/${cw_DIST}"/aws.tar.gz | tar -C "${cw_ROOT}" -xz
