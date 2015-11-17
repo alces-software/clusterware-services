@@ -27,6 +27,9 @@ install:
     printf "%-25s - %s\n" "'qdesktop'" "submit an interactive session request" >> "${cw_ROOT}"/etc/motd
 
     sed -e 's,^module load \(.*\),module load services/gridscheduler \1,g' -i "${cw_ROOT}"/etc/skel/modules
+
+    cp -R docs/templates/* "${cw_ROOT}"/var/lib/docs/templates
+    cp -R docs/guides/* "${cw_ROOT}"/var/lib/docs/guides
 component-qmaster:
   el6: |
     enable_qmaster() {
