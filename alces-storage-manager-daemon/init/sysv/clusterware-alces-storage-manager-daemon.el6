@@ -22,6 +22,10 @@
 . _cw_ROOT_/etc/ruby.rc
 export RUBY_HOME PATH LD_LIBRARY_PATH
 
+if [ -z "$HOME" ]; then
+  export HOME=/root
+fi
+
 PID_FILE=/var/run/alces-storage-manager-daemon.pid
 DAEMON_HOME=_cw_ROOT_/opt/alces-storage-manager-daemon
 DAEMON_CMD="$DAEMON_HOME/bin/alces-storage-manager-daemon start --pidfile $PID_FILE -l /var/log/alces-storage-manager-daemon/runtime.log -e production"

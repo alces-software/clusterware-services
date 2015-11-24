@@ -12,6 +12,7 @@ After=network.target
 [Service]
 Type=forking
 EnvironmentFile=_cw_ROOT_/etc/ruby.rc
+Environment=HOME=/root
 ExecStart=_cw_ROOT_/bin/alces-storage-manager-daemon start --pidfile /var/run/alces-storage-manager-daemon.pid -l /var/log/alces-storage-manager-daemon/runtime.log -e production
 PIDFile=/var/run/alces-storage-manager-daemon.pid
 
