@@ -1,0 +1,10 @@
+# Rotate Alces Storage Manager Daemon logs
+/var/log/alces-storage-manager-daemon/*.log {
+  daily
+  missingok
+  rotate 7
+  compress
+  delaycompress
+  notifempty
+  copytruncate
+}

@@ -1,0 +1,43 @@
+---
+install:
+  _: |
+    . "${cw_ROOT}"/etc/serviceware.rc
+    . "${cw_ROOT}"/etc/distro.rc
+    curl -# -L "${cw_DIST_URL}/${cw_DIST}"/alces-storage-manager-daemon.tar.gz | tar -C "${cw_ROOT}" -xz
+component-base:
+  el6: |
+    enable_alces_storage_manager_daemon() {
+        sed -e "s,_cw_ROOT_,${cw_ROOT},g" \
+            init/sysv/clusterware-alces-storage-manager-daemon.el6 \
+            > /etc/init.d/clusterware-alces-storage-manager-daemon
+        chmod 755 /etc/init.d/clusterware-alces-storage-manager-daemon
+        chkconfig clusterware-alces-storage-manager-daemon on
+    }
+  el7: |
+    enable_alces_storage_manager_daemon() {
+        sed -e "s,_cw_ROOT_,${cw_ROOT},g" \
+            init/systemd/clusterware-alces-storage-manager-daemon.service \
+            > /etc/systemd/system/clusterware-alces-storage-manager-daemon.service
+        systemctl enable clusterware-alces-storage-manager-daemon.service
+    }
+  _: |
+    mkdir -p /var/log/alces-storage-manager-daemon "${cw_ROOT}"/etc/ssl
+    cp etc/logrotate.d/* "${cw_ROOT}"/etc/logrotate.d
+    cp etc/ssl/* "${cw_ROOT}"/etc/ssl
+    cp etc/pam.d/rpam /etc/pam.d
+
+    cat <<EOF > "${cw_ROOT}"/opt/alces-storage-manager-daemon/config/storage-manager-daemon.yml
+    interfaces: ['*']
+    port: 25268
+    log_file: /var/log/alces-storage-manager-daemon/daemon.log
+    configs:
+      - ssl
+    EOF
+    cat <<EOF > "${cw_ROOT}"/opt/alces-storage-manager-daemon/config/ssl.yml
+    root: ${cw_ROOT}/etc/ssl
+    certificate: daemon_crt.pem
+    key: daemon_key.pem
+    ca: alces-ca_crt.pem
+    EOF
+
+    enable_alces_storage_manager_daemon
