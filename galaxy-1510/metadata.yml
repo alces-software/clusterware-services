@@ -1,0 +1,142 @@
+---
+install:
+  _: |
+    . "${cw_ROOT}"/etc/serviceware.rc
+    . "${cw_ROOT}"/etc/distro.rc
+    curl -# -L "${cw_DIST_URL}/${cw_DIST}"/galaxy-1510.tar.gz | tar -C "${cw_ROOT}" -xz
+component-base:
+  el6: |
+    yum install -y postgresql-server
+
+    enable_galaxy() {
+        sed -e "s,_cw_ROOT_,${cw_ROOT},g" \
+            init/sysv/clusterware-galaxy.el6 \
+            > /etc/init.d/clusterware-galaxy
+        chmod 755 /etc/init.d/clusterware-galaxy
+        chkconfig clusterware-galaxy on
+    }
+
+    enable_postgres() {
+        /etc/init.d/postgresql initdb
+        chkconfig postgresql on
+        cat <<EOF > /var/lib/pgsql/data/pg_hba.conf
+    local   all         postgres                          trust
+    local   all         all                               md5
+    host    all         all         127.0.0.1/32          md5
+    host    all         all         ::1/128               md5
+    EOF
+    }
+
+    start_postgres() {
+        service postgresql start
+    }
+  el7: |
+    yum install -y postgresql-server postgresql-contrib
+
+    enable_galaxy() {
+        sed -e "s,_cw_ROOT_,${cw_ROOT},g" \
+            init/systemd/clusterware-galaxy.service \
+            > /etc/systemd/system/clusterware-galaxy.service
+        systemctl enable clusterware-galaxy.service
+    }
+
+    enable_postgres() {
+        postgresql-setup initdb
+        systemctl enable postgresql
+        cat <<EOF > /var/lib/pgsql/data/pg_hba.conf
+    local   all         postgres                          trust
+    local   all         all                               md5
+    host    all         all         127.0.0.1/32          md5
+    host    all         all         ::1/128               md5
+    EOF
+    }
+
+    start_postgres() {
+        systemctl start postgresql
+    }
+  _: |
+    mkdir -p /var/log/galaxy
+    cp etc/logrotate.d/* "${cw_ROOT}"/etc/logrotate.d
+
+    DESTDIR="${cw_ROOT}/opt/galaxy-1510"
+    DATADIR="${cw_ROOT}/var/lib/galaxy-1510"
+    mkdir -p "${DATADIR}"
+    for a in database config tool-data external_service_types shed-tool-deps; do
+      mv "${DESTDIR}"/$a "${DATADIR}"
+      ln -s "${DATADIR}"/$a "${DESTDIR}"/$a
+    done
+
+    mkdir "${DATADIR}"/html "${DATADIR}"/shed_tools
+    mv "${DESTDIR}"/static/welcome.html "${DATADIR}"/html
+    ln -s "${DATADIR}"/html/welcome.html "${DESTDIR}"/static/welcome.html
+
+    secret="$(dd if=/dev/urandom bs=24 count=2 2>/dev/null | md5sum | cut -d' ' -f1)"
+    sed -e "s,_SECRET_,${secret},g" -i "$DATADIR"/config/galaxy.ini
+
+    install -Dm644 shed_tool_conf.xml.tpl "${DATADIR}"/config/shed_tool_conf.xml
+    sed -e "s,_cw_ROOT_,${cw_ROOT},g" -i "$DATADIR"/config/shed_tool_conf.xml
+    cp "$DATADIR"/config/shed_tool_conf.xml "$DATADIR"/config/migrated_tools_conf.xml
+
+    getent group galaxy &>/dev/null || groupadd --gid 361 galaxy
+    getent passwd galaxy &>/dev/null || useradd --uid 361 --gid 361 \
+        --shell /sbin/nologin --home-dir "${DATADIR}" galaxy
+    chown -R galaxy:galaxy "${DATADIR}" /var/log/galaxy
+
+    if [ "$1" == "--no-postgres" ]; then
+      sed -i -e 's,^database_connection = postgresql,#database_connection = postgresql,g' -e 's,^#database_connection = sqlite,database_connection = sqlite,g' "${DATADIR}"/config/galaxy.ini
+    else
+      enable_postgres
+      start_postgres
+      password="$(dd if=/dev/urandom bs=24 count=2 2>/dev/null | base64 | cut -c1-16)"
+      echo -e "${password}\n${password}" | su postgres -c 'createuser -D -R -S -P galaxy'
+      sed -i -e "s,_PASSWORD_,${password},g" "${DATADIR}"/config/galaxy.ini
+      su postgres -c 'createdb -O galaxy galaxy'
+      pushd "${DESTDIR}"
+      ./run.sh &
+      GALAXYPID=$!
+      if [ "$GALAXYPID" ]; then
+        # wait until it's listening on port
+        while ps $GALAXYPID >/dev/null && ! ss -ln | grep -q 'LISTEN.*:6414 '; do
+          sleep 5
+        done
+        curl -X POST --data 'create_user_button=Submit&email=admin%40alces.network&password=changeme&confirm=changeme&username=galaxy-admin' http://localhost:6414/user/create &>/dev/null
+        # kill background process
+        kill $GALAXYPID
+        pkill -f "paster.py serve config/galaxy.ini"
+      fi
+      popd
+    fi
+
+    enable_galaxy
+build:
+  el6: |
+    yum install -y postgresql-server
+  el7: |
+    yum install -y postgresql-server
+  _: |
+    curl -L "https://github.com/galaxyproject/galaxy/archive/release_15.10.zip" -o /tmp/release_15.10.zip
+    unzip -d /tmp /tmp/release_15.10.zip >/dev/null
+
+    DESTDIR="${cw_ROOT}/opt/galaxy-1510"
+    mv /tmp/galaxy-release_15.10 "${DESTDIR}"
+    install -Dm644 galaxy.ini "${DESTDIR}"/config/galaxy.ini
+
+    pushd "${DESTDIR}"
+    cp config/tool_conf.xml.sample config/tool_conf.xml
+    mkdir shed-tool-deps
+    # run in background
+    ./run.sh &
+    GALAXYPID=$!
+    if [ "$GALAXYPID" ]; then
+      # wait until it's listening on port
+      while ps $GALAXYPID >/dev/null && ! ss -ln | grep -q 'LISTEN.*:6414 '; do
+        sleep 5
+      done
+      curl -X POST --data 'create_user_button=Submit&email=admin%40alces.network&password=changeme&confirm=changeme&username=galaxy-admin' http://localhost:6414/user/create &>/dev/null
+      # kill background process
+      kill $GALAXYPID
+      pkill -f "paster.py serve config/galaxy.ini"
+    fi
+
+    sed -i -e 's,^#database_connection = postgresql,database_connection = postgresql,g' -e 's,^database_connection = sqlite,#database_connection = sqlite,g' config/galaxy.ini
+    ./run.sh &>/dev/null || true

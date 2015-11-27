@@ -1,0 +1,21 @@
+################################################################################
+##
+## Alces Clusterware - Systemd service unit file
+## Copyright (c) 2015 Alces Software Ltd
+##
+################################################################################
+# Galaxy (systemd service unit)
+[Unit]
+Description=Galaxy
+After=network.target
+
+[Service]
+Type=forking
+Environment=PYTHON_EGG_CACHE=_cw_ROOT_/var/lib/galaxy-1510/python-eggs
+WorkingDirectory=_cw_ROOT_/opt/galaxy-1510
+ExecStart=/usr/bin/python scripts/paster.py serve --daemon --pid-file=/var/run/apps/galaxy.pid --log-file=/var/log/galaxy/galaxy.log --user=galaxy --group-galaxy config/galaxy.ini
+# unsure if this works, also try https://www.centos.org/forums/viewtopic.php?f=48&t=52276
+PIDFile=/var/run/apps/galaxy.pid
+
+[Install]
+WantedBy=multi-user.target
