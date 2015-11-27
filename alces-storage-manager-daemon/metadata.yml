@@ -24,6 +24,8 @@ component-base:
     mkdir -p /var/log/alces-storage-manager-daemon "${cw_ROOT}"/etc/ssl
     cp etc/logrotate.d/* "${cw_ROOT}"/etc/logrotate.d
     cp etc/ssl/* "${cw_ROOT}"/etc/ssl
+    chmod 0600 "${cw_ROOT}"/etc/ssl/*_key.pem
+
     cp etc/pam.d/rpam /etc/pam.d
 
     cat <<EOF > "${cw_ROOT}"/opt/alces-storage-manager-daemon/config/storage-manager-daemon.yml
@@ -41,3 +43,14 @@ component-base:
     EOF
 
     enable_alces_storage_manager_daemon
+build:
+  _: |
+    curl "https://github.com/alces-software/alces-storage-manager-daemon/archive/master.zip" -o /tmp/asmd.zip
+    cd "${cw_ROOT}"/opt
+    unzip asmd.zip
+    mv alces-storage-manager-daemon-master alces-storage-manager-daemon
+    cd alces-storage-manager-daemon
+    rm -rf log script tasks Rakefile
+    PATH="${cw_ROOT}"/opt/git/bin:$PATH
+    "${cw_ROOT}"/opt/ruby/bin/bundle install --local --path=vendor
+    rm -rf vendor/cache config/etc config/ssl *.yml.ex
