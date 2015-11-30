@@ -4,3 +4,9 @@ install:
     . "${cw_ROOT}"/etc/serviceware.rc
     . "${cw_ROOT}"/etc/distro.rc
     curl -# -L "${cw_DIST_URL}/${cw_DIST}"/aws.tar.gz | tar -C "${cw_ROOT}" -xz
+build:
+  _: |
+    curl "https://s3.amazonaws.com/aws-cli/awscli-bundle.zip" -o "/tmp/awscli-bundle.zip"
+    cd /tmp
+    unzip awscli-bundle.zip
+    ./awscli-bundle/install -i "${cw_ROOT}"/opt/aws

@@ -1,0 +1,18 @@
+################################################################################
+##
+## Alces Clusterware - Systemd service unit file
+## Copyright (c) 2015 Alces Software Ltd
+##
+################################################################################
+# Clusterware Galaxy FTP Daemon (systemd service unit)
+[Unit]
+Description=Clusterware Galaxy FTP Daemon
+After=network.target
+
+[Service]
+Type=forking
+ExecStart=_cw_ROOT_/opt/galaxy-1510/sbin/proftpd
+PIDFile=/var/run/clusterware-galaxy-ftpd.pid
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,178 @@
+---
+install:
+  _: |
+    . "${cw_ROOT}"/etc/serviceware.rc
+    . "${cw_ROOT}"/etc/distro.rc
+    curl -# -L "${cw_DIST_URL}/${cw_DIST}"/galaxy-1510.tar.gz | tar -C "${cw_ROOT}" -xz
+component-base:
+  el6: |
+    if [ "$1" == "--no-postgres" ]; then
+      yum install -y sqlite
+    else
+      yum install -y postgresql-server
+    fi
+
+    enable_galaxy() {
+        sed -e "s,_cw_ROOT_,${cw_ROOT},g" \
+            init/sysv/clusterware-galaxy.el6 \
+            > /etc/init.d/clusterware-galaxy
+        chmod 755 /etc/init.d/clusterware-galaxy
+        chkconfig clusterware-galaxy on
+    }
+
+    enable_postgres() {
+        /etc/init.d/postgresql initdb
+        chkconfig postgresql on
+        cat <<EOF > /var/lib/pgsql/data/pg_hba.conf
+    local   all         postgres                          trust
+    local   all         all                               md5
+    host    all         all         127.0.0.1/32          md5
+    host    all         all         ::1/128               md5
+    EOF
+    }
+
+    start_postgres() {
+        service postgresql start
+    }
+
+    enable_galaxy_proxy() {
+        sed -e "s,_cw_ROOT_,${cw_ROOT},g" \
+            init/sysv/clusterware-galaxy-proxy.el6 \
+            > /etc/init.d/clusterware-galaxy-proxy
+        chmod 755 /etc/init.d/clusterware-galaxy-proxy
+        chkconfig clusterware-galaxy-proxy on
+    }
+
+    enable_ftpd() {
+        sed -e "s,_cw_ROOT_,${cw_ROOT},g" \
+            init/sysv/clusterware-galaxy-ftpd.el6 \
+            > /etc/init.d/clusterware-galaxy-ftpd
+        chmod 755 /etc/init.d/clusterware-galaxy-ftpd
+        chkconfig clusterware-galaxy-ftpd on
+    }
+  el7: |
+    if [ "$1" == "--no-postgres" ]; then
+      yum install -y sqlite
+    else
+      yum install -y postgresql-server postgresql-contrib
+    fi
+
+    enable_galaxy() {
+        sed -e "s,_cw_ROOT_,${cw_ROOT},g" \
+            init/systemd/clusterware-galaxy.service \
+            > /etc/systemd/system/clusterware-galaxy.service
+        systemctl enable clusterware-galaxy.service
+    }
+
+    enable_postgres() {
+        postgresql-setup initdb
+        systemctl enable postgresql
+        cat <<EOF > /var/lib/pgsql/data/pg_hba.conf
+    local   all         postgres                          trust
+    local   all         all                               md5
+    host    all         all         127.0.0.1/32          md5
+    host    all         all         ::1/128               md5
+    EOF
+    }
+
+    start_postgres() {
+        systemctl start postgresql
+    }
+
+    enable_galaxy_proxy() {
+        sed -e "s,_cw_ROOT_,${cw_ROOT},g" \
+            init/systemd/clusterware-galaxy-proxy.service \
+            > /etc/systemd/system/clusterware-galaxy-proxy.service
+        systemctl enable clusterware-galaxy-proxy.service
+    }
+
+    enable_ftpd() {
+        sed -e "s,_cw_ROOT_,${cw_ROOT},g" \
+            init/systemd/clusterware-galaxy-ftpd.service \
+            > /etc/systemd/system/clusterware-galaxy-ftpd.service
+        systemctl enable clusterware-galaxy-ftpd.service
+    }
+  _: |
+    mkdir -p /var/log/galaxy "${cw_ROOT}"/etc/ssl
+    chmod 750 /var/log/galaxy
+    cp -p etc/ssl/* "${cw_ROOT}"/etc/ssl
+    chmod 0600 "${cw_ROOT}"/etc/ssl/*_key.pem
+    enable_galaxy_proxy
+
+    mkdir -p /var/log/galaxy
+    cp etc/logrotate.d/* "${cw_ROOT}"/etc/logrotate.d
+
+    SERVICEDIR="${cw_ROOT}/opt/galaxy-1510"
+    GALAXYDIR="${SERVICEDIR}/galaxy"
+    DATADIR="${cw_ROOT}/var/lib/galaxy-1510"
+    mkdir -p "${DATADIR}"
+    for a in database config tool-data external_service_types shed-tool-deps; do
+      mv "${GALAXYDIR}"/$a "${DATADIR}"
+      ln -s "${DATADIR}"/$a "${GALAXYDIR}"/$a
+    done
+
+    mkdir "${DATADIR}"/html "${DATADIR}"/shed_tools
+    mv "${GALAXYDIR}"/static/welcome.html "${DATADIR}"/html
+    ln -s "${DATADIR}"/html/welcome.html "${GALAXYDIR}"/static/welcome.html
+
+    secret="$(dd if=/dev/urandom bs=24 count=2 2>/dev/null | md5sum | cut -d' ' -f1)"
+    sed -e "s,_SECRET_,${secret},g" -i "$DATADIR"/config/galaxy.ini
+
+    install -Dm644 shed_tool_conf.xml.tpl "${DATADIR}"/config/shed_tool_conf.xml
+    sed -e "s,_cw_ROOT_,${cw_ROOT},g" -i "$DATADIR"/config/shed_tool_conf.xml
+    cp "$DATADIR"/config/shed_tool_conf.xml "$DATADIR"/config/migrated_tools_conf.xml
+
+    getent group galaxy &>/dev/null || groupadd --gid 361 galaxy
+    getent passwd galaxy &>/dev/null || useradd --uid 361 --gid 361 \
+        --shell /sbin/nologin --home-dir "${DATADIR}" galaxy
+    chown -R galaxy:galaxy "${DATADIR}" /var/log/galaxy
+
+    if [ "$1" == "--no-postgres" ]; then
+      sed -i -e 's,^database_connection = postgresql,#database_connection = postgresql,g' \
+        -e 's,^#database_connection = sqlite,database_connection = sqlite,g' \
+        "${DATADIR}"/config/galaxy.ini
+      sed -i -e 's,^SQLConnectInfo,#SQLConnectInfo,g' \
+        -e 's,^SQLBackend,#SQLBackend,g' \
+        -e 's,^SQLNamedQuery,#SQLNamedQuery,g' \
+        -e 's,^#SQLITE#,,g' \
+        "${SERVICEDIR}"/etc/proftpd.conf
+    else
+      enable_postgres
+      start_postgres
+      password="$(dd if=/dev/urandom bs=24 count=2 2>/dev/null | base64 | cut -c1-16)"
+      echo -e "${password}\n${password}" | su postgres -c 'createuser -D -R -S -P galaxy'
+      sed -i -e "s,_PASSWORD_,${password},g" "${DATADIR}"/config/galaxy.ini "${SERVICEDIR}"/etc/proftpd.conf
+      su postgres -c 'createdb -O galaxy galaxy'
+      export PGPASSWORD="${password}"
+      zcat galaxy.sql.gz | psql -U galaxy &>/dev/null
+      pushd "${GALAXYDIR}"
+      ./run.sh &
+      GALAXYPID=$!
+      if [ "$GALAXYPID" ]; then
+        # wait until it's listening on port
+        while ps $GALAXYPID >/dev/null && ! ss -ln | grep -q 'LISTEN.*:6414 '; do
+          sleep 5
+        done
+        curl -X POST --data 'create_user_button=Submit&email=admin%40alces.network&password=changeme&confirm=changeme&username=galaxy-admin' http://localhost:6414/user/create &>/dev/null
+        # kill background process
+        kill $GALAXYPID
+        pkill -f "paster.py serve config/galaxy.ini"
+      fi
+      popd
+    fi
+
+    enable_galaxy
+
+    echo "Galaxy FTP service" > "${DATADIR}"/ftp_welcome.txt
+    enable_ftpd
+build:
+  el6: |
+    yum install -y postgresql-server pcre-devel openssl-devel postgresql-devel sqlite-devel
+  el7: |
+    yum install -y postgresql-server pcre-devel openssl-devel postgresql-devel sqlite-devel
+  _: |
+    SERVICEDIR="${cw_ROOT}/opt/galaxy-1510"
+    mkdir -p "${SERVICEDIR}"
+    for a in build/*.sh; do
+      . $a
+    done
