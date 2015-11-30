@@ -165,7 +165,6 @@ component-base:
 
     echo "Galaxy FTP service" > "${DATADIR}"/ftp_welcome.txt
     enable_ftpd
-
 build:
   el6: |
     yum install -y postgresql-server pcre-devel openssl-devel postgresql-devel sqlite-devel
