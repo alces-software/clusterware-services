@@ -1,0 +1,27 @@
+# Rotate Galaxy logs
+/var/log/galaxy/galaxy.log {
+    daily
+    missingok
+    rotate 7
+    compress
+    delaycompress
+    notifempty
+    create 640 galaxy galaxy
+    copytruncate
+}
+
+# Rotate Galaxy Proxy logs
+/var/log/galaxy/access.log
+/var/log/galaxy/error.log {
+    daily
+    missingok
+    rotate 7
+    compress
+    delaycompress
+    notifempty
+    create 640 nobody adm
+    sharedscripts
+      postrotate
+      [ -f /var/run/clusterware-galaxy-proxy.pid ] && kill -USR1 `cat /var/run/clusterware-galaxy-proxy.pid`
+    endscript
+}

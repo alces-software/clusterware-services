@@ -1,0 +1,18 @@
+################################################################################
+##
+## Alces Clusterware - Systemd service unit file
+## Copyright (c) 2015 Alces Software Ltd
+##
+################################################################################
+# Clusterware Galaxy Proxy (systemd service unit)
+[Unit]
+Description=Clusterware Galaxy Proxy
+After=network.target
+
+[Service]
+Type=forking
+ExecStart=_cw_ROOT_/opt/galaxy-1510/bin/nginx
+PIDFile=/var/run/clusterware-galaxy-proxy.pid
+
+[Install]
+WantedBy=multi-user.target
