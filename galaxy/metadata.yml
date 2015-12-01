@@ -264,12 +264,14 @@ component-pulsar:
 build:
   el6: |
     yum install -y postgresql-server pcre-devel openssl-devel \
-      postgresql-devel sqlite-devel libffi-devel python-devel
+      postgresql-devel sqlite-devel libffi-devel python-devel \
+      python-setuptools
     pyver=2.6
     pulsar_pidfile=/var/run/clusterware-galaxy-pulsar.pid
   el7: |
     yum install -y postgresql-server pcre-devel openssl-devel \
-      postgresql-devel sqlite-devel libffi-devel python-devel
+      postgresql-devel sqlite-devel libffi-devel python-devel \
+      python-setuptools
     pyver=2.7
     pulsar_pidfile=/run/clusterware-galaxy/pulsar.pid
   _: |
