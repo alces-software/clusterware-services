@@ -20,7 +20,7 @@
 . /etc/rc.d/init.d/functions
 
 PID_FILE=/var/run/clusterware-galaxy-ftpd.pid
-DAEMON_CMD="_cw_ROOT_/opt/galaxy-1510/sbin/proftpd"
+DAEMON_CMD="_cw_ROOT_/opt/galaxy/sbin/proftpd"
 
 start()
 {

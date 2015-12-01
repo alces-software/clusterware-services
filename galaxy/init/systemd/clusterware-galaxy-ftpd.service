@@ -11,7 +11,7 @@ After=network.target
 
 [Service]
 Type=forking
-ExecStart=_cw_ROOT_/opt/galaxy-1510/sbin/proftpd
+ExecStart=_cw_ROOT_/opt/galaxy/sbin/proftpd
 PIDFile=/var/run/clusterware-galaxy-ftpd.pid
 
 [Install]

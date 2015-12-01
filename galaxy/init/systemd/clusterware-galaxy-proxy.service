@@ -11,7 +11,7 @@ After=network.target
 
 [Service]
 Type=forking
-ExecStart=_cw_ROOT_/opt/galaxy-1510/bin/nginx
+ExecStart=_cw_ROOT_/opt/galaxy/bin/nginx
 PIDFile=/var/run/clusterware-galaxy-proxy.pid
 
 [Install]

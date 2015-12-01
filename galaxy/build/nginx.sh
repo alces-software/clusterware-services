@@ -1,4 +1,25 @@
 #!/bin/bash
+#==============================================================================
+# Copyright (C) 2015 Stephen F. Norledge and Alces Software Ltd.
+#
+# This file/package is part of Alces Clusterware.
+#
+# Alces Clusterware is free software: you can redistribute it and/or
+# modify it under the terms of the GNU Affero General Public License
+# as published by the Free Software Foundation, either version 3 of
+# the License, or (at your option) any later version.
+#
+# Alces Clusterware is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this package.  If not, see <http://www.gnu.org/licenses/>.
+#
+# For more information on the Alces Clusterware, please visit:
+# https://github.com/alces-software/clusterware
+#==============================================================================
 curl -L "http://nginx.org/download/nginx-1.6.2.tar.gz" -o /tmp/nginx.tar.gz
 curl -L "https://github.com/vkholodkov/nginx-upload-module/archive/2.2.zip" -o /tmp/nginx_upload_module.zip
 
@@ -55,3 +76,5 @@ popd
 install -Dm644 build/nginx.conf.tpl "$NGINXDIR"/etc/nginx.conf
 install -Dm644 build/galaxy.conf.tpl "$NGINXDIR"/etc/conf.d/galaxy.conf
 sed -e "s,_ROOT_,${cw_ROOT},g" -i "$NGINXDIR"/etc/nginx.conf "$NGINXDIR"/etc/conf.d/galaxy.conf
+
+rm -rf /tmp/nginx_upload_module.zip /tmp/nginx.tar.gz /tmp/nginx-1.6.2 /tmp/nginx-upload-module-2.2

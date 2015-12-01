@@ -1,3 +1,24 @@
+#==============================================================================
+# Copyright (C) 2015 Stephen F. Norledge and Alces Software Ltd.
+#
+# This file/package is part of Alces Clusterware.
+#
+# Alces Clusterware is free software: you can redistribute it and/or
+# modify it under the terms of the GNU Affero General Public License
+# as published by the Free Software Foundation, either version 3 of
+# the License, or (at your option) any later version.
+#
+# Alces Clusterware is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this package.  If not, see <http://www.gnu.org/licenses/>.
+#
+# For more information on the Alces Clusterware, please visit:
+# https://github.com/alces-software/clusterware
+#==============================================================================
 upstream galaxy_app {
     server localhost:6414;
 }
@@ -23,31 +44,31 @@ server {
 
     # serve static content for visualization plugins
     location ~ ^/plugins/visualizations/(?<vis_name>.+?)/static/(?<static_file>.*?)$ {
-        alias _ROOT_/var/lib/galaxy-1510/config/plugins/visualizations/$vis_name/static/$static_file;
+        alias _ROOT_/var/lib/galaxy/config/plugins/visualizations/$vis_name/static/$static_file;
     }
 
     location /static {
-        alias _ROOT_/opt/galaxy-1510/galaxy/static;
+        alias _ROOT_/opt/galaxy/galaxy/static;
         expires 24h;
     }
 
     location /static/style {
-        alias _ROOT_/opt/galaxy-1510/galaxy/static/june_2007_style/blue;
+        alias _ROOT_/opt/galaxy/galaxy/static/june_2007_style/blue;
         expires 24h;
     }
 
     location /static/scripts {
-        alias _ROOT_/opt/galaxy-1510/galaxy/static/scripts/packed;
+        alias _ROOT_/opt/galaxy/galaxy/static/scripts/packed;
         expires 24h;
     }
 
     location /favicon.ico {
-        alias _ROOT_/opt/galaxy-1510/galaxy/static/favicon.ico;
+        alias _ROOT_/opt/galaxy/galaxy/static/favicon.ico;
         expires 24h;
     }
 
     location /robots.txt {
-        alias _ROOT_/opt/galaxy-1510/galaxy/static/robots.txt;
+        alias _ROOT_/opt/galaxy/galaxy/static/robots.txt;
         expires 24h;
     }
 
@@ -57,7 +78,7 @@ server {
     }
 
     location /_upload {
-        upload_store _ROOT_/var/lib/galaxy-1510/database/tmp/upload_store;
+        upload_store _ROOT_/var/lib/galaxy/database/tmp/upload_store;
         upload_pass_form_field "";
         upload_set_form_field "__${upload_field_name}__is_composite" "true";
         upload_set_form_field "__${upload_field_name}__keys" "name path";
