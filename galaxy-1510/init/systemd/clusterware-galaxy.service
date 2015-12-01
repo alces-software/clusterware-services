@@ -11,8 +11,8 @@ After=network.target
 
 [Service]
 Type=forking
-Environment=PYTHON_EGG_CACHE=_cw_ROOT_/var/lib/galaxy-1510/python-eggs
-WorkingDirectory=_cw_ROOT_/opt/galaxy-1510/galaxy
+Environment=PYTHON_EGG_CACHE=_cw_ROOT_/var/lib/galaxy/python-eggs
+WorkingDirectory=_cw_ROOT_/opt/galaxy/galaxy
 ExecStart=/usr/bin/python scripts/paster.py serve --daemon --pid-file=/var/run/clusterware-galaxy/galaxy.pid --log-file=/var/log/galaxy/galaxy.log --user=galaxy --group=galaxy config/galaxy.ini
 PIDFile=/var/run/clusterware-galaxy/galaxy.pid
 

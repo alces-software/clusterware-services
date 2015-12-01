@@ -27,9 +27,9 @@ managers:
 #  drmaa:
 #    type: queued_drmaa
 #    min_polling_interval: 0.5
-staging_directory: _cw_ROOT_/var/lib/galaxy-1510/pulsar/files/staging
+staging_directory: _cw_ROOT_/var/lib/galaxy/pulsar/files/staging
 job_directory_mode: '0777'
 private_token: _SECRET_
-persistence_directory: _cw_ROOT_/var/lib/galaxy-1510/pulsar/files/persisted_data
+persistence_directory: _cw_ROOT_/var/lib/galaxy/pulsar/files/persisted_data
 assign_ids: uuid
-tool_dependency_dir: _cw_ROOT_/var/lib/galaxy-1510/pulsar/shed-tool-deps
+tool_dependency_dir: _cw_ROOT_/var/lib/galaxy/pulsar/shed-tool-deps

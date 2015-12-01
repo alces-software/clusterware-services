@@ -23,4 +23,4 @@
 #export SGE_ROOT=_cw_ROOT_/opt/gridscheduler
 #export SGE_CELL=etc
 #export SGE_CLUSTER_NAME=cluster
-export GALAXY_HOME=_cw_ROOT_/opt/galaxy-1510/galaxy
+export GALAXY_HOME=_cw_ROOT_/opt/galaxy/galaxy

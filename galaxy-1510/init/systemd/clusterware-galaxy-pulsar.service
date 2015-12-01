@@ -11,12 +11,12 @@ After=network.target
 
 [Service]
 Type=forking
-Environment=PYTHON_EGG_CACHE=_cw_ROOT_/var/lib/galaxy-1510/pulsar/python-eggs
-Environment=PYTHONPATH=_cw_ROOT_/opt/galaxy-1510/pulsar/lib/python2.7/site-packages
-Environment=PATH=_cw_ROOT_/opt/galaxy-1510/pulsar/bin
+Environment=PYTHON_EGG_CACHE=_cw_ROOT_/var/lib/galaxy/pulsar/python-eggs
+Environment=PYTHONPATH=_cw_ROOT_/opt/galaxy/pulsar/lib/python2.7/site-packages
+Environment=PATH=_cw_ROOT_/opt/galaxy/pulsar/bin
 WorkingDirectory=/tmp
 User=galaxy
-ExecStart=_cw_ROOT_/opt/galaxy-1510/pulsar/bin/pulsar -c _cw_ROOT_/etc/galaxy/pulsar --daemon
+ExecStart=_cw_ROOT_/opt/galaxy/pulsar/bin/pulsar -c _cw_ROOT_/etc/galaxy/pulsar --daemon
 PIDFile=/var/run/clusterware-galaxy/pulsar.pid
 
 [Install]

@@ -20,11 +20,11 @@
 . /etc/rc.d/init.d/functions
 
 PID_FILE=/var/run/clusterware-galaxy-pulsar.pid
-DAEMON_CMD="_cw_ROOT_/opt/galaxy-1510/pulsar/bin/pulsar -c _cw_ROOT_/etc/galaxy/pulsar --daemon"
+DAEMON_CMD="_cw_ROOT_/opt/galaxy/pulsar/bin/pulsar -c _cw_ROOT_/etc/galaxy/pulsar --daemon"
 DAEMON_HOME="/"
-PATH="_cw_ROOT_/opt/galaxy-1510/pulsar/bin"
-export PYTHONPATH="_cw_ROOT_/opt/galaxy-1510/pulsar/lib/python2.6/site-packages"
-export PYTHON_EGG_CACHE="_cw_ROOT_/var/lib/galaxy-1510/pulsar/python-eggs"
+PATH="_cw_ROOT_/opt/galaxy/pulsar/bin"
+export PYTHONPATH="_cw_ROOT_/opt/galaxy/pulsar/lib/python2.6/site-packages"
+export PYTHON_EGG_CACHE="_cw_ROOT_/var/lib/galaxy/pulsar/python-eggs"
 
 start()
 {

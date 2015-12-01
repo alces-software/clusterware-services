@@ -29,7 +29,7 @@ events {
 }
 
 http {
-    include _ROOT_/opt/galaxy-1510/etc/mime.types;
+    include _ROOT_/opt/galaxy/etc/mime.types;
     default_type application/octet-stream;
     log_format main '$remote_addr - $remote_user [$time_local] "$request" '
                     '$status $body_bytes_sent "$http_referer" '
@@ -46,5 +46,5 @@ http {
     gzip_types text/plain text/css application/x-javascript text/xml application/xml text/javascript application/json;
     gzip_buffers 16 8k;
     gzip_disable "MSIE [1-6].(?!.*SV1)";
-    include _ROOT_/opt/galaxy-1510/etc/conf.d/*.conf;
+    include _ROOT_/opt/galaxy/etc/conf.d/*.conf;
 }

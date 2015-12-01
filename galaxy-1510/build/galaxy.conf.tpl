@@ -44,31 +44,31 @@ server {
 
     # serve static content for visualization plugins
     location ~ ^/plugins/visualizations/(?<vis_name>.+?)/static/(?<static_file>.*?)$ {
-        alias _ROOT_/var/lib/galaxy-1510/config/plugins/visualizations/$vis_name/static/$static_file;
+        alias _ROOT_/var/lib/galaxy/config/plugins/visualizations/$vis_name/static/$static_file;
     }
 
     location /static {
-        alias _ROOT_/opt/galaxy-1510/galaxy/static;
+        alias _ROOT_/opt/galaxy/galaxy/static;
         expires 24h;
     }
 
     location /static/style {
-        alias _ROOT_/opt/galaxy-1510/galaxy/static/june_2007_style/blue;
+        alias _ROOT_/opt/galaxy/galaxy/static/june_2007_style/blue;
         expires 24h;
     }
 
     location /static/scripts {
-        alias _ROOT_/opt/galaxy-1510/galaxy/static/scripts/packed;
+        alias _ROOT_/opt/galaxy/galaxy/static/scripts/packed;
         expires 24h;
     }
 
     location /favicon.ico {
-        alias _ROOT_/opt/galaxy-1510/galaxy/static/favicon.ico;
+        alias _ROOT_/opt/galaxy/galaxy/static/favicon.ico;
         expires 24h;
     }
 
     location /robots.txt {
-        alias _ROOT_/opt/galaxy-1510/galaxy/static/robots.txt;
+        alias _ROOT_/opt/galaxy/galaxy/static/robots.txt;
         expires 24h;
     }
 
@@ -78,7 +78,7 @@ server {
     }
 
     location /_upload {
-        upload_store _ROOT_/var/lib/galaxy-1510/database/tmp/upload_store;
+        upload_store _ROOT_/var/lib/galaxy/database/tmp/upload_store;
         upload_pass_form_field "";
         upload_set_form_field "__${upload_field_name}__is_composite" "true";
         upload_set_form_field "__${upload_field_name}__keys" "name path";

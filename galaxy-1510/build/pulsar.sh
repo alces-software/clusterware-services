@@ -20,19 +20,19 @@
 # For more information on the Alces Clusterware, please visit:
 # https://github.com/alces-software/clusterware
 #==============================================================================
-export PYTHONPATH="${cw_ROOT}"/opt/galaxy-1510/pulsar/lib/python${pyver}/site-packages
+export PYTHONPATH="${cw_ROOT}"/opt/galaxy/pulsar/lib/python${pyver}/site-packages
 export CFLAGS=-I/opt/clusterware/opt/lib/include
 export LIBRARY_PATH=/opt/clusterware/opt/lib/lib
 
-mkdir -p "${cw_ROOT}"/opt/galaxy-1510/pulsar/lib/python${pyver}/site-packages
+mkdir -p "${cw_ROOT}"/opt/galaxy/pulsar/lib/python${pyver}/site-packages
 
-easy_install --prefix="${cw_ROOT}"/opt/galaxy-1510/pulsar pulsar-app
-easy_install --prefix="${cw_ROOT}"/opt/galaxy-1510/pulsar pyOpenSSL
-easy_install --prefix="${cw_ROOT}"/opt/galaxy-1510/pulsar drmaa
+easy_install --prefix="${cw_ROOT}"/opt/galaxy/pulsar pulsar-app
+easy_install --prefix="${cw_ROOT}"/opt/galaxy/pulsar pyOpenSSL
+easy_install --prefix="${cw_ROOT}"/opt/galaxy/pulsar drmaa
 
 unset PYTHONPATH
 unset CFLAGS
 unset LIBRARY_PATH
 
 sed -i -e "s,paster serve ,paster serve --pid-file=${pulsar_pidfile} --log-file=/var/log/galaxy/pulsar.log ,g" \
-  "${cw_ROOT}"/opt/galaxy-1510/pulsar/bin/pulsar
+  "${cw_ROOT}"/opt/galaxy/pulsar/bin/pulsar

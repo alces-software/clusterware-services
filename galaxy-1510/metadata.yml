@@ -24,7 +24,7 @@ install:
   _: |
     . "${cw_ROOT}"/etc/serviceware.rc
     . "${cw_ROOT}"/etc/distro.rc
-    curl -# -L "${cw_DIST_URL}/${cw_DIST}"/galaxy-1510.tar.gz | tar -C "${cw_ROOT}" -xz
+    curl -# -L "${cw_DIST_URL}/${cw_DIST}"/galaxy.tar.gz | tar -C "${cw_ROOT}" -xz
 component-webapp:
   el6: |
     if [ "$1" == "--no-postgres" ]; then
@@ -129,9 +129,9 @@ component-webapp:
     mkdir -p /var/log/galaxy
     cp etc/logrotate.d/* "${cw_ROOT}"/etc/logrotate.d
 
-    SERVICEDIR="${cw_ROOT}/opt/galaxy-1510"
+    SERVICEDIR="${cw_ROOT}/opt/galaxy"
     GALAXYDIR="${SERVICEDIR}/galaxy"
-    DATADIR="${cw_ROOT}/var/lib/galaxy-1510"
+    DATADIR="${cw_ROOT}/var/lib/galaxy"
     mkdir -p "${DATADIR}"
     for a in database config tool-data external_service_types shed-tool-deps; do
       mv "${GALAXYDIR}"/$a "${DATADIR}"
@@ -234,7 +234,7 @@ component-pulsar:
     }
   _: |
     mkdir -p /var/log/galaxy "${cw_ROOT}"/etc/galaxy/pulsar "${cw_ROOT}"/etc/ssl
-    mkdir -p "${cw_ROOT}"/var/lib/galaxy-1510/pulsar/shed-tool-deps
+    mkdir -p "${cw_ROOT}"/var/lib/galaxy/pulsar/shed-tool-deps
     cp pulsar/etc/logrotate.d/* "${cw_ROOT}"/etc/logrotate.d
     cp -p pulsar/ssl/* "${cw_ROOT}"/etc/ssl
     chmod 0600 "${cw_ROOT}"/etc/ssl/*_key.pem
@@ -249,7 +249,7 @@ component-pulsar:
 
     getent group galaxy &>/dev/null || groupadd --gid 361 galaxy
     getent passwd galaxy &>/dev/null || useradd --uid 361 --gid 361 \
-        --shell /sbin/nologin --home-dir "${cw_ROOT}/var/lib/galaxy-1510" galaxy
+        --shell /sbin/nologin --home-dir "${cw_ROOT}/var/lib/galaxy" galaxy
 
     secret="${1:-$(dd if=/dev/urandom bs=1 count=18 2>/dev/null | base64)}"
     # configure secret for app.yml
@@ -258,7 +258,7 @@ component-pulsar:
       "${cw_ROOT}"/etc/ssl/clusterware-galaxy-pulsar_crt_and_key.pem
     sed -e "s,_SECRET_,${secret},g" -i "${cw_ROOT}"/etc/galaxy/pulsar/app.yml
 
-    chown -R galaxy:galaxy "${cw_ROOT}"/var/lib/galaxy-1510/pulsar /var/log/galaxy
+    chown -R galaxy:galaxy "${cw_ROOT}"/var/lib/galaxy/pulsar /var/log/galaxy
 
     enable_pulsar
 build:
@@ -273,7 +273,7 @@ build:
     pyver=2.7
     pulsar_pidfile=/run/clusterware-galaxy/pulsar.pid
   _: |
-    SERVICEDIR="${cw_ROOT}/opt/galaxy-1510"
+    SERVICEDIR="${cw_ROOT}/opt/galaxy"
     mkdir -p "${SERVICEDIR}"
     for a in build/*.sh; do
       . $a

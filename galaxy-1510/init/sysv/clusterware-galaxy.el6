@@ -21,8 +21,8 @@
 
 PID_FILE=/var/run/galaxy.pid
 DAEMON_CMD="/usr/bin/python scripts/paster.py serve --daemon --pid-file=$PID_FILE --log-file=/var/log/galaxy/galaxy.log --user=galaxy --group=galaxy config/galaxy.ini"
-DAEMON_HOME="_cw_ROOT_/opt/galaxy-1510/galaxy"
-export PYTHON_EGG_CACHE="_cw_ROOT_/var/lib/galaxy-1510/python-eggs"
+DAEMON_HOME="_cw_ROOT_/opt/galaxy/galaxy"
+export PYTHON_EGG_CACHE="_cw_ROOT_/var/lib/galaxy/python-eggs"
 
 start()
 {

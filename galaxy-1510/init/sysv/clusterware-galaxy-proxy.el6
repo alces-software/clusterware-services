@@ -20,7 +20,7 @@
 . /etc/rc.d/init.d/functions
 
 PID_FILE=/var/run/clusterware-galaxy-proxy.pid
-DAEMON_CMD="_cw_ROOT_/opt/galaxy-1510/bin/nginx"
+DAEMON_CMD="_cw_ROOT_/opt/galaxy/bin/nginx"
 
 start()
 {
