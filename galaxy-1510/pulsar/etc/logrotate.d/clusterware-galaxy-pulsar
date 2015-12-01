@@ -1,0 +1,11 @@
+# Rotate Galaxy Pulsar logs
+/var/log/galaxy/pulsar.log {
+    daily
+    missingok
+    rotate 7
+    compress
+    delaycompress
+    notifempty
+    create 640 galaxy galaxy
+    copytruncate
+}

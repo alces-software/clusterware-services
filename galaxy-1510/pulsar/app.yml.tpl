@@ -1,4 +1,3 @@
-#!/bin/bash
 #==============================================================================
 # Copyright (C) 2015 Stephen F. Norledge and Alces Software Ltd.
 #
@@ -20,16 +19,17 @@
 # For more information on the Alces Clusterware, please visit:
 # https://github.com/alces-software/clusterware
 #==============================================================================
-curl -L "ftp://ftp.proftpd.org/distrib/source/proftpd-1.3.5a.tar.gz" -o /tmp/proftpd-1.3.5a.tar.gz
-tar -C /tmp -xzf /tmp/proftpd-1.3.5a.tar.gz
-pushd /tmp/proftpd-1.3.5a
-./configure --prefix="${SERVICEDIR}" \
-    --disable-auth-file --disable-ncurses --disable-ident \
-    --disable-shadow --enable-openssl --with-modules=mod_sql:mod_sql_postgres:mod_sql_passwd:mod_sql_sqlite
-make
-make install
-popd
-install -Dm640 build/proftpd.conf.tpl "$SERVICEDIR"/etc/proftpd.conf
-sed -e "s,_cw_ROOT_,${cw_ROOT},g" -i "$SERVICEDIR"/etc/proftpd.conf
-
-rm -rf /tmp/proftpd-1.3.5a.tar.gz /tmp/proftpd-1.3.5a
+---
+managers:
+  _default_:
+    type: queued_python
+    num_concurrent_jobs: '*'
+#  drmaa:
+#    type: queued_drmaa
+#    min_polling_interval: 0.5
+staging_directory: _cw_ROOT_/var/lib/galaxy-1510/pulsar/files/staging
+job_directory_mode: '0777'
+private_token: _SECRET_
+persistence_directory: _cw_ROOT_/var/lib/galaxy-1510/pulsar/files/persisted_data
+assign_ids: uuid
+tool_dependency_dir: _cw_ROOT_/var/lib/galaxy-1510/pulsar/shed-tool-deps

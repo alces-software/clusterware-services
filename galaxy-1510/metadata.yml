@@ -1,10 +1,31 @@
+#==============================================================================
+# Copyright (C) 2015 Stephen F. Norledge and Alces Software Ltd.
+#
+# This file/package is part of Alces Clusterware.
+#
+# Alces Clusterware is free software: you can redistribute it and/or
+# modify it under the terms of the GNU Affero General Public License
+# as published by the Free Software Foundation, either version 3 of
+# the License, or (at your option) any later version.
+#
+# Alces Clusterware is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this package.  If not, see <http://www.gnu.org/licenses/>.
+#
+# For more information on the Alces Clusterware, please visit:
+# https://github.com/alces-software/clusterware
+#==============================================================================
 ---
 install:
   _: |
     . "${cw_ROOT}"/etc/serviceware.rc
     . "${cw_ROOT}"/etc/distro.rc
     curl -# -L "${cw_DIST_URL}/${cw_DIST}"/galaxy-1510.tar.gz | tar -C "${cw_ROOT}" -xz
-component-base:
+component-webapp:
   el6: |
     if [ "$1" == "--no-postgres" ]; then
       yum install -y sqlite
@@ -62,7 +83,7 @@ component-base:
             init/systemd/clusterware-galaxy.service \
             > /etc/systemd/system/clusterware-galaxy.service
         systemctl enable clusterware-galaxy.service
-        mkdir /run/clusterware-galaxy
+        mkdir -p /run/clusterware-galaxy
         chown galaxy /run/clusterware-galaxy
         cat <<EOF > /etc/tmpfiles.d/clusterware-galaxy
     # Clusterware Galaxy runtime directory
@@ -121,17 +142,35 @@ component-base:
     mv "${GALAXYDIR}"/static/welcome.html "${DATADIR}"/html
     ln -s "${DATADIR}"/html/welcome.html "${GALAXYDIR}"/static/welcome.html
 
-    secret="$(dd if=/dev/urandom bs=24 count=2 2>/dev/null | md5sum | cut -d' ' -f1)"
-    sed -e "s,_SECRET_,${secret},g" -i "$DATADIR"/config/galaxy.ini
-
     install -Dm644 shed_tool_conf.xml.tpl "${DATADIR}"/config/shed_tool_conf.xml
-    sed -e "s,_cw_ROOT_,${cw_ROOT},g" -i "$DATADIR"/config/shed_tool_conf.xml
+    install -Dm644 job_conf.xml.tpl "${DATADIR}"/config/job_conf.xml
+    install -Dm644 destinations.py.tpl "${GALAXYDIR}"/lib/galaxy/jobs/rules/destinations.py
+
+    cores=$(grep -ic 'processor' /proc/cpuinfo)
+    sed -i -e "s,_cw_ROOT_,${cw_ROOT},g" -e "s,_CORES_,${cores},g" \
+      "$DATADIR"/config/shed_tool_conf.xml \
+      "$DATADIR"/config/job_conf.xml \
+      "${GALAXYDIR}"/lib/galaxy/jobs/rules/destinations.py
+    if [ -d "${cw_ROOT}/opt/gridscheduler" ]; then
+      sed -i -e 's,<!--plugin id="drmaa_sge,<plugin id="drmaa_sge,g' \
+        -e 's,plugin-->,plugin>,g' \
+        "$DATADIR"/config/job_conf.xml
+    fi
+
     cp "$DATADIR"/config/shed_tool_conf.xml "$DATADIR"/config/migrated_tools_conf.xml
 
     getent group galaxy &>/dev/null || groupadd --gid 361 galaxy
     getent passwd galaxy &>/dev/null || useradd --uid 361 --gid 361 \
         --shell /sbin/nologin --home-dir "${DATADIR}" galaxy
     chown -R galaxy:galaxy "${DATADIR}" /var/log/galaxy
+
+    chown galaxy "${GALAXYDIR}"/config/galaxy.ini
+    secret="$(dd if=/dev/urandom bs=24 count=2 2>/dev/null | md5sum | cut -d' ' -f1)"
+    sed -e "s,_SECRET_,${secret},g" -i "$DATADIR"/config/galaxy.ini
+
+    mkdir -p "${cw_ROOT}"/etc/galaxy
+    install -Dm600 destinations.yml "${cw_ROOT}"/etc/galaxy/destinations.yml
+    chown galaxy "${cw_ROOT}"/etc/galaxy/destinations.yml
 
     if [ "$1" == "--no-postgres" ]; then
       sed -i -e 's,^database_connection = postgresql,#database_connection = postgresql,g' \
@@ -171,11 +210,68 @@ component-base:
 
     echo "Galaxy FTP service" > "${DATADIR}"/ftp_welcome.txt
     enable_ftpd
+component-pulsar:
+  el6: |
+    enable_pulsar() {
+        sed -e "s,_cw_ROOT_,${cw_ROOT},g" \
+            init/sysv/clusterware-galaxy-pulsar.el6 \
+            > /etc/init.d/clusterware-galaxy-pulsar
+        chmod 755 /etc/init.d/clusterware-galaxy-pulsar
+        chkconfig clusterware-galaxy-pulsar on
+    }
+  el7: |
+    enable_pulsar() {
+        sed -e "s,_cw_ROOT_,${cw_ROOT},g" \
+            init/systemd/clusterware-galaxy-pulsar.service \
+            > /etc/systemd/system/clusterware-galaxy-pulsar.service
+        systemctl enable clusterware-galaxy-pulsar.service
+        mkdir -p /run/clusterware-galaxy
+        chown galaxy /run/clusterware-galaxy
+        cat <<EOF > /etc/tmpfiles.d/clusterware-galaxy
+    # Clusterware Galaxy runtime directory
+    d /run/clusterware-galaxy 0755 galaxy root -
+    EOF
+    }
+  _: |
+    mkdir -p /var/log/galaxy "${cw_ROOT}"/etc/galaxy/pulsar "${cw_ROOT}"/etc/ssl
+    mkdir -p "${cw_ROOT}"/var/lib/galaxy-1510/pulsar/shed-tool-deps
+    cp pulsar/etc/logrotate.d/* "${cw_ROOT}"/etc/logrotate.d
+    cp -p pulsar/ssl/* "${cw_ROOT}"/etc/ssl
+    chmod 0600 "${cw_ROOT}"/etc/ssl/*_key.pem
+
+    install -Dm644 pulsar/server.ini.tpl "${cw_ROOT}"/etc/galaxy/pulsar/server.ini
+    install -Dm644 pulsar/local_env.sh.tpl "${cw_ROOT}"/etc/galaxy/pulsar/local_env.sh
+    install -Dm644 pulsar/app.yml.tpl "${cw_ROOT}"/etc/galaxy/pulsar/app.yml
+
+    sed -e "s,_cw_ROOT_,${cw_ROOT},g" -i "${cw_ROOT}"/etc/galaxy/pulsar/server.ini \
+      "${cw_ROOT}"/etc/galaxy/pulsar/local_env.sh \
+      "${cw_ROOT}"/etc/galaxy/pulsar/app.yml
+
+    getent group galaxy &>/dev/null || groupadd --gid 361 galaxy
+    getent passwd galaxy &>/dev/null || useradd --uid 361 --gid 361 \
+        --shell /sbin/nologin --home-dir "${cw_ROOT}/var/lib/galaxy-1510" galaxy
+
+    secret="${1:-$(dd if=/dev/urandom bs=1 count=18 2>/dev/null | base64)}"
+    # configure secret for app.yml
+    chmod 0600 "${cw_ROOT}"/etc/galaxy/pulsar/app.yml
+    chown galaxy "${cw_ROOT}"/etc/galaxy/pulsar/app.yml \
+      "${cw_ROOT}"/etc/ssl/clusterware-galaxy-pulsar_crt_and_key.pem
+    sed -e "s,_SECRET_,${secret},g" -i "${cw_ROOT}"/etc/galaxy/pulsar/app.yml
+
+    chown -R galaxy:galaxy "${cw_ROOT}"/var/lib/galaxy-1510/pulsar /var/log/galaxy
+
+    enable_pulsar
 build:
   el6: |
-    yum install -y postgresql-server pcre-devel openssl-devel postgresql-devel sqlite-devel
+    yum install -y postgresql-server pcre-devel openssl-devel \
+      postgresql-devel sqlite-devel libffi-devel python-devel
+    pyver=2.6
+    pulsar_pidfile=/var/run/clusterware-galaxy-pulsar.pid
   el7: |
-    yum install -y postgresql-server pcre-devel openssl-devel postgresql-devel sqlite-devel
+    yum install -y postgresql-server pcre-devel openssl-devel \
+      postgresql-devel sqlite-devel libffi-devel python-devel
+    pyver=2.7
+    pulsar_pidfile=/run/clusterware-galaxy/pulsar.pid
   _: |
     SERVICEDIR="${cw_ROOT}/opt/galaxy-1510"
     mkdir -p "${SERVICEDIR}"

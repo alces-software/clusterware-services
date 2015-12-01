@@ -1,3 +1,4 @@
+#!/bin/bash
 #==============================================================================
 # Copyright (C) 2015 Stephen F. Norledge and Alces Software Ltd.
 #
@@ -19,43 +20,19 @@
 # For more information on the Alces Clusterware, please visit:
 # https://github.com/alces-software/clusterware
 #==============================================================================
-[server:main]
-use = egg:Paste#http
-port = 6414
-host = 0.0.0.0
-use_threadpool = True
-threadpool_kill_thread_limit = 10800
+export PYTHONPATH="${cw_ROOT}"/opt/galaxy-1510/pulsar/lib/python${pyver}/site-packages
+export CFLAGS=-I/opt/clusterware/opt/lib/include
+export LIBRARY_PATH=/opt/clusterware/opt/lib/lib
 
-[filter:proxy-prefix]
-use = egg:PasteDeploy#prefix
-force_port = 64443
+mkdir -p "${cw_ROOT}"/opt/galaxy-1510/pulsar/lib/python${pyver}/site-packages
 
-[app:main]
-paste.app_factory = galaxy.web.buildapp:app_factory
+easy_install --prefix="${cw_ROOT}"/opt/galaxy-1510/pulsar pulsar-app
+easy_install --prefix="${cw_ROOT}"/opt/galaxy-1510/pulsar pyOpenSSL
+easy_install --prefix="${cw_ROOT}"/opt/galaxy-1510/pulsar drmaa
 
-use_interactive = False
+unset PYTHONPATH
+unset CFLAGS
+unset LIBRARY_PATH
 
-database_connection = sqlite:///./database/universe.sqlite?isolation_level=IMMEDIATE
-#database_connection = postgresql://galaxy:_PASSWORD_@localhost/galaxy
-
-file_path = database/files
-new_file_path = database/tmp
-tool_config_file = config/tool_conf.xml,config/shed_tool_conf.xml
-integrated_tool_panel_config = config/integrated_tool_panel.xml
-tool_dependency_dir = shed-tool-deps
-
-use_nglims = False
-nglims_config_file = tool-data/nglims.yaml
-id_secret = _SECRET_
-
-admin_users = admin@alces.network
-
-ftp_upload_dir = database/uploads
-ftp_upload_site = Galaxy
-
-filter-with = proxy-prefix
-upstream_gzip = False
-nginx_x_accel_redirect_base = /_x_accel_redirect
-nginx_x_archive_files_base = /_x_accel_redirect
-nginx_upload_store = database/tmp/upload_store
-nginx_upload_path = /_upload
+sed -i -e "s,paster serve ,paster serve --pid-file=${pulsar_pidfile} --log-file=/var/log/galaxy/pulsar.log ,g" \
+  "${cw_ROOT}"/opt/galaxy-1510/pulsar/bin/pulsar

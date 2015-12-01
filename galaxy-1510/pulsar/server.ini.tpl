@@ -21,41 +21,40 @@
 #==============================================================================
 [server:main]
 use = egg:Paste#http
-port = 6414
-host = 0.0.0.0
-use_threadpool = True
-threadpool_kill_thread_limit = 10800
-
-[filter:proxy-prefix]
-use = egg:PasteDeploy#prefix
-force_port = 64443
+port = 8913
+host = localhost
+## pem file to use to enable SSL.
+ssl_pem = _cw_ROOT_/etc/ssl/clusterware-galaxy-pulsar_crt_and_key.pem
 
 [app:main]
-paste.app_factory = galaxy.web.buildapp:app_factory
+paste.app_factory = pulsar.web.wsgi:app_factory
+app_config = %(here)s/app.yml
 
-use_interactive = False
+## Configure Python loggers.
+[loggers]
+keys = root,pulsar
 
-database_connection = sqlite:///./database/universe.sqlite?isolation_level=IMMEDIATE
-#database_connection = postgresql://galaxy:_PASSWORD_@localhost/galaxy
+[handlers]
+keys = console
 
-file_path = database/files
-new_file_path = database/tmp
-tool_config_file = config/tool_conf.xml,config/shed_tool_conf.xml
-integrated_tool_panel_config = config/integrated_tool_panel.xml
-tool_dependency_dir = shed-tool-deps
+[formatters]
+keys = generic
 
-use_nglims = False
-nglims_config_file = tool-data/nglims.yaml
-id_secret = _SECRET_
+[logger_root]
+level = INFO
+handlers = console
 
-admin_users = admin@alces.network
+[logger_pulsar]
+level = DEBUG
+handlers = console
+qualname = pulsar
+propagate = 0
 
-ftp_upload_dir = database/uploads
-ftp_upload_site = Galaxy
+[handler_console]
+class = StreamHandler
+args = (sys.stderr,)
+level = DEBUG
+formatter = generic
 
-filter-with = proxy-prefix
-upstream_gzip = False
-nginx_x_accel_redirect_base = /_x_accel_redirect
-nginx_x_archive_files_base = /_x_accel_redirect
-nginx_upload_store = database/tmp/upload_store
-nginx_upload_path = /_upload
+[formatter_generic]
+format = %(asctime)s %(levelname)-5.5s [%(name)s][%(threadName)s] %(message)s
