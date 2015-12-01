@@ -22,7 +22,7 @@
 [server:main]
 use = egg:Paste#http
 port = 8913
-host = localhost
+host = 0.0.0.0
 ## pem file to use to enable SSL.
 ssl_pem = _cw_ROOT_/etc/ssl/clusterware-galaxy-pulsar_crt_and_key.pem
 
