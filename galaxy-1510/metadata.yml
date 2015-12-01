@@ -62,6 +62,12 @@ component-base:
             init/systemd/clusterware-galaxy.service \
             > /etc/systemd/system/clusterware-galaxy.service
         systemctl enable clusterware-galaxy.service
+        mkdir /run/clusterware-galaxy
+        chown galaxy /run/clusterware-galaxy
+        cat <<EOF > /etc/tmpfiles.d/clusterware-galaxy
+    # Clusterware Galaxy runtime directory
+    d /run/clusterware-galaxy 0755 galaxy root -
+    EOF
     }
 
     enable_postgres() {
