@@ -20,15 +20,8 @@
 # https://github.com/alces-software/clusterware
 #==============================================================================
 ---
-local:
-# pulsar:
-#   token: _SECRET_
-#   targets:
-#   - type: drmaa
-#     url: https://localhost:8913/drmaa
-#     native: -pe smp 2
-#   - url: https://node01:8913/
-#   - url: https://node02:8913/
-# drmaa:
-#   type: sge
-#   native: -pe smp 2
+pulsar:
+  token: _SECRET_
+  targets: []
+#DRMAA#drmaa:
+#DRMAA#  type: sge

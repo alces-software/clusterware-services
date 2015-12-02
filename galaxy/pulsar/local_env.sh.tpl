@@ -19,8 +19,8 @@
 # For more information on the Alces Clusterware, please visit:
 # https://github.com/alces-software/clusterware
 #==============================================================================
-#export DRMAA_LIBRARY_PATH=_cw_ROOT_/opt/gridscheduler/lib/linux-x64/libdrmaa.so
-#export SGE_ROOT=_cw_ROOT_/opt/gridscheduler
-#export SGE_CELL=etc
-#export SGE_CLUSTER_NAME=cluster
+#DRMAA#export DRMAA_LIBRARY_PATH=_cw_ROOT_/opt/gridscheduler/lib/linux-x64/libdrmaa.so
+#DRMAA#export SGE_ROOT=_cw_ROOT_/opt/gridscheduler
+#DRMAA#export SGE_CELL=etc
+#DRMAA#export SGE_CLUSTER_NAME=cluster
 export GALAXY_HOME=_cw_ROOT_/opt/galaxy/galaxy

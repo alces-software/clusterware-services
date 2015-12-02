@@ -1,0 +1,9 @@
+################################################################################
+##
+## Alces Clusterware - Shell configuration
+## Copyright (c) 2015 Alces Software Ltd
+##
+################################################################################
+#export SGE_ROOT=_cw_ROOT_/opt/gridscheduler
+#export SGE_CELL=etc
+#export SGE_CLUSTER_NAME=cluster

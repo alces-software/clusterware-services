@@ -151,11 +151,6 @@ component-webapp:
       "$DATADIR"/config/shed_tool_conf.xml \
       "$DATADIR"/config/job_conf.xml \
       "${GALAXYDIR}"/lib/galaxy/jobs/rules/destinations.py
-    if [ -d "${cw_ROOT}/opt/gridscheduler" ]; then
-      sed -i -e 's,<!--plugin id="drmaa_sge,<plugin id="drmaa_sge,g' \
-        -e 's,plugin-->,plugin>,g' \
-        "$DATADIR"/config/job_conf.xml
-    fi
 
     cp "$DATADIR"/config/shed_tool_conf.xml "$DATADIR"/config/migrated_tools_conf.xml
 
@@ -170,7 +165,12 @@ component-webapp:
 
     mkdir -p "${cw_ROOT}"/etc/galaxy
     install -Dm600 destinations.yml "${cw_ROOT}"/etc/galaxy/destinations.yml
+    install -Dm600 etc/galaxy/galaxy.rc "${cw_ROOT}"/etc/galaxy/galaxy.rc
+    sed -i -e "s,_cw_ROOT_,${cw_ROOT},g" "${cw_ROOT}"/etc/galaxy/galaxy.rc
     chown galaxy "${cw_ROOT}"/etc/galaxy/destinations.yml
+
+    secret="$(dd if=/dev/urandom bs=1 count=18 2>/dev/null | base64)"
+    sed -e "s,_SECRET_,${secret},g" -i "${cw_ROOT}"/etc/galaxy/destinations.yml
 
     if [ "$1" == "--no-postgres" ]; then
       sed -i -e 's,^database_connection = postgresql,#database_connection = postgresql,g' \
@@ -212,6 +212,8 @@ component-webapp:
     enable_ftpd
 component-pulsar:
   el6: |
+    yum install -y python-setuptools
+
     enable_pulsar() {
         sed -e "s,_cw_ROOT_,${cw_ROOT},g" \
             init/sysv/clusterware-galaxy-pulsar.el6 \
@@ -220,6 +222,8 @@ component-pulsar:
         chkconfig clusterware-galaxy-pulsar on
     }
   el7: |
+    yum install -y python-setuptools
+
     enable_pulsar() {
         sed -e "s,_cw_ROOT_,${cw_ROOT},g" \
             init/systemd/clusterware-galaxy-pulsar.service \
@@ -251,12 +255,9 @@ component-pulsar:
     getent passwd galaxy &>/dev/null || useradd --uid 361 --gid 361 \
         --shell /sbin/nologin --home-dir "${cw_ROOT}/var/lib/galaxy" galaxy
 
-    secret="${1:-$(dd if=/dev/urandom bs=1 count=18 2>/dev/null | base64)}"
-    # configure secret for app.yml
     chmod 0600 "${cw_ROOT}"/etc/galaxy/pulsar/app.yml
     chown galaxy "${cw_ROOT}"/etc/galaxy/pulsar/app.yml \
       "${cw_ROOT}"/etc/ssl/clusterware-galaxy-pulsar_crt_and_key.pem
-    sed -e "s,_SECRET_,${secret},g" -i "${cw_ROOT}"/etc/galaxy/pulsar/app.yml
 
     chown -R galaxy:galaxy "${cw_ROOT}"/var/lib/galaxy/pulsar /var/log/galaxy
 

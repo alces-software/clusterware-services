@@ -24,9 +24,9 @@ managers:
   _default_:
     type: queued_python
     num_concurrent_jobs: '*'
-#  drmaa:
-#    type: queued_drmaa
-#    min_polling_interval: 0.5
+#DRMAA#  drmaa:
+#DRMAA#    type: queued_drmaa
+#DRMAA#    min_polling_interval: 0.5
 staging_directory: _cw_ROOT_/var/lib/galaxy/pulsar/files/staging
 job_directory_mode: '0777'
 private_token: _SECRET_

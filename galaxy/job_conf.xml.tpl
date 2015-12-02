@@ -34,7 +34,7 @@
     <handler id="main"/>
   </handlers>
   <destinations default="dynamic">
-    <destination id="dynamic">
+    <destination id="dynamic" runner="dynamic">
       <param id="type">python</param>
       <param id="function">job_dispatcher</param>
     </destination>

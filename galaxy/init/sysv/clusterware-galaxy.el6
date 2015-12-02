@@ -19,6 +19,8 @@
 
 . /etc/rc.d/init.d/functions
 
+. "_cw_ROOT_/etc/galaxy/galaxy.rc"
+
 PID_FILE=/var/run/galaxy.pid
 DAEMON_CMD="/usr/bin/python scripts/paster.py serve --daemon --pid-file=$PID_FILE --log-file=/var/log/galaxy/galaxy.log --user=galaxy --group=galaxy config/galaxy.ini"
 DAEMON_HOME="_cw_ROOT_/opt/galaxy/galaxy"

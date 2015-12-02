@@ -22,7 +22,7 @@
 PID_FILE=/var/run/clusterware-galaxy-pulsar.pid
 DAEMON_CMD="_cw_ROOT_/opt/galaxy/pulsar/bin/pulsar -c _cw_ROOT_/etc/galaxy/pulsar --daemon"
 DAEMON_HOME="/"
-PATH="_cw_ROOT_/opt/galaxy/pulsar/bin"
+PATH="_cw_ROOT_/opt/galaxy/pulsar/bin:/sbin:/bin:/usr/sbin:/usr/bin"
 export PYTHONPATH="_cw_ROOT_/opt/galaxy/pulsar/lib/python2.6/site-packages"
 export PYTHON_EGG_CACHE="_cw_ROOT_/var/lib/galaxy/pulsar/python-eggs"
 
@@ -32,7 +32,7 @@ start()
   cd $DAEMON_HOME
   touch $PID_FILE
   chown galaxy $PID_FILE
-  su galaxy -c "$DAEMON_CMD" &>/dev/null
+  su -s /bin/bash -c "$DAEMON_CMD" galaxy &>/dev/null
   sleep 2
   PID=`pidofproc -p $PID_FILE`
   if [ -n $PID ]; then
@@ -61,7 +61,7 @@ restart()
   cd $DAEMON_HOME
   touch $PID_FILE
   chown galaxy $PID_FILE
-  su galaxy -c "$DAEMON_CMD" &>/dev/null
+  su -s /bin/bash -c "$DAEMON_CMD" galaxy &>/dev/null
   sleep 2
   PID=`pidofproc -p $PID_FILE`
   if [ -n $PID ]; then
