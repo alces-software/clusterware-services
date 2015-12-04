@@ -24,18 +24,31 @@ from galaxy.jobs.mapper import JobMappingException
 import os
 import yaml
 
-def pulsar_params_for(cfg, token):
+def pulsar_params_for(cfg, token, native_spec):
     params = {}
     params['url'] = cfg['url']
     params['private_token'] = token
-    if 'native' in cfg:
+    # override the default 'http' file_action to 'none' as we're using
+    # a shared filesystem model.
+    params['default_file_action'] = cfg.get('file_action','none')
+    if native_spec:
+        if native_spec[0] == '+':
+            params['submit_native_specification'] = cfg.get('native','') + ' ' + native_spec
+        else:
+            params['submit_native_specification'] = native_spec
+    elif 'native' in cfg:
         params['submit_native_specification'] = cfg['native']
     return params
 
-def drmaa_params_for(cfg):
+def drmaa_params_for(cfg, native_spec):
     params = {}
-    if 'native' in cfg:
-        params['nativeSpecification'] = cfg['native']
+    if native_spec:
+        if native_spec[0] == '+':
+            params['native_specification'] = cfg.get('native','') + ' ' + native_spec
+        else:
+            params['native_specification'] = native_spec
+    elif 'native' in cfg:
+        params['native_specification'] = cfg['native']
     return params
 
 # Dynamically determine which queue to use
@@ -43,6 +56,16 @@ def job_dispatcher(app, user_email, user, job, tool, tool_id):
     # read config and state files
     with open("_cw_ROOT_/etc/galaxy/destinations.yml", 'r') as stream:
         cfg = yaml.load(stream)
+
+    # first check to see if we have any specific configuration for a tool_id
+    if 'tools' in cfg:
+        tools_cfg = cfg['tools']
+        if tool_id in tools_cfg:
+            tool_cfg = tools_cfg[tool_id]
+            dest = tool_cfg['destination']
+            if dest == 'local':
+                return 'local'
+            native_spec = tool_cfg.get('native', None)
 
     # if we have pulsar(s) available, ship the job to the next available
     if 'pulsar' in cfg and len(cfg['pulsar']['targets']) > 0:
@@ -55,11 +78,13 @@ def job_dispatcher(app, user_email, user, job, tool, tool_id):
             next_pulsar_idx = 0
 
         pulsar_cfg = cfg['pulsar']
-        # if we have a DRMAA pulsar, ship the job to that
-        # if we have one or more pulsars available, ship to the next pulsar in the ring
-        if pulsar_cfg['targets'][0]['type'] == 'drmaa':
+
+        # If the first pulsar is a DRMAA pulsar, ship the job to that.
+        # Otherwise, if we have one or more pulsars available, ship to
+        # the next pulsar in the ring.
+        if 'type' in pulsar_cfg['targets'][0] and pulsar_cfg['targets'][0]['type'] == 'drmaa':
             next_pulsar_idx = 0
-        params = pulsar_params_for(pulsar_cfg['targets'][next_pulsar_idx], pulsar_cfg['token'])
+        params = pulsar_params_for(pulsar_cfg['targets'][next_pulsar_idx], pulsar_cfg['token'], native_spec)
 
         # update state
         if next_pulsar_idx + 1 == len(cfg['pulsar']['targets']):
@@ -75,7 +100,7 @@ def job_dispatcher(app, user_email, user, job, tool, tool_id):
     # if we have DRMAA available, ship the job to that
     elif 'drmaa' in cfg:
         runner = 'drmaa_%s' % (cfg['drmaa']['type'])
-        return JobDestination(runner=runner, params=drmaa_params_for(cfg['drmaa']))
+        return JobDestination(runner=runner, params=drmaa_params_for(cfg['drmaa'], native_spec))
 
 
     # if none of the above are available, use the local destination

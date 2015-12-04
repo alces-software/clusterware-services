@@ -25,3 +25,6 @@ pulsar:
   targets: []
 #DRMAA#drmaa:
 #DRMAA#  type: sge
+tools:
+  upload1:
+    destination: local
