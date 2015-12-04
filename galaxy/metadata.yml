@@ -33,6 +33,12 @@ component-webapp:
       yum install -y postgresql-server
     fi
 
+    # From https://wiki.galaxyproject.org/Admin/Config/ToolDependenciesList
+    yum install -y autoconf automake gcc gcc-c++ make gcc-gfortran \
+      cmake atlas-devel blas-devel lapack-devel glibc-devel mercurial \
+      subversion python-devel pkg-config openssl-devel \
+      java-1.8.0-openjdk-devel zlib-devel
+
     enable_galaxy() {
         sed -e "s,_cw_ROOT_,${cw_ROOT},g" \
             init/sysv/clusterware-galaxy.el6 \
@@ -78,11 +84,20 @@ component-webapp:
       yum install -y postgresql-server postgresql-contrib
     fi
 
+    # From https://wiki.galaxyproject.org/Admin/Config/ToolDependenciesList
+    yum install -y autoconf automake gcc gcc-c++ make gcc-gfortran \
+      cmake atlas-devel blas-devel lapack-devel glibc-devel mercurial \
+      subversion python-devel pkg-config openssl-devel \
+      java-1.8.0-openjdk-devel zlib-devel
+
     enable_galaxy() {
         sed -e "s,_cw_ROOT_,${cw_ROOT},g" \
             init/systemd/clusterware-galaxy.service \
             > /etc/systemd/system/clusterware-galaxy.service
         systemctl enable clusterware-galaxy.service
+        mkdir -p "${cw_ROOT}"/libexec/galaxy
+        cp libexec/* "${cw_ROOT}"/libexec/galaxy
+        chmod 755 "${cw_ROOT}"/libexec/galaxy/*
         mkdir -p /run/clusterware-galaxy
         chown galaxy /run/clusterware-galaxy
         cat <<EOF > /etc/tmpfiles.d/clusterware-galaxy
@@ -132,13 +147,17 @@ component-webapp:
     SERVICEDIR="${cw_ROOT}/opt/galaxy"
     GALAXYDIR="${SERVICEDIR}/galaxy"
     DATADIR="${cw_ROOT}/var/lib/galaxy"
-    mkdir -p "${DATADIR}"
-    for a in database config tool-data external_service_types shed-tool-deps; do
+    mkdir -p "${DATADIR}"/share
+    for a in database tool-data shed-tool-deps; do
+      mv "${GALAXYDIR}"/$a "${DATADIR}"/share
+      ln -s "${DATADIR}"/share/$a "${GALAXYDIR}"/$a
+    done
+    for a in config external_service_types; do
       mv "${GALAXYDIR}"/$a "${DATADIR}"
       ln -s "${DATADIR}"/$a "${GALAXYDIR}"/$a
     done
 
-    mkdir "${DATADIR}"/html "${DATADIR}"/shed_tools
+    mkdir "${DATADIR}"/html "${DATADIR}"/share/shed_tools
     mv "${GALAXYDIR}"/static/welcome.html "${DATADIR}"/html
     ln -s "${DATADIR}"/html/welcome.html "${GALAXYDIR}"/static/welcome.html
 
@@ -167,7 +186,8 @@ component-webapp:
     install -Dm600 destinations.yml "${cw_ROOT}"/etc/galaxy/destinations.yml
     install -Dm600 etc/galaxy/galaxy.rc "${cw_ROOT}"/etc/galaxy/galaxy.rc
     sed -i -e "s,_cw_ROOT_,${cw_ROOT},g" "${cw_ROOT}"/etc/galaxy/galaxy.rc
-    chown galaxy "${cw_ROOT}"/etc/galaxy/destinations.yml
+    touch "${cw_ROOT}"/etc/galaxy/state.yml
+    chown galaxy "${cw_ROOT}"/etc/galaxy/destinations.yml "${cw_ROOT}"/etc/galaxy/state.yml
 
     secret="$(dd if=/dev/urandom bs=1 count=18 2>/dev/null | base64)"
     sed -e "s,_SECRET_,${secret},g" -i "${cw_ROOT}"/etc/galaxy/destinations.yml
@@ -238,7 +258,6 @@ component-pulsar:
     }
   _: |
     mkdir -p /var/log/galaxy "${cw_ROOT}"/etc/galaxy/pulsar "${cw_ROOT}"/etc/ssl
-    mkdir -p "${cw_ROOT}"/var/lib/galaxy/pulsar/shed-tool-deps
     cp pulsar/etc/logrotate.d/* "${cw_ROOT}"/etc/logrotate.d
     cp -p pulsar/ssl/* "${cw_ROOT}"/etc/ssl
     chmod 0600 "${cw_ROOT}"/etc/ssl/*_key.pem
@@ -266,13 +285,13 @@ build:
   el6: |
     yum install -y postgresql-server pcre-devel openssl-devel \
       postgresql-devel sqlite-devel libffi-devel python-devel \
-      python-setuptools
+      python-setuptools ncurses-devel zlib-devel
     pyver=2.6
     pulsar_pidfile=/var/run/clusterware-galaxy-pulsar.pid
   el7: |
     yum install -y postgresql-server pcre-devel openssl-devel \
       postgresql-devel sqlite-devel libffi-devel python-devel \
-      python-setuptools
+      python-setuptools ncurses-devel zlib-devel
     pyver=2.7
     pulsar_pidfile=/run/clusterware-galaxy/pulsar.pid
   _: |
