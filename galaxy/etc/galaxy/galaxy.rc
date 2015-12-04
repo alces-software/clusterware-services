@@ -4,6 +4,7 @@
 ## Copyright (c) 2015 Alces Software Ltd
 ##
 ################################################################################
+PATH=_cw_ROOT_/opt/galaxy/samtools/bin:_cw_ROOT_/opt/git/bin:$PATH
 #export SGE_ROOT=_cw_ROOT_/opt/gridscheduler
 #export SGE_CELL=etc
 #export SGE_CLUSTER_NAME=cluster
