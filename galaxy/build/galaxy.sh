@@ -52,6 +52,20 @@ fi
 
 sed -i -e 's,^#database_connection = postgresql,database_connection = postgresql,g' -e 's,^database_connection = sqlite,#database_connection = sqlite,g' config/galaxy.ini
 ./run.sh &>/dev/null || true
+
+patch <<EOF
+--- lib/galaxy/jobs/runners/drmaa.py.orig	2015-11-30 19:39:17.000000000 +0000
++++ lib/galaxy/jobs/runners/drmaa.py	2015-12-03 18:24:48.002121062 +0000
+@@ -138,6 +138,7 @@
+         jt.workingDirectory = job_wrapper.working_directory
+         jt.outputPath = ":%s" % ajs.output_file
+         jt.errorPath = ":%s" % ajs.error_file
++        jt.joinFiles = False
+ 
+         # Avoid a jt.exitCodePath for now - it's only used when finishing.
+         native_spec = job_destination.params.get('nativeSpecification', None)
+EOF
+
 popd
 
 rm -f /tmp/release_15.10.zip
