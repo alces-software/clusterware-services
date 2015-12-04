@@ -78,7 +78,7 @@ server {
     }
 
     location /_upload {
-        upload_store _ROOT_/var/lib/galaxy/database/tmp/upload_store;
+        upload_store _ROOT_/opt/galaxy/galaxy/database/tmp/upload_store;
         upload_pass_form_field "";
         upload_set_form_field "__${upload_field_name}__is_composite" "true";
         upload_set_form_field "__${upload_field_name}__keys" "name path";
