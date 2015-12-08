@@ -53,7 +53,7 @@ fi
 sed -i -e 's,^#database_connection = postgresql,database_connection = postgresql,g' -e 's,^database_connection = sqlite,#database_connection = sqlite,g' config/galaxy.ini
 ./run.sh &>/dev/null || true
 
-patch <<EOF
+patch -p0 <<EOF
 --- lib/galaxy/jobs/runners/drmaa.py.orig	2015-11-30 19:39:17.000000000 +0000
 +++ lib/galaxy/jobs/runners/drmaa.py	2015-12-03 18:24:48.002121062 +0000
 @@ -138,6 +138,7 @@

@@ -31,7 +31,7 @@ easy_install --prefix="${cw_ROOT}"/opt/galaxy/pulsar pyOpenSSL
 easy_install --prefix="${cw_ROOT}"/opt/galaxy/pulsar drmaa
 
 pushd "${cw_ROOT}"/opt/galaxy/pulsar/lib/python${pyver}/site-packages/pulsar_app-*.egg
-patch <<EOF
+patch -p0 <<EOF
 --- pulsar/managers/util/job_script/DEFAULT_JOB_FILE_TEMPLATE.sh.orig	2015-12-03 16:07:24.561674962 +0000
 +++ pulsar/managers/util/job_script/DEFAULT_JOB_FILE_TEMPLATE.sh	2015-12-03 16:08:58.462674935 +0000
 @@ -4,11 +4,7 @@
