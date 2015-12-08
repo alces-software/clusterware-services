@@ -57,6 +57,7 @@ def job_dispatcher(app, user_email, user, job, tool, tool_id):
     with open("_cw_ROOT_/etc/galaxy/destinations.yml", 'r') as stream:
         cfg = yaml.load(stream)
 
+    native_spec = None
     # first check to see if we have any specific configuration for a tool_id
     if 'tools' in cfg:
         tools_cfg = cfg['tools']

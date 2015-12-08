@@ -257,7 +257,8 @@ component-pulsar:
     EOF
     }
   _: |
-    mkdir -p /var/log/galaxy "${cw_ROOT}"/etc/galaxy/pulsar "${cw_ROOT}"/etc/ssl
+    mkdir -p /var/log/galaxy "${cw_ROOT}"/etc/galaxy/pulsar \
+      "${cw_ROOT}"/var/lib/galaxy/pulsar "${cw_ROOT}"/etc/ssl
     cp pulsar/etc/logrotate.d/* "${cw_ROOT}"/etc/logrotate.d
     cp -p pulsar/ssl/* "${cw_ROOT}"/etc/ssl
     chmod 0600 "${cw_ROOT}"/etc/ssl/*_key.pem

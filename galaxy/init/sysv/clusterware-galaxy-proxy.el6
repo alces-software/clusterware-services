@@ -25,7 +25,6 @@ DAEMON_CMD="_cw_ROOT_/opt/galaxy/bin/nginx"
 start()
 {
   echo -n Starting Clusterware Galaxy Proxy:
-  cd $DAEMON_HOME
   $DAEMON_CMD
   sleep 2
   PID=`pidofproc -p $PID_FILE`
@@ -52,7 +51,6 @@ restart()
   PID=`pidofproc -p $PID_FILE`
   kill $PID
   sleep 1
-  cd $DAEMON_HOME
   $DAEMON_CMD
   PID=`pidofproc -p $PID_FILE`
   if [ -n $PID ]; then
