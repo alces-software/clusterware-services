@@ -182,6 +182,13 @@ component-webapp:
     secret="$(dd if=/dev/urandom bs=24 count=2 2>/dev/null | md5sum | cut -d' ' -f1)"
     sed -e "s,_SECRET_,${secret},g" -i "$DATADIR"/config/galaxy.ini
 
+    sed -e "s,^file_path.*,file_path = ${DATADIR}/share/database/files" \
+      -e "s,^new_file_path.*,new_file_path = ${DATADIR}/share/database/tmp" \
+      -e "s,^tool_dependency_dir.*,tool_dependency_dir = ${DATADIR}/share/shed-tool-deps" \
+      -e "s,^tool_data_path.*,tool_data_path = ${DATADIR}/share/tool-data" \
+      -e "s,^shed_tool_data_path.*,shed_tool_data_path = ${DATADIR}/share/tool-data" \
+      -i "${DATADIR}"/config/galaxy.ini
+
     mkdir -p "${cw_ROOT}"/etc/galaxy
     install -Dm600 destinations.yml "${cw_ROOT}"/etc/galaxy/destinations.yml
     install -Dm600 etc/galaxy/galaxy.rc "${cw_ROOT}"/etc/galaxy/galaxy.rc
