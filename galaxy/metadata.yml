@@ -182,11 +182,11 @@ component-webapp:
     secret="$(dd if=/dev/urandom bs=24 count=2 2>/dev/null | md5sum | cut -d' ' -f1)"
     sed -e "s,_SECRET_,${secret},g" -i "$DATADIR"/config/galaxy.ini
 
-    sed -e "s,^file_path.*,file_path = ${DATADIR}/share/database/files" \
-      -e "s,^new_file_path.*,new_file_path = ${DATADIR}/share/database/tmp" \
-      -e "s,^tool_dependency_dir.*,tool_dependency_dir = ${DATADIR}/share/shed-tool-deps" \
-      -e "s,^tool_data_path.*,tool_data_path = ${DATADIR}/share/tool-data" \
-      -e "s,^shed_tool_data_path.*,shed_tool_data_path = ${DATADIR}/share/tool-data" \
+    sed -e "s,^file_path.*,file_path = ${DATADIR}/share/database/files,g" \
+      -e "s,^new_file_path.*,new_file_path = ${DATADIR}/share/database/tmp,g" \
+      -e "s,^tool_dependency_dir.*,tool_dependency_dir = ${DATADIR}/share/shed-tool-deps,g" \
+      -e "s,^tool_data_path.*,tool_data_path = ${DATADIR}/share/tool-data,g" \
+      -e "s,^shed_tool_data_path.*,shed_tool_data_path = ${DATADIR}/share/tool-data,g" \
       -i "${DATADIR}"/config/galaxy.ini
 
     mkdir -p "${cw_ROOT}"/etc/galaxy
