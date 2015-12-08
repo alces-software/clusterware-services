@@ -1,0 +1,62 @@
+#==============================================================================
+# Copyright (C) 2015 Stephen F. Norledge and Alces Software Ltd.
+#
+# This file/package is part of Alces Clusterware.
+#
+# Alces Clusterware is free software: you can redistribute it and/or
+# modify it under the terms of the GNU Affero General Public License
+# as published by the Free Software Foundation, either version 3 of
+# the License, or (at your option) any later version.
+#
+# Alces Clusterware is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this package.  If not, see <http://www.gnu.org/licenses/>.
+#
+# For more information on the Alces Clusterware, please visit:
+# https://github.com/alces-software/clusterware
+#==============================================================================
+---
+install:
+  _: |
+    . "${cw_ROOT}"/etc/serviceware.rc
+    . "${cw_ROOT}"/etc/distro.rc
+    curl -# -L "${cw_DIST_URL}/${cw_DIST}"/simp_le.tar.gz | tar -C "${cw_ROOT}" -xz
+build:
+  el7: |
+    yum install -y libffi-devel openssl-devel
+    pyver=2.7
+    _post_build() {
+      :
+    }
+  el6: |
+    yum install -y libffi-devel openssl-devel
+    pyver=2.6
+    _post_build() {
+      sed -e "/^import sys/a\\
+    import warnings\\
+    warnings.filterwarnings('ignore')" \
+      -i bin/simp_le
+    }
+  _: |
+    curl -L "https://github.com/kuba/simp_le/archive/7caa31c189dc72a0f18e4fcc021132212f6848d1.zip" -o /tmp/simp_le-source.zip
+    cd /tmp
+    unzip simp_le-source.zip
+    cd simp_le-7caa31c189dc72a0f18e4fcc021132212f6848d1
+    export PYTHONPATH="${cw_ROOT}"/opt/simp_le/lib/python${pyver}/site-packages
+    mkdir -p "${cw_ROOT}"/opt/simp_le/lib/python${pyver}/site-packages
+    easy_install --install-dir "${cw_ROOT}"/opt/simp_le/lib/python${pyver}/site-packages mock==1.0.1
+    python setup.py install --prefix="${cw_ROOT}"/opt/simp_le
+    cd "${cw_ROOT}"/opt/simp_le
+    mv lib/python${pyver}/site-packages/* lib
+    rm -rf lib/python${pyver}
+    rm bin/easy_install* bin/jws bin/ndg_httpclient
+    sed -e "/^import sys/a\\
+    import os\\
+    sys.path.append(os.path.abspath(os.path.dirname(os.path.abspath(__file__)) + '/../lib'))" \
+      -i bin/simp_le
+    _post_build
+    rm -rf /tmp/simp_le-source.zip /tmp/simp_le-7caa31c189dc72a0f18e4fcc021132212f6848d1
