@@ -135,6 +135,12 @@ component-webapp:
         systemctl enable clusterware-galaxy-ftpd.service
     }
   _: |
+    _generate_password() {
+        dd if=/dev/urandom bs=20 count=1 2>/dev/null | base64 | tr '/+' '_' | cut -c1-10
+    }
+
+    require files
+
     mkdir -p /var/log/galaxy "${cw_ROOT}"/etc/ssl
     chmod 750 /var/log/galaxy
     cp -p etc/ssl/* "${cw_ROOT}"/etc/ssl
@@ -217,21 +223,43 @@ component-webapp:
       su postgres -c 'createdb -O galaxy galaxy'
       export PGPASSWORD="${password}"
       zcat galaxy.sql.gz | psql -U galaxy &>/dev/null
-      pushd "${GALAXYDIR}"
-      ./run.sh &
-      GALAXYPID=$!
-      if [ "$GALAXYPID" ]; then
-        # wait until it's listening on port
-        while ps $GALAXYPID >/dev/null && ! ss -ln | grep -q 'LISTEN.*:6414 '; do
-          sleep 5
-        done
-        curl -X POST --data 'create_user_button=Submit&email=admin%40alces.network&password=changeme&confirm=changeme&username=galaxy-admin' http://localhost:6414/user/create &>/dev/null
-        # kill background process
-        kill $GALAXYPID
-        pkill -f "paster.py serve config/galaxy.ini"
-      fi
-      popd
     fi
+
+    files_load_config config config/cluster
+    sane_cluster_name="$(echo "${cw_CLUSTER_name}" | tr "[A-Z]" "[a-z]" | sed -e 's/[^a-z0-9_]/-/g' -e 's/-[-]*/-/g' -e 's/-$//g')"
+
+    if "${cw_ROOT}"/libexec/share/allocate-ssl-certificate "${sane_cluster_name}"; then
+      rm -f "${cw_ROOT}/etc/ssl/clusterware-galaxy-proxy_crt.pem" \
+        "${cw_ROOT}/etc/ssl/clusterware-galaxy-proxy_key.pem"
+      ln -s "${cw_ROOT}/etc/ssl/cluster/fullchain.pem" "${cw_ROOT}/etc/ssl/clusterware-galaxy-proxy_crt.pem"
+      ln -s "${cw_ROOT}/etc/ssl/cluster/key.pem" "${cw_ROOT}/etc/ssl/clusterware-galaxy-proxy_key.pem"
+    fi
+    files_load_config meta
+    domain="${cw_META_hostname:-${sane_cluster_name}.alces.network}"
+    password=$(_generate_password)
+
+    pushd "${GALAXYDIR}"
+    ./run.sh &
+    GALAXYPID=$!
+    if [ "$GALAXYPID" ]; then
+      # wait until it's listening on port
+      while ps $GALAXYPID >/dev/null && ! ss -ln | grep -q 'LISTEN.*:6414 '; do
+        sleep 5
+      done
+      curl -X POST --data "create_user_button=Submit&email=admin%40${domain}&password=${password}&confirm=${password}&username=galaxy-admin" http://localhost:6414/user/create &>/dev/null
+      echo "cw_META_galaxy_admin_desc=\"Galaxy - admin username\"" >> "${cw_ROOT}"/etc/meta.rc
+      echo "cw_META_galaxy_admin=\"admin@${domain}\"" >> "${cw_ROOT}"/etc/meta.rc
+      echo "cw_META_galaxy_admin_password_desc=\"Galaxy - admin password\"" >> "${cw_ROOT}"/etc/meta.rc
+      echo "cw_META_galaxy_admin_password=\"${password}\"" >> "${cw_ROOT}"/etc/meta.rc
+      echo "cw_META_galaxy_url_desc=\"Galaxy - access point\"" >> "${cw_ROOT}"/etc/meta.rc
+      echo "cw_META_galaxy_url=\"https://${domain}:64443/\"" >> "${cw_ROOT}"/etc/meta.rc
+      sed -i -e "s/^admin_users = .*/admin_users = admin@${domain}/g" \
+        "$DATADIR"/config/galaxy.ini
+      # kill background process
+      kill $GALAXYPID
+      pkill -f "paster.py serve config/galaxy.ini"
+    fi
+    popd
 
     enable_galaxy
 
