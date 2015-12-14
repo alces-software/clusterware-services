@@ -36,20 +36,6 @@ mkdir shed-tool-deps
 ./run.sh
 rm -f "${GALAXYDIR}"/config/job_conf.xml
 
-# run in background
-./run.sh &
-GALAXYPID=$!
-if [ "$GALAXYPID" ]; then
-    # wait until it's listening on port
-    while ps $GALAXYPID >/dev/null && ! ss -ln | grep -q 'LISTEN.*:6414 '; do
-        sleep 5
-    done
-    curl -X POST --data 'create_user_button=Submit&email=admin%40alces.network&password=changeme&confirm=changeme&username=galaxy-admin' http://localhost:6414/user/create &>/dev/null
-    # kill background process
-    kill $GALAXYPID
-    pkill -f "paster.py serve config/galaxy.ini"
-fi
-
 sed -i -e 's,^#database_connection = postgresql,database_connection = postgresql,g' -e 's,^database_connection = sqlite,#database_connection = sqlite,g' config/galaxy.ini
 ./run.sh &>/dev/null || true
 
