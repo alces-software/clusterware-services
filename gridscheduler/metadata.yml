@@ -155,4 +155,17 @@ component-execd:
   _: |
     mkdir -p /var/spool/gridscheduler
     chown geadmin:geadmin /var/spool/gridscheduler
+
+    cat << EOF > /etc/security/limits.d/99-clusterware-80-gridscheduler.conf
+    ################################################################################
+    ##
+    ## Alces Clusterware - System configuration
+    ## Copyright (c) 2015 Alces Software Ltd
+    ##
+    ################################################################################
+    # Allow all users to lock all memory
+    * soft memlock unlimited
+    * hard memlock unlimited
+    EOF
+
     enable_execd

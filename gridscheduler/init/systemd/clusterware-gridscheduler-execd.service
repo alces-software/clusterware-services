@@ -12,6 +12,7 @@ After=network.target
 
 [Service]
 Type=forking
+LimitMEMLOCK=infinity
 Environment=SGE_ROOT=_cw_ROOT_/opt/gridscheduler
 Environment=SGE_CELL=etc
 ExecStart=_cw_ROOT_/opt/gridscheduler/bin/linux-x64/sge_execd
