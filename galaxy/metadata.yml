@@ -235,7 +235,7 @@ component-webapp:
       ln -s "${cw_ROOT}/etc/ssl/cluster/key.pem" "${cw_ROOT}/etc/ssl/clusterware-galaxy-proxy_key.pem"
     fi
     files_load_config meta
-    domain="${cw_META_hostname:-${sane_cluster_name}.alces.network}"
+    domain="${cw_META_fqdn:-${sane_cluster_name}.alces.network}"
     password=$(_generate_password)
 
     pushd "${GALAXYDIR}"
