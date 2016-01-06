@@ -47,7 +47,7 @@ build:
   _: |
     curl -L "https://github.com/alces-software/alces-storage-manager-daemon/archive/master.zip" -o /tmp/asmd.zip
     cd "${cw_ROOT}"/opt
-    unzip asmd.zip
+    unzip /tmp/asmd.zip
     mv alces-storage-manager-daemon-master alces-storage-manager-daemon
     cd alces-storage-manager-daemon
     rm -rf log script tasks Rakefile
