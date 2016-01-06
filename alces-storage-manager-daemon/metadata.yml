@@ -52,5 +52,6 @@ build:
     cd alces-storage-manager-daemon
     rm -rf log script tasks Rakefile
     PATH="${cw_ROOT}"/opt/git/bin:$PATH
+    export ALCES_RUBY_VERSION=$("${cw_ROOT}"/opt/ruby/bin/ruby -se 'puts RUBY_VERSION')
     "${cw_ROOT}"/opt/ruby/bin/bundle install --local --path=vendor
     rm -rf vendor/cache config/etc config/ssl *.yml.ex
