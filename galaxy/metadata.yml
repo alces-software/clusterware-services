@@ -96,8 +96,8 @@ component-webapp:
             > /etc/systemd/system/clusterware-galaxy.service
         systemctl enable clusterware-galaxy.service
         mkdir -p "${cw_ROOT}"/libexec/galaxy
-        cp libexec/* "${cw_ROOT}"/libexec/galaxy
-        chmod 755 "${cw_ROOT}"/libexec/galaxy/*
+        cp libexec/galaxy-starter "${cw_ROOT}"/libexec/galaxy
+        chmod 755 "${cw_ROOT}"/libexec/galaxy/galaxy-starter
         mkdir -p /run/clusterware-galaxy
         chown galaxy /run/clusterware-galaxy
         cat <<EOF > /etc/tmpfiles.d/clusterware-galaxy
@@ -284,6 +284,9 @@ component-pulsar:
             init/systemd/clusterware-galaxy-pulsar.service \
             > /etc/systemd/system/clusterware-galaxy-pulsar.service
         systemctl enable clusterware-galaxy-pulsar.service
+        mkdir -p "${cw_ROOT}"/libexec/galaxy
+        cp libexec/pulsar-starter "${cw_ROOT}"/libexec/galaxy
+        chmod 755 "${cw_ROOT}"/libexec/galaxy/pulsar-starter
         mkdir -p /run/clusterware-galaxy
         chown galaxy /run/clusterware-galaxy
         cat <<EOF > /etc/tmpfiles.d/clusterware-galaxy
