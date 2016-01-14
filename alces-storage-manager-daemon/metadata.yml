@@ -21,6 +21,7 @@ component-base:
         systemctl enable clusterware-alces-storage-manager-daemon.service
     }
   _: |
+    port="${1:-25268}"
     mkdir -p /var/log/alces-storage-manager-daemon "${cw_ROOT}"/etc/ssl
     cp etc/logrotate.d/* "${cw_ROOT}"/etc/logrotate.d
     cp -R etc/ssl/* "${cw_ROOT}"/etc/ssl
@@ -30,7 +31,7 @@ component-base:
 
     cat <<EOF > "${cw_ROOT}"/opt/alces-storage-manager-daemon/config/storage-manager-daemon.yml
     interfaces: ['*']
-    port: 25268
+    port: ${port}
     log_file: /var/log/alces-storage-manager-daemon/daemon.log
     configs:
       - ssl
