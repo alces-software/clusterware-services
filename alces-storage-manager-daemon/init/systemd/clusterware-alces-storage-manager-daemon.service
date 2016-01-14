@@ -1,7 +1,7 @@
 ################################################################################
 ##
 ## Alces Clusterware - Systemd service unit file
-## Copyright (c) 2015 Alces Software Ltd
+## Copyright (c) 2015-2016 Alces Software Ltd
 ##
 ################################################################################
 # Alces Storage Manager Daemon (systemd service unit)
@@ -11,9 +11,7 @@ After=network.target
 
 [Service]
 Type=forking
-EnvironmentFile=_cw_ROOT_/etc/ruby.rc
-Environment=HOME=/root
-ExecStart=_cw_ROOT_/opt/alces-storage-manager-daemon/bin/alces-storage-manager-daemon start --pidfile /var/run/alces-storage-manager-daemon.pid -l /var/log/alces-storage-manager-daemon/runtime.log -e production
+ExecStart=_cw_ROOT_/libexec/alces-storage-manager-daemon/alces-storage-manager-daemon-starter
 PIDFile=/var/run/alces-storage-manager-daemon.pid
 
 [Install]
