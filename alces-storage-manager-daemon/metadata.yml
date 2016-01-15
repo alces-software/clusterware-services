@@ -43,6 +43,7 @@ component-base:
     root: ${cw_ROOT}/etc/ssl/alces-storage-manager-daemon
     certificate: cert.pem
     key: key.pem
+    verify: false
     ca: alces-ca_crt.pem
     EOF
 
