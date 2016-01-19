@@ -100,7 +100,7 @@ component-webapp:
         chmod 755 "${cw_ROOT}"/libexec/galaxy/galaxy-starter
         mkdir -p /run/clusterware-galaxy
         chown galaxy /run/clusterware-galaxy
-        cat <<EOF > /etc/tmpfiles.d/clusterware-galaxy
+        cat <<EOF > /etc/tmpfiles.d/clusterware-galaxy.conf
     # Clusterware Galaxy runtime directory
     d /run/clusterware-galaxy 0755 galaxy root -
     EOF
@@ -305,7 +305,7 @@ component-pulsar:
         chmod 755 "${cw_ROOT}"/libexec/galaxy/pulsar-starter
         mkdir -p /run/clusterware-galaxy
         chown galaxy /run/clusterware-galaxy
-        cat <<EOF > /etc/tmpfiles.d/clusterware-galaxy
+        cat <<EOF > /etc/tmpfiles.d/clusterware-galaxy.conf
     # Clusterware Galaxy runtime directory
     d /run/clusterware-galaxy 0755 galaxy root -
     EOF
