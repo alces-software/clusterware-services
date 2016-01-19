@@ -228,13 +228,29 @@ component-webapp:
     files_load_config config config/cluster
     sane_cluster_name="$(echo "${cw_CLUSTER_name}" | tr "[A-Z]" "[a-z]" | sed -e 's/[^a-z0-9_]/-/g' -e 's/-[-]*/-/g' -e 's/-$//g')"
 
-    if "${cw_ROOT}"/libexec/share/allocate-ssl-certificate "${sane_cluster_name}"; then
+    if [ ! -f "${cw_ROOT}"/etc/ssl/cluster/cert.pem ]; then
+      "${cw_ROOT}"/libexec/share/allocate-ssl-certificate "${sane_cluster_name}"
+    fi
+
+    files_load_config meta
+
+    if [ -z "${cw_META_fqdn}" ]; then
+      # SSL allocation was skipped, use our current hostname for meta
+      cw_META_fqdn="$(hostname -f)"
+      cw_META_hostname="$(hostname -s)"
+      echo "cw_META_fqdn_desc=\"Public host name\"" >> "${cw_ROOT}"/etc/meta.rc
+      echo "cw_META_fqdn=\"${cw_META_fqdn}\"" >> "${cw_ROOT}"/etc/meta.rc
+      echo "cw_META_hostname_desc=\"Clusterware name\"" >> "${cw_ROOT}"/etc/meta.rc
+      echo "cw_META_hostname=\"${cw_META_hostname}\"" >> "${cw_ROOT}"/etc/meta.rc
+    fi
+
+    if [ -f "${cw_ROOT}"/etc/ssl/cluster/cert.pem ]; then
       rm -f "${cw_ROOT}/etc/ssl/clusterware-galaxy-proxy_crt.pem" \
         "${cw_ROOT}/etc/ssl/clusterware-galaxy-proxy_key.pem"
       ln -s "${cw_ROOT}/etc/ssl/cluster/fullchain.pem" "${cw_ROOT}/etc/ssl/clusterware-galaxy-proxy_crt.pem"
       ln -s "${cw_ROOT}/etc/ssl/cluster/key.pem" "${cw_ROOT}/etc/ssl/clusterware-galaxy-proxy_key.pem"
     fi
-    files_load_config meta
+
     domain="${cw_META_fqdn:-${sane_cluster_name}.alces.network}"
     password=$(_generate_password)
 
