@@ -28,7 +28,6 @@ component-base:
     mkdir -p /var/log/alces-storage-manager-daemon "${cw_ROOT}"/etc/ssl
     cp etc/logrotate.d/* "${cw_ROOT}"/etc/logrotate.d
     cp -R etc/ssl/* "${cw_ROOT}"/etc/ssl
-    chmod 0600 "${cw_ROOT}"/etc/ssl/alces-storage-manager-daemon/*_key.pem
 
     cp dist/pam.d/rpam /etc/pam.d
 
