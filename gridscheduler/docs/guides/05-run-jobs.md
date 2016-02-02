@@ -75,7 +75,11 @@ by specifying them on the command line. For example:
  * `-l h_vmem=4g`:
 
    How much memory you will potentially want to use in this session;
-   the session will be terminated if you use more than you request
+   the session will be terminated if you use more than you
+   request. Note that this request is per slot, so if you are
+   requesting multiple slots/cores for your job, you should divide the
+   total amount of memory you want to use by the number of slots you
+   are requesting.
 
  * `-pe smp 2`:
 
