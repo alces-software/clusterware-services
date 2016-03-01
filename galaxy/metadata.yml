@@ -251,7 +251,7 @@ component-webapp:
     password=$(_generate_password)
 
     pushd "${GALAXYDIR}"
-    ./run.sh &
+    sudo -u galaxy "./run.sh" &
     GALAXYPID=$!
     if [ "$GALAXYPID" ]; then
       # wait until it's listening on port
