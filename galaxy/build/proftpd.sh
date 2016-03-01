@@ -30,6 +30,5 @@ make
 make install
 popd
 install -Dm640 build/proftpd.conf.tpl "$SERVICEDIR"/etc/proftpd.conf
-sed -e "s,_cw_ROOT_,${cw_ROOT},g" -i "$SERVICEDIR"/etc/proftpd.conf
 
 rm -rf /tmp/proftpd-1.3.5a.tar.gz /tmp/proftpd-1.3.5a

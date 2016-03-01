@@ -44,7 +44,6 @@ component-webapp:
             init/sysv/clusterware-galaxy.el6 \
             > /etc/init.d/clusterware-galaxy
         chmod 755 /etc/init.d/clusterware-galaxy
-        chkconfig clusterware-galaxy on
     }
 
     enable_postgres() {
@@ -67,7 +66,6 @@ component-webapp:
             init/sysv/clusterware-galaxy-proxy.el6 \
             > /etc/init.d/clusterware-galaxy-proxy
         chmod 755 /etc/init.d/clusterware-galaxy-proxy
-        chkconfig clusterware-galaxy-proxy on
     }
 
     enable_ftpd() {
@@ -75,7 +73,7 @@ component-webapp:
             init/sysv/clusterware-galaxy-ftpd.el6 \
             > /etc/init.d/clusterware-galaxy-ftpd
         chmod 755 /etc/init.d/clusterware-galaxy-ftpd
-        chkconfig clusterware-galaxy-ftpd on
+        sed -e "s,_cw_ROOT_,${cw_ROOT},g" -i "${cw_ROOT}"/opt/galaxy/etc/proftpd.conf
     }
   el7: |
     if [ "$1" == "--no-postgres" ]; then
@@ -94,7 +92,6 @@ component-webapp:
         sed -e "s,_cw_ROOT_,${cw_ROOT},g" \
             init/systemd/clusterware-galaxy.service \
             > /etc/systemd/system/clusterware-galaxy.service
-        systemctl enable clusterware-galaxy.service
         mkdir -p "${cw_ROOT}"/libexec/galaxy
         cp libexec/galaxy-starter "${cw_ROOT}"/libexec/galaxy
         chmod 755 "${cw_ROOT}"/libexec/galaxy/galaxy-starter
@@ -125,14 +122,13 @@ component-webapp:
         sed -e "s,_cw_ROOT_,${cw_ROOT},g" \
             init/systemd/clusterware-galaxy-proxy.service \
             > /etc/systemd/system/clusterware-galaxy-proxy.service
-        systemctl enable clusterware-galaxy-proxy.service
     }
 
     enable_ftpd() {
         sed -e "s,_cw_ROOT_,${cw_ROOT},g" \
             init/systemd/clusterware-galaxy-ftpd.service \
             > /etc/systemd/system/clusterware-galaxy-ftpd.service
-        systemctl enable clusterware-galaxy-ftpd.service
+        sed -e "s,_cw_ROOT_,${cw_ROOT},g" -i "${cw_ROOT}"/opt/galaxy/etc/proftpd.conf
     }
   _: |
     _generate_password() {
@@ -283,23 +279,21 @@ component-webapp:
     enable_ftpd
 component-pulsar:
   el6: |
-    yum install -y python-setuptools
+    yum install -y python-setuptools java-1.8.0-openjdk-devel
 
     enable_pulsar() {
         sed -e "s,_cw_ROOT_,${cw_ROOT},g" \
             init/sysv/clusterware-galaxy-pulsar.el6 \
             > /etc/init.d/clusterware-galaxy-pulsar
         chmod 755 /etc/init.d/clusterware-galaxy-pulsar
-        chkconfig clusterware-galaxy-pulsar on
     }
   el7: |
-    yum install -y python-setuptools
+    yum install -y python-setuptools java-1.8.0-openjdk-devel
 
     enable_pulsar() {
         sed -e "s,_cw_ROOT_,${cw_ROOT},g" \
             init/systemd/clusterware-galaxy-pulsar.service \
             > /etc/systemd/system/clusterware-galaxy-pulsar.service
-        systemctl enable clusterware-galaxy-pulsar.service
         mkdir -p "${cw_ROOT}"/libexec/galaxy
         cp libexec/pulsar-starter "${cw_ROOT}"/libexec/galaxy
         chmod 755 "${cw_ROOT}"/libexec/galaxy/pulsar-starter
