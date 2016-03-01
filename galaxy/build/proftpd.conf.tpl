@@ -62,5 +62,5 @@ SQLPasswordUserSalt             sql:/GetUserSalt
 SQLUserInfo                     custom:/LookupGalaxyUser
 SQLNamedQuery                   LookupGalaxyUser SELECT "email, (CASE WHEN substring(password from 1 for 6) = 'PBKDF2' THEN substring(password from 38 for 69) ELSE password END) AS password2,361,361,'_cw_ROOT_/var/lib/galaxy/share/database/uploads/%U','/bin/bash' FROM galaxy_user WHERE email='%U'"
 SQLNamedQuery                   GetUserSalt SELECT "(CASE WHEN SUBSTRING (password from 1 for 6) = 'PBKDF2' THEN SUBSTRING (password from 21 for 16) END) AS salt FROM galaxy_user WHERE email='%U'"
-#SQLITE#SQLNamedQuery                   LookupGalaxyUser SELECT "email, substr(password,38,69) AS password2,361,361,'/opt/clusterware/var/lib/galaxy/share/database/uploads/%U','/bin/bash' FROM galaxy_user WHERE email='%U'"
+#SQLITE#SQLNamedQuery                   LookupGalaxyUser SELECT "email, substr(password,38,69) AS password2,361,361,'_cw_ROOT_/var/lib/galaxy/share/database/uploads/%U','/bin/bash' FROM galaxy_user WHERE email='%U'"
 #SQLITE#SQLNamedQuery                   GetUserSalt SELECT "substr(password,21,16) AS salt FROM galaxy_user WHERE email='%U'"
