@@ -24,6 +24,7 @@ ServerType                      standalone
 PidFile                         /var/run/clusterware-galaxy-ftpd.pid
 DefaultServer                   on
 Port                            21
+MasqueradeAddress               0.0.0.0
 Umask                           077
 SyslogFacility                  DAEMON
 SyslogLevel                     debug
