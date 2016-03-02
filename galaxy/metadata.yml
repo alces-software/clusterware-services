@@ -167,6 +167,7 @@ component-webapp:
       mv "${GALAXYDIR}"/$a "${DATADIR}"
       ln -s "${DATADIR}"/$a "${GALAXYDIR}"/$a
     done
+    mkdir -p "${DATADIR}"/share/pulsar
 
     mkdir "${DATADIR}"/html "${DATADIR}"/share/shed_tools
     mv "${GALAXYDIR}"/static/welcome.html "${DATADIR}"/html
@@ -315,7 +316,9 @@ component-pulsar:
     }
   _: |
     mkdir -p /var/log/galaxy "${cw_ROOT}"/etc/galaxy/pulsar \
-      "${cw_ROOT}"/var/lib/galaxy/pulsar "${cw_ROOT}"/etc/ssl
+      "${cw_ROOT}"/var/lib/galaxy/pulsar \
+      "${cw_ROOT}"/var/lib/galaxy/share/pulsar \
+      "${cw_ROOT}"/etc/ssl
     cp pulsar/etc/logrotate.d/* "${cw_ROOT}"/etc/logrotate.d
     cp -p pulsar/ssl/* "${cw_ROOT}"/etc/ssl
     chmod 0600 "${cw_ROOT}"/etc/ssl/*_key.pem
@@ -336,7 +339,9 @@ component-pulsar:
     chown galaxy "${cw_ROOT}"/etc/galaxy/pulsar/app.yml \
       "${cw_ROOT}"/etc/ssl/clusterware-galaxy-pulsar_crt_and_key.pem
 
-    chown -R galaxy:galaxy "${cw_ROOT}"/var/lib/galaxy/pulsar /var/log/galaxy
+    chown -R galaxy:galaxy "${cw_ROOT}"/var/lib/galaxy/share/pulsar \
+      "${cw_ROOT}"/var/lib/galaxy/pulsar \
+      /var/log/galaxy
 
     enable_pulsar
 build:
