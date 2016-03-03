@@ -1,0 +1,71 @@
+#==============================================================================
+# Copyright (C) 2016 Stephen F. Norledge and Alces Software Ltd.
+#
+# This file/package is part of Alces Clusterware.
+#
+# Alces Clusterware is free software: you can redistribute it and/or
+# modify it under the terms of the GNU Affero General Public License
+# as published by the Free Software Foundation, either version 3 of
+# the License, or (at your option) any later version.
+#
+# Alces Clusterware is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this package.  If not, see <http://www.gnu.org/licenses/>.
+#
+# For more information on the Alces Clusterware, please visit:
+# https://github.com/alces-software/clusterware
+#==============================================================================
+---
+install:
+  el7: |
+      yum install -y openssl net-tools lzo-minilzo
+  el6: |
+      yum install -y openssl net-tools lzo-minilzo
+  _: |
+    . "${cw_ROOT}"/etc/clusterware.rc
+    case "${cw_VERSION:-1.0.0}" in
+      1.[012].*)
+        . "${cw_ROOT}"/etc/serviceware.rc
+        . "${cw_ROOT}"/etc/distro.rc
+        curl -# -L "${cw_DIST_URL}/${cw_DIST}"/openvpn.tar.gz | tar -C "${cw_ROOT}" -xz
+      ;;
+      *)
+        require serviceware
+        serviceware_add openvpn
+      ;;
+    esac
+component-base:
+  el7: |
+    enable_openvpn() {
+        sed -e "s,_cw_ROOT_,${cw_ROOT},g" \
+            init/systemd/clusterware-openvpn@.service \
+            > /etc/systemd/system/clusterware-openvpn@.service
+        mkdir -p /run/clusterware-openvpn
+        cat <<EOF > /etc/tmpfiles.d/clusterware-openvpn.conf
+    # Clusterware OpenVPN runtime directory
+    d /run/clusterware-openvpn 0755 root root -
+    EOF
+    }
+  el6: |
+    enable_openvpn() {
+        sed -e "s,_cw_ROOT_,${cw_ROOT},g" \
+            init/sysv/clusterware-openvpn.el6 \
+            > /etc/init.d/clusterware-openvpn
+        chmod 755 /etc/init.d/clusterware-openvpn
+    }
+  _: |
+    enable_openvpn
+    mkdir -p "${cw_ROOT}"/etc/openvpn
+build:
+  _: |
+    curl -L "https://swupdate.openvpn.org/community/releases/openvpn-2.3.10.tar.gz" -o /tmp/openvpn-source.tar.gz
+    tar -C /tmp -xzf "/tmp/openvpn-source.tar.gz"
+    yum install -y openssl-devel net-tools lzo-devel pam-devel
+    cd /tmp/openvpn-2.3.10
+    ./configure --prefix=/opt/clusterware/opt/openvpn
+    make
+    make install

@@ -1,0 +1,172 @@
+#!/bin/bash
+################################################################################
+##
+## Alces Clusterware - SysVInit service file
+## Copyright (c) 2015 Alces Software Ltd
+##
+################################################################################
+# chkconfig: 2345 24 76
+# galaxy: start/stop OpenVPN
+# description: start/stop OpenVPN
+### BEGIN INIT INFO
+# Provides:       clusterware-openvpn
+# Required-Start: $network $remote_fs
+# Required-Stop: $network $remote_fs
+# Default-Start:  2 3 4 5
+# Default-Stop: 0 1 6
+# Description:  start/stop Clusterware OpenVPN servers
+### END INIT INFO
+
+# Adapted from a script contributed to the OpenVPN project by Douglas
+# Keller <doug@voidstar.dyndns.org> 2002.05.15
+
+openvpn="_cw_ROOT_/opt/openvpn/sbin/openvpn"
+lock="/var/lock/subsys/clusterware-openvpn"
+piddir="/var/run/clusterware-openvpn"
+work=_cw_ROOT_/etc/openvpn
+
+. /etc/rc.d/init.d/functions
+. /etc/sysconfig/network
+
+if [ ${NETWORKING} = "no" ]
+then
+  echo "Networking is down"
+  exit 0
+fi
+
+if ! [ -f "$openvpn" ] 
+then
+  echo "openvpn binary not found"
+  exit 0
+fi
+
+case "$1" in
+  start)
+	echo -n $"Starting openvpn: "
+
+	/sbin/modprobe tun >/dev/null 2>&1
+
+	# Run startup script, if defined
+	if [ -f $work/openvpn-startup ]; then
+	    $work/openvpn-startup
+	fi
+
+	if [ ! -d  $piddir ]; then
+	    mkdir $piddir
+	fi
+
+	if [ -f $lock ]; then
+	    # we were not shut down correctly
+	    for pidf in `/bin/ls $piddir/*.pid 2>/dev/null`; do
+	      if [ -s $pidf ]; then
+		kill `cat $pidf` >/dev/null 2>&1
+	      fi
+	      rm -f $pidf
+	    done
+	    rm -f $lock
+	    sleep 2
+	fi
+
+	rm -f $piddir/*.pid
+	cd $work
+
+	# Start every .conf in $work and run .sh if exists
+	errors=0
+	successes=0
+	for c in `/bin/ls *.conf 2>/dev/null`; do
+	    bn=${c%%.conf}
+	    if [ -f "$bn.sh" ]; then
+		. ./$bn.sh
+	    fi
+	    rm -f $piddir/$bn.pid
+	    $openvpn --daemon --writepid $piddir/$bn.pid --config $c --cd $work
+	    if [ $? = 0 ]; then
+		successes=1
+	    else
+		errors=1
+	    fi
+	done
+
+	if [ $errors = 1 ]; then
+	    failure; echo
+	else
+	    success; echo
+	fi
+
+	if [ $successes = 1 ]; then
+	    touch $lock
+	fi
+	;;
+  stop)
+	echo -n $"Shutting down openvpn: "
+	for pidf in `/bin/ls $piddir/*.pid 2>/dev/null`; do
+	  if [ -s $pidf ]; then
+	    kill `cat $pidf` >/dev/null 2>&1
+	  fi
+	  rm -f $pidf
+	done
+
+	# Run shutdown script, if defined
+	if [ -f $work/openvpn-shutdown ]; then
+	    $work/openvpn-shutdown
+	fi
+
+	success; echo
+	rm -f $lock
+	;;
+  restart)
+	$0 stop
+	sleep 2
+	$0 start
+	;;
+  reload)
+	if [ -f $lock ]; then
+	    for pidf in `/bin/ls $piddir/*.pid 2>/dev/null`; do
+		if [ -s $pidf ]; then
+		    kill -HUP `cat $pidf` >/dev/null 2>&1
+		fi
+	    done
+	else
+	    echo "openvpn: service not started"
+	    exit 1
+	fi
+	;;
+  reopen)
+	if [ -f $lock ]; then
+	    for pidf in `/bin/ls $piddir/*.pid 2>/dev/null`; do
+		if [ -s $pidf ]; then
+		    kill -USR1 `cat $pidf` >/dev/null 2>&1
+		fi
+	    done
+	else
+	    echo "openvpn: service not started"
+	    exit 1
+	fi
+	;;
+  condrestart)
+	if [ -f $lock ]; then
+	    $0 stop
+	    # avoid race
+	    sleep 2
+	    $0 start
+	fi
+	;;
+  status)
+	if [ -f $lock ]; then
+	    for pidf in `/bin/ls $piddir/*.pid 2>/dev/null`; do
+		if [ -s $pidf ]; then
+		    kill -USR2 `cat $pidf` >/dev/null 2>&1
+		fi
+	    done
+	    echo "Status written to /var/log/messages"
+	else
+	    echo "openvpn: service not started"
+	    exit 1
+	fi
+        ;;
+  *)
+	echo "Usage: openvpn {start|stop|restart|condrestart|reload|reopen|status}"
+	exit 1
+	;;
+esac
+exit 0
