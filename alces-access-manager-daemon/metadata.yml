@@ -1,0 +1,64 @@
+---
+install:
+  _: |
+    . "${cw_ROOT}"/etc/serviceware.rc
+    . "${cw_ROOT}"/etc/distro.rc
+    curl -# -L "${cw_DIST_URL}/${cw_DIST}"/alces-access-manager-daemon.tar.gz | tar -C "${cw_ROOT}" -xz
+component-base:
+  el6: |
+    enable_alces_access_manager_daemon() {
+        sed -e "s,_cw_ROOT_,${cw_ROOT},g" \
+            init/sysv/clusterware-alces-access-manager-daemon.el6 \
+            > /etc/init.d/clusterware-alces-access-manager-daemon
+        chmod 755 /etc/init.d/clusterware-alces-access-manager-daemon
+        chkconfig clusterware-alces-access-manager-daemon on
+    }
+  el7: |
+    enable_alces_access_manager_daemon() {
+        sed -e "s,_cw_ROOT_,${cw_ROOT},g" \
+            init/systemd/clusterware-alces-access-manager-daemon.service \
+            > /etc/systemd/system/clusterware-alces-access-manager-daemon.service
+        mkdir -p "${cw_ROOT}"/libexec/alces-access-manager-daemon
+        cp libexec/alces-access-manager-daemon-starter "${cw_ROOT}"/libexec/alces-access-manager-daemon
+        chmod 755 "${cw_ROOT}"/libexec/alces-access-manager-daemon/alces-access-manager-daemon-starter
+        systemctl enable clusterware-alces-access-manager-daemon.service
+    }
+  _: |
+    port="${1:-25269}"
+    mkdir -p /var/log/alces-access-manager-daemon "${cw_ROOT}"/etc/ssl
+    cp etc/logrotate.d/* "${cw_ROOT}"/etc/logrotate.d
+    cp -R etc/ssl/* "${cw_ROOT}"/etc/ssl
+
+    cp dist/pam.d/rpam /etc/pam.d
+
+    cat <<EOF > "${cw_ROOT}"/opt/alces-access-manager-daemon/config/access-manager-daemon.yml
+    interfaces: ['*']
+    port: ${port}
+    log_file: /var/log/alces-access-manager-daemon/daemon.log
+    configs:
+      - ssl
+    EOF
+    cat <<EOF > "${cw_ROOT}"/opt/alces-access-manager-daemon/config/ssl.yml
+    root: ${cw_ROOT}/etc/ssl/alces-access-manager-daemon
+    certificate: cert.pem
+    key: key.pem
+    verify: false
+    ca: alces-ca_crt.pem
+    EOF
+
+    enable_alces_access_manager_daemon
+build:
+  el7: |
+    yum install -y gmp-devel pam-devel openssl-devel gcc-c++
+  _: |
+    TREE=2016.01-pre
+    curl -L "https://github.com/alces-software/alces-access-manager-daemon/archive/$TREE.zip" -o /tmp/aamd.zip
+    cd "${cw_ROOT}"/opt
+    unzip /tmp/aamd.zip
+    mv alces-access-manager-daemon-$TREE alces-access-manager-daemon
+    cd alces-access-manager-daemon
+    rm -rf log script tasks Rakefile
+    PATH="${cw_ROOT}"/opt/git/bin:$PATH
+    export ALCES_RUBY_VERSION=$("${cw_ROOT}"/opt/ruby/bin/ruby -se 'puts RUBY_VERSION')
+    "${cw_ROOT}"/opt/ruby/bin/bundle install --without="development test" --local --path=vendor
+    rm -rf vendor/cache config/etc config/ssl config/*.yml.ex

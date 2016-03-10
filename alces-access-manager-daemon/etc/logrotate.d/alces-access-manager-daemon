@@ -1,0 +1,10 @@
+# Rotate Alces Access Manager Daemon logs
+/var/log/alces-access-manager-daemon/*.log {
+  daily
+  missingok
+  rotate 7
+  compress
+  delaycompress
+  notifempty
+  copytruncate
+}
