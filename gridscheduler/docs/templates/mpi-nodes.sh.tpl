@@ -142,7 +142,7 @@
 #     Specify a `G` suffix to request gigabytes. e.g. specify `61140`
 #     or `60G` for 60 gigabytes.
 #
-#$ -l h_vmem=60G
+#$ -l h_vmem=2G
 
 #========================
 #  Parallel environment
@@ -181,14 +181,6 @@
 # Load the OpenMPI module for access to `mpirun` command
 module load mpi/openmpi
 
-#===========================
-#  Create output directory
-#---------------------------
-# Specify and create an output file directory.
-
-OUTPUT_PATH="$(pwd)/$JOB_NAME/$JOB_ID"
-mkdir -p "$OUTPUT_PATH"
-
 #===============================
 #  Application launch commands
 #-------------------------------
@@ -198,6 +190,4 @@ echo "Executing job commands, current working directory is $(pwd)"
 
 # REPLACE THE FOLLOWING WITH YOUR APPLICATION COMMANDS
 
-mpirun -np 24 -npernode 12 echo "This is an example job, I ran on $NHOSTS hosts and had exclusive access to the hosts on which I ran. My master thread ran on `hostname -s` as `whoami`" > $OUTPUT_PATH/test.output
-
-echo "Output file has been generated, please check $OUTPUT_PATH/test.output"
+mpirun -np 2 -npernode 1 echo "This is an example job, I ran on $NHOSTS hosts and had exclusive access to the hosts on which I ran. My master thread ran on `hostname -s` as `whoami`"
