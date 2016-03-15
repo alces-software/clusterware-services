@@ -164,6 +164,14 @@
 # e.g.:
 # module load apps/imb
 
+#===========================
+#  Create output directory
+#---------------------------
+# Specify and create an output file directory.
+
+OUTPUT_PATH="$(pwd)/${JOB_NAME}-outputs/$JOB_ID"
+mkdir -p "$OUTPUT_PATH"
+
 #===============================
 #  Application launch commands
 #-------------------------------
@@ -173,4 +181,5 @@ echo "Executing job commands, current working directory is $(pwd)"
 
 # REPLACE THE FOLLOWING WITH YOUR APPLICATION COMMANDS
 
-echo "This is an example array job, I was task number $SGE_TASK_ID and I ran on `hostname -s` as `whoami`"
+echo "This is an example array job, I was task number $SGE_TASK_ID and I ran on `hostname -s` as `whoami`" > $OUTPUT_PATH/test.output.$SGE_TASK_ID
+echo "Output file has been generated, please check $OUTPUT_PATH/test.output"

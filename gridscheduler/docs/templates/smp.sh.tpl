@@ -183,6 +183,14 @@
 # e.g.:
 # module load apps/imb
 
+#===========================
+#  Create output directory
+#---------------------------
+# Specify and create an output file directory.
+
+OUTPUT_PATH="$(pwd)/${JOB_NAME}-outputs/$JOB_ID"
+mkdir -p "$OUTPUT_PATH"
+
 #===============================
 #  Application launch commands
 #-------------------------------
@@ -192,4 +200,5 @@ echo "Executing job commands, current working directory is $(pwd)"
 
 # REPLACE THE FOLLOWING WITH YOUR APPLICATION COMMANDS
 
-echo "This is an example job, I was allocated $NSLOTS slots on host `hostname -s` as `whoami`"
+echo "This is an example job, I was allocated $NSLOTS slots on host `hostname -s` as `whoami`" > $OUTPUT_PATH/test.output
+echo "Output file has been generated, please check $OUTPUT_PATH/test.output"
