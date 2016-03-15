@@ -110,15 +110,15 @@ your requirements:
 
    A simple job script for submitting single thread workflows.
 
- * `mpi-multislot`:
+ * `mpi-slots`:
 
    A job script to run workflows/applications that will run on
    multiple cores which don't necessarily have to be on the same
    compute node (e.g. MPI).
 
- * `mpi-multinode`:
+ * `mpi-nodes`:
 
-   Similar to `mpi-multislot` but with exclusive use of each allocated
+   Similar to `mpi-slots` but with exclusive use of each allocated
    node.
 
  * `smp`:

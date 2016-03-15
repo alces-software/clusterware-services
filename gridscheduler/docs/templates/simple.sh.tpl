@@ -138,7 +138,7 @@
 # megabytes.  Specify a `G` suffix to request gigabytes.
 # e.g. specify `4096` or `4G` for 4 gigabytes.
 #
-#$ -l h_vmem=4G
+#$ -l h_vmem=1G
 
 # ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 #  >>>> SET TASK ENVIRONMENT VARIABLES
@@ -164,7 +164,7 @@
 #---------------------------
 # Specify and create an output file directory.
 
-OUTPUT_PATH="$(pwd)/$JOB_NAME/$JOB_ID"
+OUTPUT_PATH="$(pwd)/${JOB_NAME}-outputs/$JOB_ID"
 mkdir -p "$OUTPUT_PATH"
 
 #===============================
