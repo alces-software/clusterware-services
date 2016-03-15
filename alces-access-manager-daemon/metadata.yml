@@ -51,7 +51,7 @@ build:
   el7: |
     yum install -y gmp-devel pam-devel openssl-devel gcc-c++
   _: |
-    TREE=2016.01-pre
+    TREE=develop
     curl -L "https://github.com/alces-software/alces-access-manager-daemon/archive/$TREE.zip" -o /tmp/aamd.zip
     cd "${cw_ROOT}"/opt
     unzip /tmp/aamd.zip
