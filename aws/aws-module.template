@@ -1,0 +1,102 @@
+#%Module1.0#####################################################################
+##
+## Alces HPC Software Stack - Service module file
+## Copyright (c) 2016 Alces Software Ltd
+##
+## path: services/aws
+################################################################################
+if { [info exists ::env(ALCES_TRACE)] } {
+    puts stderr " -> $::ModulesCurrentModulefile"
+}
+
+if { [namespace exists alces] == 0 } {
+    if { [info exists ::env(MODULES_ALCES_TCL)] } {
+        source $::env(MODULES_ALCES_TCL)
+    } else {
+        # compatibility mode for module use without availability of Alces tools
+        proc ::process {body} { eval $body }
+        proc ::depend {module {version ""} {_ ""}} {
+            set req [regsub {\-} $module {/}]/$version
+            if { [catch { prereq $req }] } {
+                puts stderr "Could not satisfy prereq: $req"
+                break
+            }
+        }
+        proc ::alces {_ module} { return $module }
+        proc ::search {_ _ _} { }
+    }
+}
+
+proc ModulesHelp { } {
+    puts stderr "
+                ===== AWS Command Line Interface ====
+        Universal Command Line Interface for Amazon Web Services
+                =====================================
+
+This module sets up your environment for the use of the 'aws'
+service. This module sets up version '1.10.19' of the service.
+
+
+>> SYNOPSIS <<
+
+The AWS Command Line Interface (CLI) is a unified tool to manage your
+AWS services. With just one tool to download and configure, you can
+control multiple AWS services from the command line and automate them
+through scripts.
+
+>> LICENSING <<
+
+This package is made available subject to the following license(s):
+
+\tApache License 2.0
+
+Please visit the website for further details regarding licensing.
+
+
+>> FURTHER INFORMATION <<
+
+More information about this software can be found at the website:
+
+\thttps://aws.amazon.com/cli/
+
+For further details regarding this module, including the environment
+modifications it will apply, execute:
+
+\tmodule show services/aws
+
+
+>> GET STARTED <<
+
+Please refer to the website for further details on usage of this
+package.
+"
+}
+
+set     app     aws
+set     version 1.10.19
+set     appcaps AWS
+set     appdir  _cw_ROOT_/opt/aws
+
+module-whatis   "
+
+            Title: AWS Command Line Interface
+          Summary: Universal Command Line Interface for Amazon Web Services
+          License: Apache License 2.0
+            Group: Alces/Services
+              URL: https://aws.amazon.com/cli/
+
+             Name: aws
+          Version: 1.10.19
+           Module: [alces pretty services/aws]
+      Module path: _cw_ROOT_/etc/modules/services/aws
+     Package path: _cw_ROOT_/opt/aws
+
+For further information, execute:
+
+\tmodule help services/aws
+"
+
+setenv ${appcaps}DIR ${appdir}
+setenv ${appcaps}BIN ${appdir}/bin
+
+prepend-path PATH ${appdir}/bin
