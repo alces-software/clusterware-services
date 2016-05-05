@@ -25,10 +25,7 @@ install:
         cp qdesktop.rc "${cw_ROOT}"/etc/qdesktop.rc
     fi
 
-    echo "" >> "${cw_ROOT}"/etc/motd
-    printf "%-25s - %s\n" "'qstat'" "show summary of running jobs" >> "${cw_ROOT}"/etc/motd
-    printf "%-25s - %s\n" "'qsub'" "submit a job script" >> "${cw_ROOT}"/etc/motd
-    printf "%-25s - %s\n" "'qdesktop'" "submit an interactive session request" >> "${cw_ROOT}"/etc/motd
+    cp motd.sh "${cw_ROOT}"/etc/motd.d/00-tips-10-gridscheduler.sh
 
     sed -e 's,^module load \(.*\),module load services/gridscheduler \1,g' -i "${cw_ROOT}"/etc/skel/modules
 

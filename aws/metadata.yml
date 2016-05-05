@@ -38,8 +38,8 @@ install:
     mkdir -p "${cw_ROOT}"/etc/modules/services
     sed -e "s,_cw_ROOT_,${cw_ROOT},g" aws-module.template > "${cw_ROOT}"/etc/modules/services/aws
     sed -e 's,^module load \(.*\),module load services/aws \1,g' -i "${cw_ROOT}"/etc/skel/modules
-    echo "" >> "${cw_ROOT}"/etc/motd
-    printf "%-25s - %s\n" "'aws help'" "show help for AWS CLI" >> "${cw_ROOT}"/etc/motd
+
+    cp motd.sh "${cw_ROOT}"/etc/motd.d/00-tips-20-aws.sh
 build:
   _: |
     curl "https://s3.amazonaws.com/aws-cli/awscli-bundle-1.10.19.zip" -o "/tmp/awscli-bundle.zip"
@@ -51,7 +51,5 @@ build:
     mkdir -p "${cw_ROOT}"/etc/modules/services
     sed -e "s,_cw_ROOT_,${cw_ROOT},g" aws-module.template > "${cw_ROOT}"/etc/modules/services/aws
     sed -e 's,^module load \(.*\),module load services/aws \1,g' -i "${cw_ROOT}"/etc/skel/modules
-    echo "" >> "${cw_ROOT}"/etc/motd
-    printf "%-25s - %s\n" "'qstat'" "show summary of running jobs" >> "${cw_ROOT}"/etc/motd
-    printf "%-25s - %s\n" "'qsub'" "submit a job script" >> "${cw_ROOT}"/etc/motd
-    printf "%-25s - %s\n" "'qdesktop'" "submit an interactive session request" >> "${cw_ROOT}"/etc/motd
+
+    cp motd.sh "${cw_ROOT}"/etc/motd.d/00-tips-20-aws.sh
