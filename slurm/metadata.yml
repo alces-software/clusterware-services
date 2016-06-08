@@ -1,55 +1,70 @@
+
+# Note: Instructions for building/installing Slurm available at
+# http://slurm.schedmd.com/quickstart_admin.html.
+
 ---
 build:
   _: |
-    # TODO split this out separately
-    # TODO: Refer to Slurm/MUNGE docs?
+    set -euo pipefail
+
+    # Build MUNGE.
+    MUNGE_SOURCE='https://github.com/dun/munge/archive/munge-0.5.12.zip'
+    MUNGE_PATH="${cw_ROOT}/opt/munge"
+    rm -rf "${MUNGE_PATH}" # Get rid of any old version of MUNGE so not building on top of.
+    yum install -y openssl-devel
+    curl -L "${MUNGE_SOURCE}" -o /tmp/munge.zip
+    unzip /tmp/munge.zip
+    cd munge-munge-*
+    ./configure \
+      --prefix="${MUNGE_PATH}" \
+      --sysconfdir="${MUNGE_PATH}/etc" \
+      --localstatedir="${MUNGE_PATH}/var"
+    make
+    make install
+
+    # Build Slurm.
+    SLURM_SOURCE='https://github.com/SchedMD/slurm/archive/slurm-16-05-0-1.zip'
+    SLURM_PATH="${cw_ROOT}/opt/slurm"
+    curl -L "${SLURM_SOURCE}" -o /tmp/slurm.zip
+    unzip /tmp/slurm.zip
+    cd slurm-slurm-*
+    ./configure \
+      --prefix="${SLURM_PATH}" \
+      --with-munge="${MUNGE_PATH}"
+    make
+    make install
 
 install:
   _: |
-    # TODO: These contain cw_DIST_URL (new version is cw_SERVICE_url) and
-    # cw_DIST, to use for downloading slurm tarball when that exists
+    set -euo pipefail
+
+    # Download built Slurm and MUNGE.
     . "${cw_ROOT}/etc/serviceware.rc"
     . "${cw_ROOT}/etc/distro.rc"
+    curl -# -L "${cw_DIST_URL}/${cw_DIST}"/munge.tar.gz | tar -C "${cw_ROOT}" -xz
+    curl -# -L "${cw_DIST_URL}/${cw_DIST}"/slurm.tar.gz | tar -C "${cw_ROOT}" -xz
 
     SERVICEWARE_DIR="$(pwd)"
+    MUNGE_PATH="${cw_ROOT}/opt/munge"
+    SLURM_PATH="${cw_ROOT}/opt/slurm"
 
     # Create MUNGE user and group.
     # TODO: Use slurm and munge user
     # TODO: does uid/gid for this and Slurm user matter?
-    MUNGE_ROOT="${cw_ROOT}/opt/munge"
     # MUNGE_USER="munge"
     # getent group munge &>/dev/null || groupadd --gid 401 "${MUNGE_USER}"
     # getent passwd munge &>/dev/null || useradd --uid 401 --gid 401 \
-    #     --shell /sbin/nologin --home-dir "${MUNGE_ROOT}" "${MUNGE_USER}"
-
-    # Build and install MUNGE
-    cp -r /vagrant/dun-munge-* /tmp/build-munge # TODO: get from web
-    cd /tmp/build-munge
-    yum install -y openssl-devel
-    MUNGE_CONFIG="${MUNGE_ROOT}/etc"
-    ./configure --prefix="${MUNGE_ROOT}" --sysconfdir="${MUNGE_CONFIG}" --localstatedir="${MUNGE_ROOT}/var"
-    make
-    make install
-    rm -rf /tmp/build-munge
+    #     --shell /sbin/nologin --home-dir "${MUNGE_PATH}" "${MUNGE_USER}"
 
     # Create MUNGE key - this must be the same on all nodes so create by
     # hashing the cluster secret (which is the same on all nodes).
-    MUNGE_KEY="${MUNGE_CONFIG}/munge/munge.key"
+    MUNGE_KEY="${MUNGE_PATH}/etc/munge/munge.key"
     source "${cw_ROOT}/etc/config/cluster/auth.rc"
     echo -n "${cw_CLUSTER_auth_token}" | sha512sum | cut -d' ' -f1 > "${MUNGE_KEY}"
     chmod 400 "${MUNGE_KEY}"
 
     # Have MUNGE user own all MUNGE files.
-    # chown -R "${MUNGE_USER}":"${MUNGE_USER}" "${MUNGE_ROOT}"
-
-    # Build and install Slurm.
-    SLURM_ROOT="${cw_ROOT}/opt/slurm"
-    cp -r /vagrant/slurm-* /tmp/build-slurm # TODO: get from web
-    cd /tmp/build-slurm
-    ./configure --prefix="${SLURM_ROOT}" --with-munge="${MUNGE_ROOT}"
-    make
-    make install
-    rm -rf /tmp/build-slurm
+    # chown -R "${MUNGE_USER}":"${MUNGE_USER}" "${MUNGE_PATH}"
 
     # Create slurm user and group.
     # SLURM_USER=slurm
@@ -57,8 +72,8 @@ install:
     # getent passwd "${SLURM_USER}" &>/dev/null || useradd --uid 400 --gid 400 \
     #     --shell /sbin/nologin --home-dir "${cw_ROOT}"/opt/gridscheduler "${SLURM_USER}"
 
-    mkdir -p "${SLURM_ROOT}/etc"
-    cp "${SERVICEWARE_DIR}/slurm.conf.template" "${SLURM_ROOT}/etc/slurm.conf"
+    mkdir -p "${SLURM_PATH}/etc"
+    cp "${SERVICEWARE_DIR}/slurm.conf.template" "${SLURM_PATH}/etc/slurm.conf"
 
 component-slurmctld:
   el7: |
@@ -83,6 +98,8 @@ component-slurmctld:
         systemctl restart clusterware-slurm-slurmctld.service
     }
   _: |
+    set -euo pipefail
+
     enable_munged
     enable_slurmctld
     start_slurmctld
@@ -110,6 +127,8 @@ component-slurmd:
         systemctl restart clusterware-slurm-slurmd.service
     }
   _: |
+    set -euo pipefail
+
     enable_munged
     enable_slurmd
     start_slurmd
