@@ -1,0 +1,19 @@
+################################################################################
+##
+## Alces Clusterware - Systemd service unit file
+## Copyright (c) 2016 Alces Software Ltd
+##
+################################################################################
+# MUNGE daemon (systemd service unit)
+[Unit]
+Description=Alces Clusterware MUNGE daemon
+After=syslog.target
+After=network.target
+
+[Service]
+Type=forking
+LimitMEMLOCK=infinity
+ExecStart=_cw_ROOT_/opt/munge/sbin/munged
+
+[Install]
+WantedBy=multi-user.target

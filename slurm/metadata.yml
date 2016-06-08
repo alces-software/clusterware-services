@@ -1,0 +1,115 @@
+---
+build:
+  _: |
+    # TODO split this out separately
+    # TODO: Refer to Slurm/MUNGE docs?
+
+install:
+  _: |
+    # TODO: These contain cw_DIST_URL (new version is cw_SERVICE_url) and
+    # cw_DIST, to use for downloading slurm tarball when that exists
+    . "${cw_ROOT}/etc/serviceware.rc"
+    . "${cw_ROOT}/etc/distro.rc"
+
+    SERVICEWARE_DIR="$(pwd)"
+
+    # Create MUNGE user and group.
+    # TODO: Use slurm and munge user
+    # TODO: does uid/gid for this and Slurm user matter?
+    MUNGE_ROOT="${cw_ROOT}/opt/munge"
+    # MUNGE_USER="munge"
+    # getent group munge &>/dev/null || groupadd --gid 401 "${MUNGE_USER}"
+    # getent passwd munge &>/dev/null || useradd --uid 401 --gid 401 \
+    #     --shell /sbin/nologin --home-dir "${MUNGE_ROOT}" "${MUNGE_USER}"
+
+    # Build and install MUNGE
+    cp -r /vagrant/dun-munge-* /tmp/build-munge # TODO: get from web
+    cd /tmp/build-munge
+    yum install -y openssl-devel
+    MUNGE_CONFIG="${MUNGE_ROOT}/etc"
+    ./configure --prefix="${MUNGE_ROOT}" --sysconfdir="${MUNGE_CONFIG}" --localstatedir="${MUNGE_ROOT}/var"
+    make
+    make install
+    rm -rf /tmp/build-munge
+
+    # Create MUNGE key - this must be the same on all nodes so create by
+    # hashing the cluster secret (which is the same on all nodes).
+    MUNGE_KEY="${MUNGE_CONFIG}/munge/munge.key"
+    source "${cw_ROOT}/etc/config/cluster/auth.rc"
+    echo -n "${cw_CLUSTER_auth_token}" | sha512sum | cut -d' ' -f1 > "${MUNGE_KEY}"
+    chmod 400 "${MUNGE_KEY}"
+
+    # Have MUNGE user own all MUNGE files.
+    # chown -R "${MUNGE_USER}":"${MUNGE_USER}" "${MUNGE_ROOT}"
+
+    # Build and install Slurm.
+    SLURM_ROOT="${cw_ROOT}/opt/slurm"
+    cp -r /vagrant/slurm-* /tmp/build-slurm # TODO: get from web
+    cd /tmp/build-slurm
+    ./configure --prefix="${SLURM_ROOT}" --with-munge="${MUNGE_ROOT}"
+    make
+    make install
+    rm -rf /tmp/build-slurm
+
+    # Create slurm user and group.
+    # SLURM_USER=slurm
+    # getent group "${SLURM_USER}" &>/dev/null || groupadd --gid 400 "${SLURM_USER}"
+    # getent passwd "${SLURM_USER}" &>/dev/null || useradd --uid 400 --gid 400 \
+    #     --shell /sbin/nologin --home-dir "${cw_ROOT}"/opt/gridscheduler "${SLURM_USER}"
+
+    mkdir -p "${SLURM_ROOT}/etc"
+    cp "${SERVICEWARE_DIR}/slurm.conf.template" "${SLURM_ROOT}/etc/slurm.conf"
+
+component-slurmctld:
+  el7: |
+    enable_munged() {
+        sed -e "s,_cw_ROOT_,${cw_ROOT},g" \
+            init/systemd/clusterware-munge-munged.service \
+            > /etc/systemd/system/clusterware-munge-munged.service
+        systemctl enable clusterware-munge-munged.service
+    }
+    enable_slurmctld() {
+        sed -e "s,_cw_ROOT_,${cw_ROOT},g" \
+            init/systemd/clusterware-slurm-slurmctld.service \
+            > /etc/systemd/system/clusterware-slurm-slurmctld.service
+        systemctl enable clusterware-slurm-slurmctld.service
+    }
+
+    start_slurmctld() {
+        systemctl start clusterware-slurm-slurmctld.service
+    }
+
+    restart_slurmctld() {
+        systemctl restart clusterware-slurm-slurmctld.service
+    }
+  _: |
+    enable_munged
+    enable_slurmctld
+    start_slurmctld
+
+component-slurmd:
+  el7: |
+    enable_munged() {
+        sed -e "s,_cw_ROOT_,${cw_ROOT},g" \
+            init/systemd/clusterware-munge-munged.service \
+            > /etc/systemd/system/clusterware-munge-munged.service
+        systemctl enable clusterware-munge-munged.service
+    }
+    enable_slurmd() {
+        sed -e "s,_cw_ROOT_,${cw_ROOT},g" \
+            init/systemd/clusterware-slurm-slurmd.service \
+            > /etc/systemd/system/clusterware-slurm-slurmd.service
+        systemctl enable clusterware-slurm-slurmd.service
+    }
+
+    start_slurmd() {
+        systemctl start clusterware-slurm-slurmd.service
+    }
+
+    restart_slurmd() {
+        systemctl restart clusterware-slurm-slurmd.service
+    }
+  _: |
+    enable_munged
+    enable_slurmd
+    start_slurmd
