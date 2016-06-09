@@ -13,6 +13,7 @@ After=network.target
 [Service]
 Type=forking
 LimitMEMLOCK=infinity
+User=munge
 ExecStart=_cw_ROOT_/opt/munge/sbin/munged
 
 [Install]

@@ -15,6 +15,7 @@ Wants=clusterware-munge-munged.service
 [Service]
 Type=forking
 LimitMEMLOCK=infinity
+User=slurm
 ExecStart=_cw_ROOT_/opt/slurm/sbin/slurmctld
 
 [Install]
