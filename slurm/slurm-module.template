@@ -1,0 +1,114 @@
+#%Module1.0#####################################################################
+##
+## Alces HPC Software Stack - Service module file
+## Copyright (c) 2016 Alces Software Ltd
+##
+## path: services/slurm
+################################################################################
+if { [info exists ::env(ALCES_TRACE)] } {
+    puts stderr " -> $::ModulesCurrentModulefile"
+}
+
+if { [namespace exists alces] == 0 } {
+    if { [info exists ::env(MODULES_ALCES_TCL)] } {
+        source $::env(MODULES_ALCES_TCL)
+    } else {
+        # compatibility mode for module use without availability of Alces tools
+        proc ::process {body} { eval $body }
+        proc ::depend {module {version ""} {_ ""}} {
+            set req [regsub {\-} $module {/}]/$version
+            if { [catch { prereq $req }] } {
+                puts stderr "Could not satisfy prereq: $req"
+                break
+            }
+        }
+        proc ::alces {_ module} { return $module }
+        proc ::search {_ _ _} { }
+    }
+}
+
+proc ModulesHelp { } {
+    puts stderr "
+                =============== Slurm ===============
+        An open source, fault-tolerant, and highly scalable
+            cluster management and job scheduling system
+                =====================================
+
+This module sets up your environment for the use of the 'slurm'
+service. This module sets up version '16-05-0-1' of the service.
+
+
+>> SYNOPSIS <<
+
+The Simple Linux Utility for Resource Management (Slurm) is an open
+source, fault-tolerant, and highly scalable cluster management and job
+scheduling system for large and small Linux clusters.
+
+>> LICENSING <<
+
+This package is made available subject to the following license(s):
+
+\tGPLv2+
+
+Please visit the website for further details regarding licensing.
+
+
+>> FURTHER INFORMATION <<
+
+More information about this software can be found at the website:
+
+\thttp://slurm.schedmd.com/
+
+For further details regarding this module, including the environment
+modifications it will apply, execute:
+
+\tmodule show services/slurm
+
+
+>> GET STARTED <<
+
+Some common commands include:
+
+        'salloc'  - obtain a job allocation
+        'sbatch'  - submit a batch script for later execution
+        'srun'    - obtain a job allocation (as needed) and execute an application
+        'sbcast'  - transfer file to a job's compute nodes
+        'scancel' - signal jobs, job arrays, and/or job steps
+        'squeue'  - view information about jobs
+        'sinfo'   - view information about nodes and partitions
+
+After loading the module, further details can be found in the man
+pages for the service, by executing 'man <command>'.
+"
+}
+
+set     app	slurm
+set     version 16-05-0-1
+set     appcaps SLURM
+set     appdir  _cw_ROOT_/opt/slurm
+
+module-whatis   "
+
+            Title: Slurm
+          Summary: An open source, fault-tolerant, and highly scalable cluster management and job scheduling system
+          License: GPLv2+
+            Group: Alces/Services
+              URL: http://slurm.schedmd.com/
+
+             Name: slurm
+          Version: 16-05-0-1
+           Module: [alces pretty services/slurm]
+      Module path: _cw_ROOT_/etc/modules/services/slurm
+     Package path: _cw_ROOT_/opt/slurm
+
+For further information, execute:
+
+\tmodule help services/slurm
+"
+
+setenv ${appcaps}DIR ${appdir}
+setenv ${appcaps}BIN ${appdir}/bin
+
+prepend-path PATH ${appdir}/bin
+prepend-path MANPATH ${appdir}/share/man
+prepend-path LD_LIBRARY_PATH ${appdir}/lib
