@@ -79,6 +79,9 @@ install:
     mkdir -p ${SLURM_SYSTEM_DIRS[@]}
     chown -R "${SLURM_USER}":"${SLURM_USER}" ${SLURM_SYSTEM_DIRS[@]}
 
+    # Install Slurm MOTD.
+    cp motd.sh "${cw_ROOT}"/etc/motd.d/00-tips-10-slurm.sh
+
     # Install environment module (we also add it to the skeleton modules file
     # so it will be automatically loaded for Clusterware users created after
     # installing Slurm).
