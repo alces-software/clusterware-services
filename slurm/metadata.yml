@@ -53,16 +53,8 @@ install:
     getent passwd munge &>/dev/null || useradd --uid 401 --gid 401 \
         --shell /sbin/nologin --home-dir "${MUNGE_PATH}" "${MUNGE_USER}"
 
-    # Create MUNGE key - this must be the same on all nodes so create by
-    # hashing the cluster secret (which is the same on all nodes).
-    MUNGE_KEY_DIR="${MUNGE_PATH}/etc/munge"
-    MUNGE_KEY="${MUNGE_KEY_DIR}/munge.key"
-    source "${cw_ROOT}/etc/config/cluster/auth.rc"
-    echo -n "${cw_CLUSTER_auth_token}" | sha512sum | cut -d' ' -f1 > "${MUNGE_KEY}"
-    chmod 400 "${MUNGE_KEY}"
-
-    # MUNGE user needs to own these dirs.
-    chown -R "${MUNGE_USER}":"${MUNGE_USER}" "${MUNGE_KEY_DIR}" "${MUNGE_PATH}/var"
+    # MUNGE user needs to own this.
+    chown -R "${MUNGE_USER}":"${MUNGE_USER}" "${MUNGE_PATH}/var"
 
     # Create Slurm user and group.
     SLURM_USER='slurm'
