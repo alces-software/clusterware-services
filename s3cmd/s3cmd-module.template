@@ -1,0 +1,110 @@
+#%Module1.0#####################################################################
+##
+## Alces HPC Software Stack - Service module file
+## Copyright (c) 2016 Alces Software Ltd
+##
+## path: services/s3cmd
+################################################################################
+if { [info exists ::env(ALCES_TRACE)] } {
+    puts stderr " -> $::ModulesCurrentModulefile"
+}
+
+if { [namespace exists alces] == 0 } {
+    if { [info exists ::env(MODULES_ALCES_TCL)] } {
+        source $::env(MODULES_ALCES_TCL)
+    } else {
+        # compatibility mode for module use without availability of Alces tools
+        proc ::process {body} { eval $body }
+        proc ::depend {module {version ""} {_ ""}} {
+            set req [regsub {\-} $module {/}]/$version
+            if { [catch { prereq $req }] } {
+                puts stderr "Could not satisfy prereq: $req"
+                break
+            }
+        }
+        proc ::alces {_ module} { return $module }
+        proc ::search {_ _ _} { }
+    }
+}
+
+proc ModulesHelp { } {
+    puts stderr "
+                =============== S3cmd ===============
+            Command Line S3 Client Software and S3 Backup
+                =====================================
+
+This module sets up your environment for the use of the 's3cmd'
+service. This module sets up version '1.6.1' of the service.
+
+
+>> SYNOPSIS <<
+
+Amazon S3 is a reasonably priced data storage service. Ideal for
+off-site file backups, file archiving, web hosting and other data
+storage needs. It is generally more reliable than your regular web
+hosting for storing your files and images. Check out about Amazon S3
+<http://s3tools.org/s3_about> to find out more.
+
+S3cmd is a free command line tool and client for uploading, retrieving
+and managing data in Amazon S3 and other cloud storage service
+providers that use the S3 protocol, such as Google Cloud Storage or
+DreamHost DreamObjects. It is best suited for power users who are
+familiar with command line programs. It is also ideal for batch
+scripts and automated backup to S3, triggered from cron, etc.
+
+>> LICENSING <<
+
+This package is made available subject to the following license(s):
+
+\tGPLv2
+
+Please visit the website for further details regarding licensing.
+
+
+>> FURTHER INFORMATION <<
+
+More information about this software can be found at the website:
+
+\thttp://s3tools.org/
+
+For further details regarding this module, including the environment
+modifications it will apply, execute:
+
+\tmodule show services/s3cmd
+
+
+>> GET STARTED <<
+
+Please refer to the website for further details on usage of this
+package.
+"
+}
+
+set     app     s3cmd
+set     version 1.6.1
+set     appcaps S3CMD
+set     appdir  _cw_ROOT_/opt/s3cmd
+
+module-whatis   "
+
+            Title: S3cmd
+          Summary: Command Line S3 Client Software and S3 Backup
+          License: GPLv2
+            Group: Alces/Services
+              URL: http://s3tools.org/
+
+             Name: s3cmd
+          Version: 1.6.1
+           Module: [alces pretty services/s3cmd]
+      Module path: _cw_ROOT_/etc/modules/services/s3cmd
+     Package path: _cw_ROOT_/opt/s3cmd
+
+For further information, execute:
+
+\tmodule help services/s3cmd
+"
+
+setenv ${appcaps}DIR ${appdir}
+setenv ${appcaps}BIN ${appdir}
+
+prepend-path PATH ${appdir}

@@ -34,6 +34,11 @@ install:
         serviceware_add s3cmd
       ;;
     esac
+    # install environment module
+    mkdir -p "${cw_ROOT}"/etc/modules/services
+    sed -e "s,_cw_ROOT_,${cw_ROOT},g" s3cmd-module.template > "${cw_ROOT}"/etc/modules/services/s3cmd
+    sed -e 's,^module load \(.*\),module load services/s3cmd \1,g' -i "${cw_ROOT}"/etc/skel/modules
+    cp motd.sh "${cw_ROOT}"/etc/motd.d/00-tips-20-s3cmd.sh
 build:
   _: |
     curl -L "https://github.com/s3tools/s3cmd/releases/download/v1.6.1/s3cmd-1.6.1.tar.gz" -o /tmp/s3cmd-source.tar.gz
@@ -44,3 +49,8 @@ build:
     cp -R s3cmd S3 "${cw_ROOT}/opt/s3cmd"
     cp README.md "${cw_ROOT}/opt/s3cmd/doc"
     cp s3cmd.1 "${cw_ROOT}/opt/s3cmd/man/man1"
+    # install environment module
+    mkdir -p "${cw_ROOT}"/etc/modules/services
+    sed -e "s,_cw_ROOT_,${cw_ROOT},g" s3cmd-module.template > "${cw_ROOT}"/etc/modules/services/s3cmd
+    sed -e 's,^module load \(.*\),module load services/s3cmd \1,g' -i "${cw_ROOT}"/etc/skel/modules
+    cp motd.sh "${cw_ROOT}"/etc/motd.d/00-tips-20-s3cmd.sh
