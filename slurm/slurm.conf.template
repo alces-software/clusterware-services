@@ -1,5 +1,5 @@
 
-ControlMachine=login1.cluster
+ControlMachine=PLACEHOLDER
 #ControlAddr=
 #BackupController=
 #BackupAddr=
@@ -155,5 +155,5 @@ SlurmSchedLogLevel=1
 #
 #
 # COMPUTE NODES
-NodeName=login1.cluster,node01.cluster CPUs=1 State=UNKNOWN
-PartitionName=debug Nodes=login1.cluster,node01.cluster Default=YES MaxTime=INFINITE State=UP
+NodeName=PLACEHOLDER
+PartitionName=all Nodes=PLACEHOLDER Default=YES MaxTime=UNLIMITED
