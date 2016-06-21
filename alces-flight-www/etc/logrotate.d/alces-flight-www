@@ -1,0 +1,14 @@
+# Rotate Alces Flight WWW logs
+/var/log/alces-flight-www/*.log {
+    daily
+    missingok
+    rotate 7
+    compress
+    delaycompress
+    notifempty
+    create 640 nobody adm
+    sharedscripts
+      postrotate
+      [ -f /var/run/alces-flight-www.pid ] && kill -USR1 `cat /var/run/alces-flight-www.pid`
+    endscript
+}

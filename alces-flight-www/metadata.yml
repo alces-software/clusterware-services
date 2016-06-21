@@ -1,0 +1,148 @@
+---
+install:
+  _: |
+    require serviceware
+    serviceware_add alces-flight-www
+    mkdir -p "${cw_ROOT}"/etc/alces-flight-www/{http.d,server-http.d,server-https.d}
+    cat <<EOF > "${cw_ROOT}"/etc/alces-flight-www.rc
+    ################################################################################
+    ##
+    ## Alces Clusterware - Shell configuration
+    ## Copyright (c) 2016 Stephen F. Norledge and Alces Software Ltd.
+    ##
+    ################################################################################
+    #cw_ALCES_FLIGHT_WWW_http_port=80
+    #cw_ALCES_FLIGHT_WWW_https_port=443
+    #cw_ALCES_FLIGHT_WWW_ssl_strategy=selfsigned
+    EOF
+component-websocket-proxy:
+  _: |
+    cp websocket-proxy.conf.tpl "${cw_ROOT}"/etc/alces-flight-www/server-https.d/websocket-proxy.conf
+component-base:
+  el6: |
+    yum install -y -e0 pcre openssl
+    enable_alces_flight_www() {
+        sed -e "s,_cw_ROOT_,${cw_ROOT},g" \
+            init/sysv/clusterware-alces-flight-www.el6 \
+            > /etc/init.d/clusterware-alces-flight-www
+        chmod 755 /etc/init.d/clusterware-alces-flight-www
+        chkconfig clusterware-alces-flight-www on
+    }
+  el7: |
+    yum install -y -e0 pcre openssl
+    enable_alces_flight_www() {
+        sed -e "s,_cw_ROOT_,${cw_ROOT},g" \
+            init/systemd/clusterware-alces-flight-www.service \
+            > /etc/systemd/system/clusterware-alces-flight-www.service
+        systemctl enable clusterware-alces-flight-www.service
+    }
+  _: |
+    _install_nginx_conf() {
+      local srcname target tgtname
+      srcname="$1"
+      target="$2"
+      tgtname="${3:-${srcname}}"
+      sed -e "s,_ROOT_,${cw_ROOT},g" ${srcname}.conf.tpl \
+        > "${cw_ROOT}"/etc/alces-flight-www/${target}.d/${tgtname}.conf
+    }
+
+    require naming
+    require files
+
+    files_load_config alces-flight-www
+
+    mkdir -p /var/log/alces-flight-www
+    chmod 750 /var/log/alces-flight-www
+    cp etc/logrotate.d/* "${cw_ROOT}"/etc/logrotate.d
+
+    mkdir -p "${cw_ROOT}"/var/lib/alces-flight-www/default
+    cp -R sites/* "${cw_ROOT}"/var/lib/alces-flight-www
+
+    _install_nginx_conf http http base
+    sed -i -e "s,_HTTP_PORT_,${cw_ALCES_FLIGHT_WWW_http_port:-80},g" \
+      -e "s,_HTTPS_PORT_,${cw_ALCES_FLIGHT_WWW_https_port:-443},g" \
+      "${cw_ROOT}"/etc/alces-flight-www/http.d/base.conf
+
+    _install_nginx_conf redirect-http-to-https server-http
+    _install_nginx_conf document-root server-http
+
+    _install_nginx_conf ssl-config server-https
+    _install_nginx_conf document-root server-https
+
+    mkdir -p "${cw_ROOT}"/etc/ssl/alces-flight-www
+    if [ "${cw_ALCES_FLIGHT_WWW_ssl_strategy:-selfsigned}" == "selfsigned" ]; then
+      naming_issue_self_signed_cert flight.cluster.alces.network \
+        "Alces Flight WWW Server" \
+        "${cw_ROOT}"/etc/ssl/alces-flight-www
+    fi
+
+    enable_alces_flight_www
+build:
+  el6: |
+    yum install -y -e0 pcre-devel openssl-devel
+  el7: |
+    yum install -y -e0 pcre-devel openssl-devel
+  _: |
+    curl "http://nginx.org/download/nginx-1.10.1.tar.gz" -o /tmp/nginx.tar.gz
+    tar -C /tmp -xzf /tmp/nginx.tar.gz
+    pushd /tmp/nginx-1.10.1
+    DESTDIR="${cw_ROOT}/opt/alces-flight-www"
+    ./configure \
+      --prefix=$DESTDIR/etc/nginx \
+      --conf-path=$DESTDIR/etc/nginx.conf \
+      --sbin-path=$DESTDIR/bin/nginx \
+      --pid-path=/var/run/alces-flight-www.pid \
+      --lock-path=/var/run/lock/alces-flight-www.lock \
+      --user=nobody \
+      --group=nobody \
+      --http-log-path=/var/log/alces-flight-www/access.log \
+      --error-log-path=stderr \
+      --http-client-body-temp-path=$DESTDIR/var/lib/client-body \
+      --http-proxy-temp-path=$DESTDIR/var/lib/proxy \
+      --http-fastcgi-temp-path=$DESTDIR/var/lib/fastcgi \
+      --http-scgi-temp-path=$DESTDIR/var/lib/scgi \
+      --http-uwsgi-temp-path=$DESTDIR/var/lib/uwsgi \
+      --with-imap \
+      --with-imap_ssl_module \
+      --with-ipv6 \
+      --with-pcre-jit \
+      --with-file-aio \
+      --with-http_dav_module \
+      --with-http_gunzip_module \
+      --with-http_gzip_static_module \
+      --with-http_realip_module \
+      --with-http_v2_module \
+      --with-http_ssl_module \
+      --with-http_stub_status_module \
+      --with-http_addition_module \
+      --with-http_degradation_module \
+      --with-http_flv_module \
+      --with-http_mp4_module \
+      --with-http_secure_link_module \
+      --with-http_sub_module
+    make
+    make install
+
+    rm "$DESTDIR"/etc/*.default
+    install -dm700 "$DESTDIR"/etc/conf.d
+    install -d "$DESTDIR"/man/man8/
+    gzip -9c man/nginx.8 > "$DESTDIR"/man/man8/nginx.8.gz
+    install -d "$DESTDIR"/var/lib
+    install -dm700 "$DESTDIR"/var/lib/proxy
+
+    popd
+    install -Dm644 nginx.conf.tpl "$DESTDIR"/etc/nginx.conf
+    sed -e "s,_ROOT_,${cw_ROOT},g" -i "$DESTDIR"/etc/nginx.conf
+
+    mkdir -p "${cw_ROOT}"/etc/alces-flight-www/{http.d,server-http.d,server-https.d}
+    cat <<EOF > "${cw_ROOT}"/etc/alces-flight-www.rc
+    ################################################################################
+    ##
+    ## Alces Clusterware - Shell configuration
+    ## Copyright (c) 2016 Stephen F. Norledge and Alces Software Ltd.
+    ##
+    ################################################################################
+    #cw_ALCES_FLIGHT_WWW_http_port=80
+    #cw_ALCES_FLIGHT_WWW_https_port=443
+    #cw_ALCES_FLIGHT_WWW_ssl_strategy=selfsigned
+    EOF
