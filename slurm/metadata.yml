@@ -54,7 +54,7 @@ install:
         --shell /sbin/nologin --home-dir "${MUNGE_PATH}" "${MUNGE_USER}"
 
     # MUNGE user needs to own this.
-    chown -R "${MUNGE_USER}":"${MUNGE_USER}" "${MUNGE_PATH}/var"
+    chown -R "${MUNGE_USER}:${MUNGE_USER}" "${MUNGE_PATH}/var"
 
     # Create Slurm user and group.
     SLURM_USER='slurm'
@@ -68,8 +68,8 @@ install:
 
     # Create needed system dirs owned by Slurm user.
     SLURM_SYSTEM_DIRS=(/var/{log,run,spool}/slurm)
-    mkdir -p ${SLURM_SYSTEM_DIRS[@]}
-    chown -R "${SLURM_USER}":"${SLURM_USER}" ${SLURM_SYSTEM_DIRS[@]}
+    mkdir -p "${SLURM_SYSTEM_DIRS[@]}"
+    chown -R "${SLURM_USER}:${SLURM_USER}" "${SLURM_SYSTEM_DIRS[@]}"
 
     # Install Slurm MOTD.
     cp motd.sh "${cw_ROOT}"/etc/motd.d/00-tips-10-slurm.sh
@@ -95,20 +95,11 @@ component-slurmctld:
             > /etc/systemd/system/clusterware-slurm-slurmctld.service
         systemctl enable clusterware-slurm-slurmctld.service
     }
-
-    start_slurmctld() {
-        systemctl start clusterware-slurm-slurmctld.service
-    }
-
-    restart_slurmctld() {
-        systemctl restart clusterware-slurm-slurmctld.service
-    }
   _: |
     set -euo pipefail
 
     enable_munged
     enable_slurmctld
-    start_slurmctld
 
 component-slurmd:
   el7: |
@@ -124,17 +115,8 @@ component-slurmd:
             > /etc/systemd/system/clusterware-slurm-slurmd.service
         systemctl enable clusterware-slurm-slurmd.service
     }
-
-    start_slurmd() {
-        systemctl start clusterware-slurm-slurmd.service
-    }
-
-    restart_slurmd() {
-        systemctl restart clusterware-slurm-slurmd.service
-    }
   _: |
     set -euo pipefail
 
     enable_munged
     enable_slurmd
-    start_slurmd
