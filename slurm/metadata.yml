@@ -66,11 +66,6 @@ install:
     mkdir -p "${SLURM_PATH}/etc"
     cp slurm.conf.template "${SLURM_PATH}/etc/slurm.conf"
 
-    # Create needed system dirs owned by Slurm user.
-    SLURM_SYSTEM_DIRS=(/var/{log,run,spool}/slurm)
-    mkdir -p "${SLURM_SYSTEM_DIRS[@]}"
-    chown -R "${SLURM_USER}:${SLURM_USER}" "${SLURM_SYSTEM_DIRS[@]}"
-
     # Install Slurm MOTD.
     cp motd.sh "${cw_ROOT}"/etc/motd.d/00-tips-10-slurm.sh
 
