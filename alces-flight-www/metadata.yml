@@ -61,12 +61,26 @@ component-base:
     mkdir -p "${cw_ROOT}"/var/lib/alces-flight-www/default
     cp -R sites/* "${cw_ROOT}"/var/lib/alces-flight-www
 
+    alces handler enable cluster-firewall
+    cat <<EOF > "${cw_ROOT}"/etc/cluster-firewall/static.d/alces-flight-www.rc
+    ################################################################################
+    ##
+    ## Alces Clusterware - Firewall rules
+    ## Copyright (C) 2016 Stephen F. Norledge and Alces Software Ltd.
+    ##
+    ################################################################################
+    EOF
+
+    firewall_rules=()
+
     if [ "${cw_ALCES_FLIGHT_WWW_http_enabled:-true}" == "true" ]; then
       _install_nginx_conf http http base-http
       sed -i -e "s,_HTTP_PORT_,${cw_ALCES_FLIGHT_WWW_http_port:-80},g" \
         "${cw_ROOT}"/etc/alces-flight-www/http.d/base-http.conf
 
       _install_nginx_conf document-root server-http
+      firewall_rules+=(http)
+      echo "cw_CLUSTER_FIREWALL_rule_http=\"INPUT -p tcp --dport ${cw_ALCES_FLIGHT_WWW_http_port:-80} -j ACCEPT\"" >> "${cw_ROOT}"/etc/cluster-firewall/static.d/alces-flight-www.rc
     fi
 
     if [ "${cw_ALCES_FLIGHT_WWW_https_enabled:-true}" == "true" ]; then
@@ -93,7 +107,11 @@ component-base:
         sed -i -e "s,_HTTPS_PORT_,${https_port},g" \
           "${cw_ROOT}"/etc/alces-flight-www/server-http.d/redirect-http-to-https.conf
       fi
+      firewall_rules+=(https)
+      echo "cw_CLUSTER_FIREWALL_rule_https=\"INPUT -p tcp --dport ${cw_ALCES_FLIGHT_WWW_https_port:-443} -j ACCEPT\"" >> "${cw_ROOT}"/etc/cluster-firewall/static.d/alces-flight-www.rc
     fi
+
+    echo "cw_CLUSTER_FIREWALL_rules=\"${firewall_rules[@]}\"" >> "${cw_ROOT}"/etc/cluster-firewall/static.d/alces-flight-www.rc
 
     enable_alces_flight_www
 build:
