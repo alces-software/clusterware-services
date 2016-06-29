@@ -1,1 +1,1 @@
-return 307 https://$host$request_uri;
+return 307 https://$host_HTTPS_PORT_$request_uri;

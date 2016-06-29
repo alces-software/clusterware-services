@@ -11,7 +11,10 @@ install:
     ## Copyright (c) 2016 Stephen F. Norledge and Alces Software Ltd.
     ##
     ################################################################################
+    #cw_ALCES_FLIGHT_WWW_http_enabled=true
     #cw_ALCES_FLIGHT_WWW_http_port=80
+    #cw_ALCES_FLIGHT_WWW_http_redirect_enabled=true
+    #cw_ALCES_FLIGHT_WWW_https_enabled=true
     #cw_ALCES_FLIGHT_WWW_https_port=443
     #cw_ALCES_FLIGHT_WWW_ssl_strategy=selfsigned
     EOF
@@ -58,22 +61,38 @@ component-base:
     mkdir -p "${cw_ROOT}"/var/lib/alces-flight-www/default
     cp -R sites/* "${cw_ROOT}"/var/lib/alces-flight-www
 
-    _install_nginx_conf http http base
-    sed -i -e "s,_HTTP_PORT_,${cw_ALCES_FLIGHT_WWW_http_port:-80},g" \
-      -e "s,_HTTPS_PORT_,${cw_ALCES_FLIGHT_WWW_https_port:-443},g" \
-      "${cw_ROOT}"/etc/alces-flight-www/http.d/base.conf
+    if [ "${cw_ALCES_FLIGHT_WWW_http_enabled:-true}" == "true" ]; then
+      _install_nginx_conf http http base-http
+      sed -i -e "s,_HTTP_PORT_,${cw_ALCES_FLIGHT_WWW_http_port:-80},g" \
+        "${cw_ROOT}"/etc/alces-flight-www/http.d/base-http.conf
 
-    _install_nginx_conf redirect-http-to-https server-http
-    _install_nginx_conf document-root server-http
+      _install_nginx_conf document-root server-http
+    fi
 
-    _install_nginx_conf ssl-config server-https
-    _install_nginx_conf document-root server-https
+    if [ "${cw_ALCES_FLIGHT_WWW_https_enabled:-true}" == "true" ]; then
+      _install_nginx_conf https http base-https
+      sed -i -e "s,_HTTPS_PORT_,${cw_ALCES_FLIGHT_WWW_https_port:-443},g" \
+        "${cw_ROOT}"/etc/alces-flight-www/http.d/base-https.conf
 
-    mkdir -p "${cw_ROOT}"/etc/ssl/alces-flight-www
-    if [ "${cw_ALCES_FLIGHT_WWW_ssl_strategy:-selfsigned}" == "selfsigned" ]; then
-      naming_issue_self_signed_cert flight.cluster.alces.network \
-        "Alces Flight WWW Server" \
-        "${cw_ROOT}"/etc/ssl/alces-flight-www
+      _install_nginx_conf ssl-config server-https
+      _install_nginx_conf document-root server-https
+      mkdir -p "${cw_ROOT}"/etc/ssl/alces-flight-www
+
+      if [ "${cw_ALCES_FLIGHT_WWW_ssl_strategy:-selfsigned}" == "selfsigned" ]; then
+        naming_issue_self_signed_cert flight.cluster.alces.network \
+          "Alces Flight WWW Server" \
+          "${cw_ROOT}"/etc/ssl/alces-flight-www
+      fi
+
+      if [ "${cw_ALCES_FLIGHT_WWW_http_redirect_enabled:-true}" == "true" ]; then
+        _install_nginx_conf redirect-http-to-https server-http
+        https_port=":${cw_ALCES_FLIGHT_WWW_https_port:-443}"
+        if [ "${https_port}" == ":443" ]; then
+          https_port=""
+        fi
+        sed -i -e "s,_HTTPS_PORT_,${https_port},g" \
+          "${cw_ROOT}"/etc/alces-flight-www/server-http.d/redirect-http-to-https.conf
+      fi
     fi
 
     enable_alces_flight_www
@@ -142,7 +161,10 @@ build:
     ## Copyright (c) 2016 Stephen F. Norledge and Alces Software Ltd.
     ##
     ################################################################################
+    #cw_ALCES_FLIGHT_WWW_http_enabled=true
     #cw_ALCES_FLIGHT_WWW_http_port=80
+    #cw_ALCES_FLIGHT_WWW_http_redirect_enabled=true
+    #cw_ALCES_FLIGHT_WWW_https_enabled=true
     #cw_ALCES_FLIGHT_WWW_https_port=443
     #cw_ALCES_FLIGHT_WWW_ssl_strategy=selfsigned
     EOF
