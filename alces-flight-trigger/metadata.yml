@@ -1,0 +1,59 @@
+---
+install:
+  _: |
+    require serviceware
+    serviceware_add alces-flight-trigger
+
+component-base:
+  el7: |
+    enable_alces_flight_trigger() {
+        sed -e "s,_cw_ROOT_,${cw_ROOT},g" \
+            init/systemd/clusterware-alces-flight-trigger.service \
+            > /etc/systemd/system/clusterware-alces-flight-trigger.service
+        systemctl enable clusterware-alces-flight-trigger.service
+    }
+
+    TRIGGER_LIBEXEC_DIR="${cw_ROOT}/libexec/alces-flight-trigger"
+    mkdir -p "${TRIGGER_LIBEXEC_DIR}"
+    cp libexec/alces-flight-trigger-starter "${TRIGGER_LIBEXEC_DIR}"
+    chmod 755 "${TRIGGER_LIBEXEC_DIR}/alces-flight-trigger-starter"
+
+  _: |
+    require serviceware
+
+    # If alces-flight-www service is enabled we add in config so requests to
+    # `/trigger/*` will be sent to the `alces-flight-trigger` server.
+    if serviceware_is_installed alces-flight-www; then
+        cp -R etc/alces-flight-www/* "${cw_ROOT}/etc/alces-flight-www"
+    fi
+
+    cp etc/logrotate.d/* "${cw_ROOT}"/etc/logrotate.d
+
+    TRIGGER_DIR="${cw_ROOT}/var/lib/triggers"
+    mkdir -p "${TRIGGER_DIR}"
+    CREDENTIALS_FILE="${TRIGGER_DIR}/.credentials"
+    echo 'alces:password' > "${CREDENTIALS_FILE}"
+    chmod 0600 "${CREDENTIALS_FILE}"
+    cat <<EOF
+     !!!!!!!!!!!!!!!
+     !!! WARNING !!! Insecure default credentials installed.
+     !!!!!!!!!!!!!!!
+
+       Please update ${CREDENTIALS_FILE}
+
+    EOF
+
+    enable_alces_flight_trigger
+
+build:
+  _: |
+    TREE=master
+    curl -L "https://github.com/alces-software/alces-flight-trigger/archive/$TREE.zip" -o /tmp/aft.zip
+    cd "${cw_ROOT}"/opt
+    unzip /tmp/aft.zip
+    mv alces-flight-trigger-$TREE alces-flight-trigger
+
+    cd alces-flight-trigger
+    export cw_ROOT
+    bin/install
+    rm -rf Rakefile tests bin
