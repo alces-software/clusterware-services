@@ -27,9 +27,6 @@ setup() {
         if [ -e "${a}"/clusterware/config.rc ]; then
             source "${a}"/clusterware/config.rc
             break
-        elif [ -e "${a}"/clusterware/config.vars.sh ]; then
-            source "${a}"/clusterware/config.vars.sh
-            break
         fi
     done
     if [ -z "${cw_ROOT}" ]; then
@@ -40,15 +37,16 @@ setup() {
 }
 
 main() {
+    cd "${cw_ROOT}"/opt/alces-flight-trigger
     . "${cw_ROOT}"/etc/ruby.rc
-    local log_file=/var/log/alces-flight-trigger.log
-    rackup start \
+    mkdir -p /var/log/alces-flight-trigger
+    local log_file=/var/log/alces-flight-trigger/access.log
+    bundle exec rackup start \
         --env production \
         --host 0.0.0.0 \
         --pid /var/run/alces-flight-trigger.pid \
         --port 25278 \
-        "${cw_ROOT}/opt/alces-flight-trigger/config.ru" >> "${log_file}" 2>&1 &
-
+        "config.ru" >> "${log_file}" 2>&1 &
 }
 
 setup
