@@ -1,0 +1,20 @@
+################################################################################
+##
+## Alces Clusterware - Systemd service unit file
+## Copyright (c) 2016 Alces Software Ltd
+##
+################################################################################
+# OpenLava res daemon (systemd service unit)
+[Unit]
+Description=Alces Clusterware OpenLava res daemon
+After=syslog.target
+After=network.target
+
+[Service]
+Type=forking
+Environment=LSF_ENVDIR=_cw_ROOT_/opt/openlava/etc
+Environment=LSF_SERVERDIR=_cw_ROOT_/opt/openlava/sbin
+ExecStart=_cw_ROOT_/opt/openlava/sbin/res
+
+[Install]
+WantedBy=multi-user.target

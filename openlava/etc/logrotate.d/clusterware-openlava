@@ -1,0 +1,11 @@
+# Rotate OpenLava logs
+/var/log/openlava/*.log.* {
+  daily
+  missingok
+  rotate 7
+  compress
+  delaycompress
+  notifempty
+  olddir archives
+  copytruncate
+}
