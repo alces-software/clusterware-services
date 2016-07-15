@@ -1,0 +1,10 @@
+# Rotate Slurm logs
+/var/log/slurm/*.log {
+  daily
+  missingok
+  rotate 7
+  compress
+  delaycompress
+  notifempty
+  copytruncate
+}
