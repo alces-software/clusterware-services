@@ -45,8 +45,8 @@ component-slurmctld:
   el7: |
     enable_munged() {
         sed -e "s,_cw_ROOT_,${cw_ROOT},g" \
-            init/systemd/clusterware-munge-munged.service \
-            > /etc/systemd/system/clusterware-munge-munged.service
+            init/systemd/clusterware-slurm-munged.service \
+            > /etc/systemd/system/clusterware-slurm-munged.service
     }
     enable_slurmctld() {
         sed -e "s,_cw_ROOT_,${cw_ROOT},g" \
@@ -60,8 +60,8 @@ component-slurmd:
   el7: |
     enable_munged() {
         sed -e "s,_cw_ROOT_,${cw_ROOT},g" \
-            init/systemd/clusterware-munge-munged.service \
-            > /etc/systemd/system/clusterware-munge-munged.service
+            init/systemd/clusterware-slurm-munged.service \
+            > /etc/systemd/system/clusterware-slurm-munged.service
     }
     enable_slurmd() {
         sed -e "s,_cw_ROOT_,${cw_ROOT},g" \

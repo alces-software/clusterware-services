@@ -9,7 +9,7 @@
 Description=Alces Clusterware Slurm compute node daemon
 After=syslog.target
 After=network.target
-Wants=clusterware-munge-munged.service
+Wants=clusterware-slurm-munged.service
 
 [Service]
 Type=forking
