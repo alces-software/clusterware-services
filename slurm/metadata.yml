@@ -41,6 +41,10 @@ install:
 
     #cp -R docs/templates/* "${cw_ROOT}"/var/lib/docs/templates
     #cp -R docs/guides/* "${cw_ROOT}"/var/lib/docs/guides
+
+    mkdir -p "${cw_ROOT}"/var/lib/scheduler
+    cp slurm.functions.sh "${cw_ROOT}"/var/lib/scheduler
+
 component-slurmctld:
   el7: |
     enable_munged() {
@@ -130,6 +134,10 @@ build:
     sed -e "s,_cw_ROOT_,${cw_ROOT},g" slurm-module.template > "${cw_ROOT}"/etc/modules/services/slurm
     sed -e 's,^module load \(.*\),module load services/slurm \1,g' -i "${cw_ROOT}"/etc/skel/modules
 
-    # XXX - logrotate?
+    cp etc/logrotate.d/* "${cw_ROOT}"/etc/logrotate.d
+
     #cp -R docs/templates/* "${cw_ROOT}"/var/lib/docs/templates
     #cp -R docs/guides/* "${cw_ROOT}"/var/lib/docs/guides
+
+    mkdir -p "${cw_ROOT}"/var/lib/scheduler
+    cp slurm.functions.sh "${cw_ROOT}"/var/lib/scheduler

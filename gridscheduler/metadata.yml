@@ -31,6 +31,10 @@ install:
 
     cp -R docs/templates/* "${cw_ROOT}"/var/lib/docs/templates
     cp -R docs/guides/* "${cw_ROOT}"/var/lib/docs/guides
+
+    mkdir -p "${cw_ROOT}"/var/lib/scheduler
+    cp gridscheduler.functions.sh "${cw_ROOT}"/var/lib/scheduler
+
 component-qmaster:
   el6: |
     enable_qmaster() {
