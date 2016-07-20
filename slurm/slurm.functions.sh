@@ -65,3 +65,19 @@ results = {
 results.each { |k,v| puts "#{k}=#{v}" }
 RUBY
 }
+
+slurm_write_node_resources() {
+    local target
+    target="$1"
+    require ruby
+    ruby_run <<RUBY
+require 'json'
+
+config = {"tags" => {}}
+config["tags"]["slots"] = $(grep -c '^processor\s*: [0-9]*$' /proc/cpuinfo).to_s
+ram_kb = $(grep 'MemTotal' /proc/meminfo | awk '{print $2};')
+ram_gb = (ram_kb / 1_048_576)
+config["tags"]["ram_gb"] = ram_gb.to_s
+File.write('${target}', config.to_json)
+RUBY
+}
