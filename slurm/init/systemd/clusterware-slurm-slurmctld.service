@@ -1,0 +1,24 @@
+################################################################################
+##
+## Alces Clusterware - Systemd service unit file
+## Copyright (c) 2016 Alces Software Ltd
+##
+################################################################################
+# Slurm central management daemon (systemd service unit)
+[Unit]
+Description=Alces Clusterware Slurm central management daemon
+After=syslog.target
+After=network.target
+Wants=clusterware-slurm-munged.service
+
+[Service]
+Type=forking
+LimitMEMLOCK=infinity
+User=slurm
+PIDFile=/var/run/slurm/slurmctld.pid
+ExecStart=_cw_ROOT_/opt/slurm/sbin/slurmctld
+Restart=on-failure
+RestartSec=1
+
+[Install]
+WantedBy=multi-user.target

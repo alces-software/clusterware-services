@@ -1,0 +1,143 @@
+---
+install:
+  el7: |
+    yum install -y openssl
+  el6: |
+    yum install -y openssl
+  _: |
+    # Download built Slurm and MUNGE.
+    require serviceware
+    serviceware_add munge
+    serviceware_add slurm
+
+    # Create MUNGE user and group.
+    getent group munge &>/dev/null || groupadd --gid 363 munge
+    getent passwd munge &>/dev/null || useradd --uid 363 --gid 363 \
+        --shell /sbin/nologin --home-dir "${cw_ROOT}/opt/munge" munge
+
+    # MUNGE user needs to own this.
+    chown -R munge:munge "${cw_ROOT}/opt/munge/var"
+
+    # Create Slurm user and group.
+    getent group slurm &>/dev/null || groupadd --gid 364 slurm
+    getent passwd slurm &>/dev/null || useradd --uid 364 --gid 364 \
+        --shell /sbin/nologin --home-dir "${cw_ROOT}/opt/slurm" slurm
+
+    # Copy Slurm config.
+    mkdir -p "${cw_ROOT}/opt/slurm/etc"
+    cp slurm.conf.template "${cw_ROOT}/opt/slurm/etc/slurm.conf"
+
+    # Install Slurm MOTD.
+    cp motd.sh "${cw_ROOT}"/etc/motd.d/00-tips-10-slurm.sh
+
+    # Install environment module (we also add it to the skeleton modules file
+    # so it will be automatically loaded for Clusterware users created after
+    # installing Slurm).
+    mkdir -p "${cw_ROOT}"/etc/modules/services
+    sed -e "s,_cw_ROOT_,${cw_ROOT},g" slurm-module.template > "${cw_ROOT}"/etc/modules/services/slurm
+    sed -e 's,^module load \(.*\),module load services/slurm \1,g' -i "${cw_ROOT}"/etc/skel/modules
+
+    cp etc/logrotate.d/* "${cw_ROOT}"/etc/logrotate.d
+
+    #cp -R docs/templates/* "${cw_ROOT}"/var/lib/docs/templates
+    #cp -R docs/guides/* "${cw_ROOT}"/var/lib/docs/guides
+
+    mkdir -p "${cw_ROOT}"/var/lib/scheduler
+    cp slurm.functions.sh "${cw_ROOT}"/var/lib/scheduler
+
+component-slurmctld:
+  el7: |
+    enable_munged() {
+        sed -e "s,_cw_ROOT_,${cw_ROOT},g" \
+            init/systemd/clusterware-slurm-munged.service \
+            > /etc/systemd/system/clusterware-slurm-munged.service
+    }
+    enable_slurmctld() {
+        sed -e "s,_cw_ROOT_,${cw_ROOT},g" \
+            init/systemd/clusterware-slurm-slurmctld.service \
+            > /etc/systemd/system/clusterware-slurm-slurmctld.service
+    }
+  _: |
+    enable_munged
+    enable_slurmctld
+component-slurmd:
+  el7: |
+    enable_munged() {
+        sed -e "s,_cw_ROOT_,${cw_ROOT},g" \
+            init/systemd/clusterware-slurm-munged.service \
+            > /etc/systemd/system/clusterware-slurm-munged.service
+    }
+    enable_slurmd() {
+        sed -e "s,_cw_ROOT_,${cw_ROOT},g" \
+            init/systemd/clusterware-slurm-slurmd.service \
+            > /etc/systemd/system/clusterware-slurm-slurmd.service
+    }
+  _: |
+    enable_munged
+    enable_slurmd
+build:
+  _: |
+    # Note: Instructions for building/installing Slurm available at
+    # http://slurm.schedmd.com/quickstart_admin.html.
+
+    # Build MUNGE.
+    MUNGE_SOURCE='https://github.com/dun/munge/archive/munge-0.5.12.zip'
+    MUNGE_PATH="${cw_ROOT}/opt/munge"
+    rm -rf "${MUNGE_PATH}" # Get rid of any old version of MUNGE so not building on top of.
+    yum install -y openssl-devel
+    curl -L "${MUNGE_SOURCE}" -o /tmp/munge.zip
+    unzip /tmp/munge.zip
+    cd munge-munge-*
+    ./configure \
+      --prefix="${MUNGE_PATH}" \
+      --sysconfdir="${MUNGE_PATH}/etc" \
+      --localstatedir="${MUNGE_PATH}/var"
+    make
+    make install
+
+    # Build Slurm.
+    SLURM_SOURCE='https://github.com/SchedMD/slurm/archive/slurm-16-05-0-1.zip'
+    SLURM_PATH="${cw_ROOT}/opt/slurm"
+    curl -L "${SLURM_SOURCE}" -o /tmp/slurm.zip
+    unzip /tmp/slurm.zip
+    cd slurm-slurm-*
+    ./configure \
+      --prefix="${SLURM_PATH}" \
+      --with-munge="${MUNGE_PATH}"
+    make
+    make install
+
+    # Create MUNGE user and group.
+    getent group munge &>/dev/null || groupadd --gid 363 munge
+    getent passwd munge &>/dev/null || useradd --uid 363 --gid 363 \
+        --shell /sbin/nologin --home-dir "${cw_ROOT}/opt/munge" munge
+
+    # MUNGE user needs to own this.
+    chown -R munge:munge "${cw_ROOT}/opt/munge/var"
+
+    # Create Slurm user and group.
+    getent group slurm &>/dev/null || groupadd --gid 364 slurm
+    getent passwd slurm &>/dev/null || useradd --uid 364 --gid 364 \
+        --shell /sbin/nologin --home-dir "${cw_ROOT}/opt/slurm" slurm
+
+    # Copy Slurm config.
+    mkdir -p "${cw_ROOT}/opt/slurm/etc"
+    cp slurm.conf.template "${cw_ROOT}/opt/slurm/etc/slurm.conf"
+
+    # Install Slurm MOTD.
+    cp motd.sh "${cw_ROOT}"/etc/motd.d/00-tips-10-slurm.sh
+
+    # Install environment module (we also add it to the skeleton modules file
+    # so it will be automatically loaded for Clusterware users created after
+    # installing Slurm).
+    mkdir -p "${cw_ROOT}"/etc/modules/services
+    sed -e "s,_cw_ROOT_,${cw_ROOT},g" slurm-module.template > "${cw_ROOT}"/etc/modules/services/slurm
+    sed -e 's,^module load \(.*\),module load services/slurm \1,g' -i "${cw_ROOT}"/etc/skel/modules
+
+    cp etc/logrotate.d/* "${cw_ROOT}"/etc/logrotate.d
+
+    #cp -R docs/templates/* "${cw_ROOT}"/var/lib/docs/templates
+    #cp -R docs/guides/* "${cw_ROOT}"/var/lib/docs/guides
+
+    mkdir -p "${cw_ROOT}"/var/lib/scheduler
+    cp slurm.functions.sh "${cw_ROOT}"/var/lib/scheduler
