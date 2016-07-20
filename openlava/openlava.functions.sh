@@ -43,7 +43,7 @@ jobs = IO.popen("bjobs -u all -noheader").read.split("\n")
 queues = IO.popen("bqueues | tail -n+2").read.split("\n")
 pending_jobs = jobs.count {|l| l.split(/\s+/)[2] == 'PEND'}
 running_jobs = jobs.count {|l| l.split(/\s+/)[2] == 'RUN'}
-cores_per_node = 2 #${cores_per_node:-2}
+cores_per_node = ${cores_per_node:-2}
 cores_req = queues.reduce(0) {|memo,l| memo + l.split(/\s+/)[8].to_i}
 results = {
   "openlava_job_queue" => pending_jobs,
