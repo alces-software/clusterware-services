@@ -1,0 +1,21 @@
+################################################################################
+##
+## Alces Clusterware - Systemd service unit file
+## Copyright (c) 2016 Alces Software Ltd
+##
+################################################################################
+# TORQUE trqauthd daemon (systemd service unit)
+[Unit]
+Description=Alces Clusterware TORQUE trqauthd daemon
+Requires=network.target local-fs.target
+After=network.target local-fs.target rsyslog.service
+
+[Service]
+Type=forking
+User=root
+Environment=LD_LIBRARY_PATH=_cw_ROOT_/opt/torque/lib
+ExecStart=_cw_ROOT_/opt/torque/sbin/trqauthd
+ExecStop=_cw_ROOT_/opt/torque/sbin/trqauthd -d
+
+[Install]
+WantedBy=multi-user.target

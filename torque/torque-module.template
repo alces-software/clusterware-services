@@ -1,0 +1,114 @@
+#%Module1.0#####################################################################
+##
+## Alces HPC Software Stack - Service module file
+## Copyright (c) 2016 Alces Software Ltd
+##
+## path: services/torque
+################################################################################
+if { [info exists ::env(ALCES_TRACE)] } {
+    puts stderr " -> $::ModulesCurrentModulefile"
+}
+
+if { [namespace exists alces] == 0 } {
+    if { [info exists ::env(MODULES_ALCES_TCL)] } {
+        source $::env(MODULES_ALCES_TCL)
+    } else {
+        # compatibility mode for module use without availability of Alces tools
+        proc ::process {body} { eval $body }
+        proc ::depend {module {version ""} {_ ""}} {
+            set req [regsub {\-} $module {/}]/$version
+            if { [catch { prereq $req }] } {
+                puts stderr "Could not satisfy prereq: $req"
+                break
+            }
+        }
+        proc ::alces {_ module} { return $module }
+        proc ::search {_ _ _} { }
+    }
+}
+
+proc ModulesHelp { } {
+    puts stderr "
+                ============== TORQUE ===============
+                       TORQUE Resource Manager
+                =====================================
+
+This module sets up your environment for the use of the 'torque'
+service. This module sets up version '6.0.1' of the service.
+
+>> SYNOPSIS <<
+
+TORQUE Resource Manager provides control over batch jobs and
+distributed computing resources. It is an advanced open-source product
+based on the original PBS project and incorporates the best of both
+community and professional development. It incorporates significant
+advances in the areas of scalability, reliability, and functionality
+and is currently in use at tens of thousands of leading government,
+academic, and commercial sites throughout the world. TORQUE may be
+freely used, modified, and distributed under the constraints of the
+included license.
+
+>> LICENSING <<
+
+This package is made available subject to the following license(s):
+
+\tTORQUE v2.5+ Software License v1.1
+
+>> FURTHER INFORMATION <<
+
+More information about this software can be found at the website:
+
+\thttp://www.adaptivecomputing.com/products/open-source/torque/
+
+For further details regarding this module, including the environment
+modifications it will apply, execute:
+
+\tmodule show services/torque
+
+
+>> GET STARTED <<
+
+Some common commands include:
+
+        'qstat'  - show summary of running jobs
+        'qsub'   - submit a new job to the scheduler
+
+After loading the module, further details can be found in the man
+pages for the service, by executing 'man <command>'.
+"
+}
+
+set     app torque
+set     version 6.0.1
+set     appcaps TORQUE
+set     appdir _cw_ROOT_/opt/torque
+
+module-whatis   "
+
+            Title: Torque
+          Summary: TORQUE Resource Manager
+          License: TORQUE v2.5+ Software License v1.1
+            Group: Alces/Services
+              URL: http://www.adaptivecomputing.com/products/open-source/torque/
+
+             Name: torque
+          Version: 6.0.1
+           Module: [alces pretty services/torque]
+      Module path: _cw_ROOT_/etc/modules/services/torque
+     Package path: _cw_ROOT_/opt/torque
+
+For further information, execute:
+
+\tmodule help services/torque
+"
+
+setenv ${appcaps}DIR ${appdir}
+setenv ${appcaps}BIN ${appdir}/bin
+setenv ${appcaps}LIB ${appdir}/lib
+setenv ${appcaps}INCLUDE ${appdir}/include
+setenv ${appcaps}SBIN ${appdir}/sbin
+setenv ${appcaps}SHARE ${appdir}/share
+
+prepend-path PATH ${appdir}/bin
+prepend-path MANPATH ${appdir}/share/man
+prepend-path LD_LIBRRY_PATH ${appdir}/lib

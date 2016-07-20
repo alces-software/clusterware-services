@@ -1,0 +1,138 @@
+---
+install:
+  el7: |
+    yum install -e0 -y openssl libxml2 boost gperf pam
+  el6: |
+    yum install -e0 -y openssl libxml2 boost gperf pam
+  _: |
+    # Download built Slurm and MUNGE.
+    require serviceware
+    serviceware_add torque
+
+    # Install TORQUE MOTD.
+    cp motd.sh "${cw_ROOT}"/etc/motd.d/00-tips-10-torque.sh
+
+    # Install environment module (we also add it to the skeleton modules file
+    # so it will be automatically loaded for Clusterware users created after
+    # installing Slurm).
+    mkdir -p "${cw_ROOT}"/etc/modules/services
+    sed -e "s,_cw_ROOT_,${cw_ROOT},g" torque-module.template > "${cw_ROOT}"/etc/modules/services/torque
+    sed -e 's,^module load \(.*\),module load services/torque \1,g' -i "${cw_ROOT}"/etc/skel/modules
+
+    cp etc/logrotate.d/* "${cw_ROOT}"/etc/logrotate.d
+
+    #cp -R docs/templates/* "${cw_ROOT}"/var/lib/docs/templates
+    #cp -R docs/guides/* "${cw_ROOT}"/var/lib/docs/guides
+
+    mkdir -p "${cw_ROOT}"/var/lib/scheduler
+    cp torque.functions.sh "${cw_ROOT}"/var/lib/scheduler
+component-mom:
+  el7: |
+    enable_mom() {
+        sed -e "s,_cw_ROOT_,${cw_ROOT},g" \
+            init/systemd/clusterware-torque-mom.service \
+            > /etc/systemd/system/clusterware-torque-mom.service
+    }
+  _: |
+    if [ ! -d /var/spool/torque ]; then
+      mkdir /var/spool/torque
+      tar -C /var/spool/torque -xf torque-spool.tar.gz
+    fi
+    enable_mom
+component-trqauthd:
+  el7: |
+    enable_trqauthd() {
+        sed -e "s,_cw_ROOT_,${cw_ROOT},g" \
+            init/systemd/clusterware-torque-trqauthd.service \
+            > /etc/systemd/system/clusterware-torque-trqauthd.service
+    }
+  _: |
+    if [ ! -d /var/spool/torque ]; then
+      mkdir /var/spool/torque
+      tar -C /var/spool/torque -xf torque-spool.tar.gz
+    fi
+    enable_trqauthd
+component-server:
+  el7: |
+    enable_server() {
+        sed -e "s,_cw_ROOT_,${cw_ROOT},g" \
+            init/systemd/clusterware-torque-server.service \
+            > /etc/systemd/system/clusterware-torque-server.service
+    }
+
+    start_trqauthd() {
+        systemctl start clusterware-torque-trqauthd
+    }
+
+    stop_trqauthd() {
+        systemctl stop clusterware-torque-trqauthd
+    }
+  _: |
+    "${cw_ROOT}"/bin/alces service enable torque/trqauthd
+    enable_server
+    name="$(hostname -f)"
+    echo "${name}" > /var/spool/torque/server_name
+    start_trqauthd
+    LD_LIBRARY_PATH="${cw_ROOT}"/opt/torque/lib:$LD_LIBRARY_PATH
+    PATH="${cw_ROOT}"/opt/torque/sbin:"${cw_ROOT}"/opt/torque/bin:$PATH
+    pbs_server -t create -f
+    sleep 2
+    echo set server operators += root@${name} | qmgr
+    echo set server managers += root@${name} | qmgr
+    qmgr -c 'set server scheduling = true'
+    qmgr -c 'set server keep_completed = 300'
+    qmgr -c 'set server mom_job_sync = true'
+    qmgr -c 'create queue batch'
+    qmgr -c 'set queue batch queue_type = execution'
+    qmgr -c 'set queue batch started = true'
+    qmgr -c 'set queue batch enabled = true'
+    qmgr -c 'set queue batch resources_default.walltime = 1:00:00'
+    qmgr -c 'set queue batch resources_default.nodes = 1'
+    qmgr -c 'set server default_queue = batch'
+    qterm
+    stop_trqauthd
+component-sched:
+  el7: |
+    enable_sched() {
+        sed -e "s,_cw_ROOT_,${cw_ROOT},g" \
+            init/systemd/clusterware-torque-sched.service \
+            > /etc/systemd/system/clusterware-torque-sched.service
+    }
+  _: |
+    "${cw_ROOT}"/bin/alces service enable torque/server
+    enable_sched
+build:
+  el7: |
+    yum install -e0 -y gcc-c++ openssl-devel libxml2-devel boost-devel gperf pam-devel
+  el6: |
+    yum install -e0 -y gcc-c++ openssl-devel libxml2-devel boost-devel gperf pam-devel
+  _: |
+    curl -L http://wpfilebase.s3.amazonaws.com/torque/torque-6.0.1-1456945733_daea91b.tar.gz -o /tmp/torque.tar.gz
+    tar -C /tmp -xzf /tmp/torque.tar.gz
+    cd /tmp/torque-*
+    ./configure --prefix="${cw_ROOT}"/opt/torque \
+      --with-pam \
+      --enable-drmaa \
+      --with-default-server=master
+    make
+    make install
+
+    mkdir /var/spool/torque
+
+    # Install TORQUE MOTD.
+    cp motd.sh "${cw_ROOT}"/etc/motd.d/00-tips-10-torque.sh
+
+    # Install environment module (we also add it to the skeleton modules file
+    # so it will be automatically loaded for Clusterware users created after
+    # installing Slurm).
+    mkdir -p "${cw_ROOT}"/etc/modules/services
+    sed -e "s,_cw_ROOT_,${cw_ROOT},g" torque-module.template > "${cw_ROOT}"/etc/modules/services/torque
+    sed -e 's,^module load \(.*\),module load services/torque \1,g' -i "${cw_ROOT}"/etc/skel/modules
+
+    cp etc/logrotate.d/* "${cw_ROOT}"/etc/logrotate.d
+
+    #cp -R docs/templates/* "${cw_ROOT}"/var/lib/docs/templates
+    #cp -R docs/guides/* "${cw_ROOT}"/var/lib/docs/guides
+
+    mkdir -p "${cw_ROOT}"/var/lib/scheduler
+    cp torque.functions.sh "${cw_ROOT}"/var/lib/scheduler

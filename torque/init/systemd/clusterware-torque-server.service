@@ -1,0 +1,24 @@
+################################################################################
+##
+## Alces Clusterware - Systemd service unit file
+## Copyright (c) 2016 Alces Software Ltd
+##
+################################################################################
+# TORQUE pbs_server daemon (systemd service unit)
+[Unit]
+Description=Alces Clusterware TORQUE pbs_server daemon
+Requires=clusterware-torque-trqauthd.service network.target local-fs.target
+After=clusterware-torque-trqauthd.service network.target local-fs.target rsyslog.service
+
+[Service]
+Type=forking
+User=root
+PIDFile=/var/spool/torque/server_priv/server.lock
+Environment=LD_LIBRARY_PATH=_cw_ROOT_/opt/torque/lib
+Environment=PBS_HOME=/var/spool/torque
+Environment=PBS_ARGS=
+ExecStart=_cw_ROOT_/opt/torque/sbin/pbs_server -d $PBS_HOME $PBS_ARGS
+ExecStop=_cw_ROOT_/opt/torque/bin/qterm
+
+[Install]
+WantedBy=multi-user.target
