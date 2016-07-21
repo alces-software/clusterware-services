@@ -1,9 +1,9 @@
 ---
 install:
   el7: |
-    yum install -e0 -y openssl libxml2 boost gperf pam
+    yum install -e0 -y openssl libxml2
   el6: |
-    yum install -e0 -y openssl libxml2 boost gperf pam
+    yum install -e0 -y openssl libxml2
   _: |
     # Download built Slurm and MUNGE.
     require serviceware
