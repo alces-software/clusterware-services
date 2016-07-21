@@ -10,6 +10,7 @@ gridscheduler_features() {
 
 gridscheduler_setup_environment() {
     export MODULEPATH="${cw_ROOT}"/etc/modules
+    eval $("${cw_ROOT}"/opt/Modules/bin/modulecmd bash purge)
     eval $("${cw_ROOT}"/opt/Modules/bin/modulecmd bash load services/gridscheduler)
 }
 
