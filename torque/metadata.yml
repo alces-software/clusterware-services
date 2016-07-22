@@ -109,13 +109,16 @@ build:
   _: |
     curl -L http://wpfilebase.s3.amazonaws.com/torque/torque-6.0.1-1456945733_daea91b.tar.gz -o /tmp/torque.tar.gz
     tar -C /tmp -xzf /tmp/torque.tar.gz
-    cd /tmp/torque-*
+    patch=$(pwd)/pbs_sched-bind.patch
+    pushd /tmp/torque-*
+    patch -p0 < "${patch}"
     ./configure --prefix="${cw_ROOT}"/opt/torque \
       --with-pam \
       --enable-drmaa \
       --with-default-server=master
     make
     make install
+    popd
 
     mkdir /var/spool/torque
 

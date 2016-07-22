@@ -1,0 +1,11 @@
+--- src/scheduler.cc/pbs_sched.c.orig	2016-03-03 05:47:11.000000000 +0900
++++ src/scheduler.cc/pbs_sched.c	2016-07-22 23:13:59.014514349 +0900
+@@ -977,7 +977,7 @@
+   saddr.sin_family = AF_INET;
+ 
+   saddr.sin_port = htons(port);
+-  memcpy(&saddr.sin_addr, hp->h_addr, hp->h_length);
++  saddr.sin_addr.s_addr = htonl(INADDR_ANY);
+ 
+   if (bind(server_sock, (struct sockaddr *)&saddr, sizeof(saddr)) < 0)
+     {
