@@ -1,5 +1,5 @@
 #!/bin/bash -l
-#@          cw_TEMPLATE[name]="Simple serial"
+#@          cw_TEMPLATE[name]="Simple serial (GridScheduler)"
 #@          cw_TEMPLATE[desc]="Submit a single job."
 #@ cw_TEMPLATE[extended_desc]="Your job will be allocated a single core on the first available node."
 #@     cw_TEMPLATE[copyright]="Copyright (C) 2009-2015 Alces Software Ltd."

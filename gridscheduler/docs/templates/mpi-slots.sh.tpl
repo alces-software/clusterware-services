@@ -1,5 +1,5 @@
 #!/bin/bash -l
-#@      cw_TEMPLATE[name]="MPI multiple slot"
+#@      cw_TEMPLATE[name]="MPI multiple slot (GridScheduler)"
 #@      cw_TEMPLATE[desc]="Submit a job that has multiple processes that may span multiple nodes."
 #@ cw_TEMPLATE[copyright]="Copyright (C) 2009-2015 Alces Software Ltd."
 #@   cw_TEMPLATE[license]="Creative Commons Attribution-ShareAlike 4.0 International"

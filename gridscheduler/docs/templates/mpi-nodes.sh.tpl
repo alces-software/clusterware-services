@@ -1,5 +1,5 @@
 #!/bin/bash -l
-#@      cw_TEMPLATE[name]="MPI multiple node"
+#@      cw_TEMPLATE[name]="MPI multiple node (GridScheduler)"
 #@      cw_TEMPLATE[desc]="Submit a single job that spans multiple nodes where you want exclusive use of each node allocated."
 #@ cw_TEMPLATE[copyright]="Copyright (C) 2009-2015 Alces Software Ltd."
 #@   cw_TEMPLATE[license]="Creative Commons Attribution-ShareAlike 4.0 International"
