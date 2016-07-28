@@ -105,6 +105,7 @@ setenv ${appcaps}BIN ${appdir}/bin
 
 prepend-path PATH ${appdir}/bin
 prepend-path MANPATH ${appdir}/share/man
+prepend-path CW_DOCPATH _cw_ROOT_/var/lib/docs/openlava
 
 setenv LSF_ENVDIR ${appdir}/etc
 setenv LSF_SERVERDIR ${appdir}/sbin

@@ -29,8 +29,9 @@ install:
 
     sed -e 's,^module load \(.*\),module load services/gridscheduler \1,g' -i "${cw_ROOT}"/etc/skel/modules
 
-    cp -R docs/templates/* "${cw_ROOT}"/var/lib/docs/templates
-    cp -R docs/guides/* "${cw_ROOT}"/var/lib/docs/guides
+    mkdir -p "${cw_ROOT}"/var/lib/docs/gridscheduler
+    cp -R docs/templates "${cw_ROOT}"/var/lib/docs/gridscheduler
+    cp -R docs/guides "${cw_ROOT}"/var/lib/docs/gridscheduler
 
     mkdir -p "${cw_ROOT}"/var/lib/scheduler
     cp gridscheduler.functions.sh "${cw_ROOT}"/var/lib/scheduler

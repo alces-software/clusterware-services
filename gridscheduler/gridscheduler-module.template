@@ -116,6 +116,7 @@ setenv ${appcaps}BIN ${appdir}/bin/linux-x64
 prepend-path PATH ${appdir}/bin/linux-x64
 prepend-path MANPATH ${appdir}/man
 prepend-path LD_LIBRARY_PATH ${appdir}/lib/linux-x64
+prepend-path CW_DOCPATH _cw_ROOT_/var/lib/docs/gridscheduler
 
 setenv SGE_ROOT ${appdir}
 setenv SGE_CELL etc

@@ -24,8 +24,9 @@ install:
 
     cp etc/logrotate.d/* "${cw_ROOT}"/etc/logrotate.d
 
-    cp -R docs/templates/* "${cw_ROOT}"/var/lib/docs/templates
-    #cp -R docs/guides/* "${cw_ROOT}"/var/lib/docs/guides
+    mkdir -p "${cw_ROOT}"/var/lib/docs/openlava
+    cp -R docs/templates "${cw_ROOT}"/var/lib/docs/openlava
+    #cp -R docs/guides "${cw_ROOT}"/var/lib/docs/openlava
 
     mkdir -p "${cw_ROOT}"/var/lib/scheduler
     cp openlava.functions.sh "${cw_ROOT}"/var/lib/scheduler
@@ -87,7 +88,8 @@ build:
 
     cp etc/logrotate.d/* "${cw_ROOT}"/etc/logrotate.d
 
-    cp -R docs/templates/* "${cw_ROOT}"/var/lib/docs/templates
+    mkdir -p "${cw_ROOT}"/var/lib/docs/openlava
+    cp -R docs/templates "${cw_ROOT}"/var/lib/docs/openlava
     #cp -R docs/guides/* "${cw_ROOT}"/var/lib/docs/guides
 
     mkdir -p "${cw_ROOT}"/var/lib/scheduler
