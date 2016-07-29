@@ -1,0 +1,21 @@
+################################################################################
+##
+## Alces Clusterware - Systemd service unit file
+## Copyright (c) 2016 Alces Software Ltd
+##
+################################################################################
+# PBSPro pbs_sched daemon (systemd service unit)
+[Unit]
+Description=Alces Clusterware PBSPro pbs_sched daemon
+Requires=network.target local-fs.target
+After=network.target local-fs.target rsyslog.service
+
+[Service]
+Type=forking
+User=root
+PIDFile=/var/spool/pbs/sched_priv/sched.lock
+Environment=PBS_CONF_FILE=_cw_ROOT_/opt/pbspro/etc/pbs.conf
+ExecStart=_cw_ROOT_/opt/pbspro/sbin/pbs_sched
+
+[Install]
+WantedBy=multi-user.target

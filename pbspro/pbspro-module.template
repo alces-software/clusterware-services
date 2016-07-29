@@ -1,0 +1,113 @@
+#%Module1.0#####################################################################
+##
+## Alces HPC Software Stack - Service module file
+## Copyright (c) 2016 Alces Software Ltd
+##
+## path: services/pbspro
+################################################################################
+if { [info exists ::env(ALCES_TRACE)] } {
+    puts stderr " -> $::ModulesCurrentModulefile"
+}
+
+if { [namespace exists alces] == 0 } {
+    if { [info exists ::env(MODULES_ALCES_TCL)] } {
+        source $::env(MODULES_ALCES_TCL)
+    } else {
+        # compatibility mode for module use without availability of Alces tools
+        proc ::process {body} { eval $body }
+        proc ::depend {module {version ""} {_ ""}} {
+            set req [regsub {\-} $module {/}]/$version
+            if { [catch { prereq $req }] } {
+                puts stderr "Could not satisfy prereq: $req"
+                break
+            }
+        }
+        proc ::alces {_ module} { return $module }
+        proc ::search {_ _ _} { }
+    }
+}
+
+proc ModulesHelp { } {
+    puts stderr "
+                ============== PBSPro ===============
+           Optimize job scheduling and workload management
+                =====================================
+
+This module sets up your environment for the use of the 'pbspro'
+service. This module sets up version '14.1.0' of the service.
+
+>> SYNOPSIS <<
+
+PBS Professional software optimizes job scheduling and workload
+management in high-performance computing (HPC) environments --
+clusters, clouds, and supercomputers -- improving system efficiency
+and people's productivity. Built by HPC people for HPC people, PBS Pro
+is fast, scalable, secure, and resilient, and supports all modern
+infrastructure, middleware, and applications.
+
+>> LICENSING <<
+
+This package is made available subject to the following license(s):
+
+\tAGPLv3+
+
+>> FURTHER INFORMATION <<
+
+More information about this software can be found at the website:
+
+\thttp://www.pbspro.org/
+
+For further details regarding this module, including the environment
+modifications it will apply, execute:
+
+\tmodule show services/pbspro
+
+
+>> GET STARTED <<
+
+Some common commands include:
+
+        'qstat'  - show summary of running jobs
+        'qsub'   - submit a new job to the scheduler
+
+After loading the module, further details can be found in the man
+pages for the service, by executing 'man <command>'.
+"
+}
+
+set     app pbspro
+set     version 14.1.0
+set     appcaps PBSPRO
+set     appdir _cw_ROOT_/opt/pbspro
+
+module-whatis   "
+
+            Title: PBS Pro
+          Summary: Optimize job scheduling and workload management
+          License: AGPLv3+
+            Group: Alces/Services
+              URL: http://www.pbspro.org/
+
+             Name: pbspro
+          Version: 14.1.0
+           Module: [alces pretty services/pbspro]
+      Module path: _cw_ROOT_/etc/modules/services/pbspro
+     Package path: _cw_ROOT_/opt/pbspro
+
+For further information, execute:
+
+\tmodule help services/pbspro
+"
+
+setenv ${appcaps}DIR ${appdir}
+setenv ${appcaps}BIN ${appdir}/bin
+setenv ${appcaps}LIB ${appdir}/lib
+setenv ${appcaps}INCLUDE ${appdir}/include
+setenv ${appcaps}SBIN ${appdir}/sbin
+setenv ${appcaps}SHARE ${appdir}/share
+
+setenv PBS_CONF_FILE ${appdir}/etc/pbs.conf
+
+prepend-path PATH ${appdir}/bin
+prepend-path MANPATH ${appdir}/share/man
+prepend-path LD_LIBRRY_PATH ${appdir}/lib

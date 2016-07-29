@@ -1,0 +1,22 @@
+################################################################################
+##
+## Alces Clusterware - Systemd service unit file
+## Copyright (c) 2016 Alces Software Ltd
+##
+################################################################################
+# PBSPro pbs_server daemon (systemd service unit)
+[Unit]
+Description=Alces Clusterware PBSPro pbs_server daemon
+Requires=clusterware-pbspro-comm.service network.target local-fs.target
+After=clusterware-pbspro-comm.service network.target local-fs.target rsyslog.service
+
+[Service]
+Type=forking
+User=root
+PIDFile=/var/spool/pbs/server_priv/server.lock
+Environment=PBS_CONF_FILE=_cw_ROOT_/opt/pbspro/etc/pbs.conf
+ExecStart=_cw_ROOT_/opt/pbspro/sbin/pbs_server
+ExecStop=_cw_ROOT_/opt/pbspro/bin/qterm
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,115 @@
+---
+install:
+  el7: |
+    yum install -e0 -y openssl
+  el6: |
+    yum install -e0 -y openssl
+  _: |
+    require serviceware
+    serviceware_add pbspro
+
+    # Install PBSPro MOTD.
+    cp motd.sh "${cw_ROOT}"/etc/motd.d/00-tips-10-pbspro.sh
+
+    # Install environment module (we also add it to the skeleton modules file
+    # so it will be automatically loaded for Clusterware users created after
+    # installing PBSPro).
+    mkdir -p "${cw_ROOT}"/etc/modules/services
+    sed -e "s,_cw_ROOT_,${cw_ROOT},g" pbspro-module.template > "${cw_ROOT}"/etc/modules/services/pbspro
+    sed -e 's,^module load \(.*\),module load services/pbspro \1,g' -i "${cw_ROOT}"/etc/skel/modules
+
+    cp etc/logrotate.d/* "${cw_ROOT}"/etc/logrotate.d
+
+    #cp -R docs/templates/* "${cw_ROOT}"/var/lib/docs/templates
+    #cp -R docs/guides/* "${cw_ROOT}"/var/lib/docs/guides
+
+    mkdir -p "${cw_ROOT}"/var/lib/scheduler
+    cp pbspro.functions.sh "${cw_ROOT}"/var/lib/scheduler
+component-mom:
+  el7: |
+    yum install -e0 -y hwloc-libs
+
+    enable_mom() {
+        sed -e "s,_cw_ROOT_,${cw_ROOT},g" \
+            init/systemd/clusterware-pbspro-mom.service \
+            > /etc/systemd/system/clusterware-pbspro-mom.service
+    }
+  _: |
+    if [ ! -d /var/spool/pbs ]; then
+      mkdir /var/spool/pbs
+      tar -C /var/spool/pbs -xf pbs-spool.tar.gz
+    fi
+    enable_mom
+component-comm:
+  el7: |
+    enable_comm() {
+        sed -e "s,_cw_ROOT_,${cw_ROOT},g" \
+            init/systemd/clusterware-pbspro-comm.service \
+            > /etc/systemd/system/clusterware-pbspro-comm.service
+    }
+  _: |
+    if [ ! -d /var/spool/pbs ]; then
+      mkdir /var/spool/pbs
+      tar -C /var/spool/pbs -xf pbspro-spool.tar.gz
+    fi
+    enable_comm
+component-server:
+  el7: |
+    yum install -e0 -y postgresql-server libical
+
+    enable_server() {
+        sed -e "s,_cw_ROOT_,${cw_ROOT},g" \
+            init/systemd/clusterware-pbspro-server.service \
+            > /etc/systemd/system/clusterware-pbspro-server.service
+    }
+  _: |
+    "${cw_ROOT}"/bin/alces service enable pbspro/comm
+    enable_server
+component-sched:
+  el7: |
+    yum install -e0 -y libical
+
+    enable_sched() {
+        sed -e "s,_cw_ROOT_,${cw_ROOT},g" \
+            init/systemd/clusterware-pbspro-sched.service \
+            > /etc/systemd/system/clusterware-pbspro-sched.service
+    }
+  _: |
+    "${cw_ROOT}"/bin/alces service enable pbspro/server
+    enable_sched
+build:
+  el7: |
+    yum install -e0 -y openssl-devel tcl-devel libXt-devel postgresql-devel \
+      libedit-devel hwloc-devel libical-devel tk-devel python-devel
+  el6: |
+    yum install -e0 -y openssl-devel tcl-devel libXt-devel postgresql-devel \
+      libedit-devel hwloc-devel libical-devel tk-devel python-devel
+  _: |
+    curl -L https://github.com/PBSPro/pbspro/archive/v14.1.0.tar.gz -o /tmp/pbspro.tar.gz
+    tar -C /tmp/ -xzf /tmp/pbspro.tar.gz
+    pushd /tmp/pbspro-*
+    ./configure --prefix="${cw_ROOT}"/opt/pbspro \
+      --with-pbs-conf-file="${cw_ROOT}"/opt/pbspro/pbs.conf
+    make
+    make install
+    popd
+
+    chmod 4755 "${cw_ROOT}"/opt/pbspro/sbin/pbs_iff "${cw_ROOT}"/opt/pbspro/sbin/pbs_rcp
+
+    # Install PBSPro MOTD.
+    cp motd.sh "${cw_ROOT}"/etc/motd.d/00-tips-10-pbspro.sh
+
+    # Install environment module (we also add it to the skeleton modules file
+    # so it will be automatically loaded for Clusterware users created after
+    # installing PBSPro).
+    mkdir -p "${cw_ROOT}"/etc/modules/services
+    sed -e "s,_cw_ROOT_,${cw_ROOT},g" pbspro-module.template > "${cw_ROOT}"/etc/modules/services/pbspro
+    sed -e 's,^module load \(.*\),module load services/pbspro \1,g' -i "${cw_ROOT}"/etc/skel/modules
+
+    cp etc/logrotate.d/* "${cw_ROOT}"/etc/logrotate.d
+
+    #cp -R docs/templates/* "${cw_ROOT}"/var/lib/docs/templates
+    #cp -R docs/guides/* "${cw_ROOT}"/var/lib/docs/guides
+
+    mkdir -p "${cw_ROOT}"/var/lib/scheduler
+    cp pbspro.functions.sh "${cw_ROOT}"/var/lib/scheduler

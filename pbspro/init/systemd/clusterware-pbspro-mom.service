@@ -1,0 +1,25 @@
+################################################################################
+##
+## Alces Clusterware - Systemd service unit file
+## Copyright (c) 2016 Alces Software Ltd
+##
+################################################################################
+# PBSPro pbs_mom daemon (systemd service unit)
+[Unit]
+Description=Alces Clusterware PBSPro pbs_mom daemon
+Requires=network.target local-fs.target
+After=network.target local-fs.target rsyslog.service
+
+[Service]
+Type=forking
+User=root
+LimitNOFILE=32768
+LimitMEMLOCK=infinity
+LimitSTACK=12582912
+KillMode=process
+PIDFile=/var/spool/pbs/mom_priv/mom.lock
+Environment=PBS_CONF_FILE=_cw_ROOT_/opt/pbspro/etc/pbs.conf
+ExecStart=_cw_ROOT_/opt/pbspro/sbin/pbs_mom
+
+[Install]
+WantedBy=multi-user.target
