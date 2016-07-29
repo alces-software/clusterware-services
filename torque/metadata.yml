@@ -36,7 +36,7 @@ component-mom:
   _: |
     if [ ! -d /var/spool/torque ]; then
       mkdir /var/spool/torque
-      tar -C /var/spool/torque -xf torque-spool.tar.gz
+      tar -C /var/spool/torque -xzf torque-spool.tar.gz
     fi
     enable_mom
 component-trqauthd:
@@ -49,7 +49,7 @@ component-trqauthd:
   _: |
     if [ ! -d /var/spool/torque ]; then
       mkdir /var/spool/torque
-      tar -C /var/spool/torque -xf torque-spool.tar.gz
+      tar -C /var/spool/torque -xzf torque-spool.tar.gz
     fi
     enable_trqauthd
 component-server:
