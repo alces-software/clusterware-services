@@ -1,0 +1,168 @@
+From 1340e65972dc0e8d37a9013ee4c49a1124d13cd8 Mon Sep 17 00:00:00 2001
+From: vchlum <chlumskyvaclav@gmail.com>
+Date: Tue, 21 Jun 2016 11:05:44 +0200
+Subject: [PATCH] compiling on Debian
+
+---
+ INSTALL                 | 16 ++++++++++++++++
+ configure.ac            |  1 -
+ m4/with_database_dir.m4 |  6 ++++--
+ m4/with_editline.m4     |  4 +++-
+ m4/with_expat.m4        |  2 +-
+ m4/with_hwloc.m4        |  2 +-
+ m4/with_libical.m4      |  2 +-
+ m4/with_tcl.m4          |  8 ++++++--
+ 8 files changed, 32 insertions(+), 9 deletions(-)
+
+diff --git a/INSTALL b/INSTALL
+index 859e12e..0a115dc 100644
+--- a/INSTALL
++++ b/INSTALL
+@@ -19,6 +19,13 @@ How to install PBS Pro using the configure script.
+       ncurses-devel perl postgresql-devel python-devel tcl-devel \
+       tk-devel swig libexpat-devel libopenssl-devel libXext-devel \
+       libXft-devel fontconfig
++      
++  For Debian systems you should run the following command as root:      
++  
++    sudo apt-get install gcc make libtool libhwloc-dev libX11-dev \
++      libXt-dev libedit-dev libical-dev ncurses-dev perl \
++      postgresql-server-dev-all python-dev tcl-dev tk-dev swig \
++      libexpat-dev libssl-dev libxext-dev libxft-dev
+ 
+ 2. Install the prerequisite packages for running PBS Pro. In addition
+   to the commands below, you should also install a text editor of
+@@ -33,6 +40,11 @@ How to install PBS Pro using the configure script.
+ 
+     zypper install expat libedit postgresql-server python \
+       sendmail sudo tcl tk libical1
++      
++  For Debian systems you should run the following command as root:
++
++    apt-get install expat libedit2 postgresql python sendmail-bin \
++      sudo tcl tk libical1a
+ 
+ 3. Open a terminal as a normal (non-root) user, unpack the PBS Pro
+   tarball, and cd to the package directory.
+@@ -56,6 +68,10 @@ How to install PBS Pro using the configure script.
+   following command:
+ 
+     ./configure --prefix=/opt/pbs --libexecdir=/opt/pbs/libexec
++    
++  For Debian systems you should run the following command:
++
++    ./configure --prefix=/opt/pbs
+ 
+ 6. Build PBS Pro by running "make". (See note 3 below)
+ 
+diff --git a/configure.ac b/configure.ac
+index 08f4e90..4e26a2b 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -182,7 +182,6 @@ AC_CHECK_HEADERS([ \
+ 	sys/utsname.h \
+ 	sys/vfs.h \
+ 	sys/wait.h \
+-	tcl.h \
+ 	termios.h \
+ 	time.h \
+ 	unistd.h \
+diff --git a/m4/with_database_dir.m4 b/m4/with_database_dir.m4
+index f334c6b..074efd7 100644
+--- a/m4/with_database_dir.m4
++++ b/m4/with_database_dir.m4
+@@ -52,10 +52,12 @@ AC_DEFUN([PBS_AC_WITH_DATABASE_DIR],
+       [database_inc="-I$database_dir/include"]),
+     AS_IF([test -r "$database_dir/include/pgsql/libpq-fe.h"],
+       [database_inc="-I$database_dir/include/pgsql"],
+-      AC_MSG_ERROR([Database headers not found.])))
++      AS_IF([test -r "$database_dir/include/postgresql/libpq-fe.h"],
++        [database_inc="-I$database_dir/include/postgresql"],
++        AC_MSG_ERROR([Database headers not found.]))))
+   AS_IF([test "$database_dir" = "/usr"],
+     # Using system installed PostgreSQL
+-    AS_IF([test -r "/usr/lib64/libpq.so" -o -r "/usr/lib/libpq.so"],
++    AS_IF([test -r "/usr/lib64/libpq.so" -o -r "/usr/lib/libpq.so" -o -r "/usr/lib/x86_64-linux-gnu/libpq.so"],
+       [database_lib="-lpq"],
+       AC_MSG_ERROR([PBS database shared object library not found.])),
+     # Using developer installed PostgreSQL
+diff --git a/m4/with_editline.m4 b/m4/with_editline.m4
+index a764fa2..6f5721f 100644
+--- a/m4/with_editline.m4
++++ b/m4/with_editline.m4
+@@ -57,7 +57,9 @@ AC_DEFUN([PBS_AC_WITH_EDITLINE],
+       [editline_lib="-ledit"],
+       AS_IF([test -r /usr/lib/libedit.so],
+         [editline_lib="-ledit"],
+-        AC_MSG_ERROR([editline shared object library not found.]))),
++        AS_IF([test -r /usr/lib/x86_64-linux-gnu/libedit.so],
++          [editline_lib="-ledit"],
++          AC_MSG_ERROR([editline shared object library not found.])))),
+     # Using developer installed editline
+     AS_IF([test -r "${editline_dir}/lib64/libedit.a"],
+       [editline_lib="${editline_dir}/lib64/libedit.a"],
+diff --git a/m4/with_expat.m4 b/m4/with_expat.m4
+index fc764b5..c2a5ec2 100644
+--- a/m4/with_expat.m4
++++ b/m4/with_expat.m4
+@@ -53,7 +53,7 @@ AC_DEFUN([PBS_AC_WITH_EXPAT],
+     AC_MSG_ERROR([expat headers not found.]))
+   AS_IF([test "$expat_dir" = "/usr"],
+     # Using system installed expat
+-    AS_IF([test -r "/usr/lib64/libexpat.so" -o -r "/usr/lib/libexpat.so"],
++    AS_IF([test -r "/usr/lib64/libexpat.so" -o -r "/usr/lib/libexpat.so" -o -r "/usr/lib/x86_64-linux-gnu/libexpat.so"],
+       [expat_lib="-lexpat"],
+       AC_MSG_ERROR([expat shared object library not found.])),
+     # Using developer installed expat
+diff --git a/m4/with_hwloc.m4 b/m4/with_hwloc.m4
+index 472705f..d9640e0 100644
+--- a/m4/with_hwloc.m4
++++ b/m4/with_hwloc.m4
+@@ -57,7 +57,7 @@ AC_DEFUN([PBS_AC_WITH_HWLOC],
+   )
+   AS_IF([test "$hwloc_dir" = "/usr"],
+     # Using system installed hwloc
+-    AS_IF([test -r "/usr/lib64/libhwloc.so" -o -r "/usr/lib/libhwloc.so"],
++    AS_IF([test -r "/usr/lib64/libhwloc.so" -o -r "/usr/lib/libhwloc.so" -o -r "/usr/lib/x86_64-linux-gnu/libhwloc.so"],
+       [hwloc_lib="-lhwloc"],
+       AC_MSG_ERROR([hwloc shared object library not found.])
+     ),
+diff --git a/m4/with_libical.m4 b/m4/with_libical.m4
+index dc14512..f0b270a 100644
+--- a/m4/with_libical.m4
++++ b/m4/with_libical.m4
+@@ -53,7 +53,7 @@ AC_DEFUN([PBS_AC_WITH_LIBICAL],
+     AC_MSG_ERROR([libical headers not found.]))
+   AS_IF([test "$libical_dir" = "/usr"],
+     # Using system installed libical
+-    AS_IF([test -r "/usr/lib64/libical.so" -o -r "/usr/lib/libical.so"],
++    AS_IF([test -r "/usr/lib64/libical.so" -o -r "/usr/lib/libical.so" -o -r "/usr/lib/x86_64-linux-gnu/libical.so"],
+       [libical_lib="-lical"],
+       AC_MSG_ERROR([libical shared object library not found.])),
+     # Using developer installed libical
+diff --git a/m4/with_tcl.m4 b/m4/with_tcl.m4
+index 5fc3679..6733e3c 100644
+--- a/m4/with_tcl.m4
++++ b/m4/with_tcl.m4
+@@ -51,7 +51,9 @@ AC_DEFUN([PBS_AC_WITH_TCL],
+     [. "$tcl_dir/lib64/tclConfig.sh"],
+     AS_IF([test -r "$tcl_dir/lib/tclConfig.sh"],
+       [. "$tcl_dir/lib/tclConfig.sh"],
+-      AC_MSG_ERROR([tclConfig.sh not found])))
++      AS_IF([test -r "$tcl_dir/lib/x86_64-linux-gnu/tclConfig.sh"],
++        [. "$tcl_dir/lib/x86_64-linux-gnu/tclConfig.sh"],
++        AC_MSG_ERROR([tclConfig.sh not found]))))
+   AC_MSG_RESULT([$tcl_dir])
+   AC_MSG_CHECKING([for Tcl version])
+   AS_IF([test "x$TCL_VERSION" = "x"],
+@@ -64,7 +66,9 @@ AC_DEFUN([PBS_AC_WITH_TCL],
+     [. "$tcl_dir/lib64/tkConfig.sh"],
+     AS_IF([test -r "$tcl_dir/lib/tkConfig.sh"],
+       [. "$tcl_dir/lib/tkConfig.sh"],
+-      AC_MSG_ERROR([tkConfig.sh not found])))
++      AS_IF([test -r "$tcl_dir/lib/x86_64-linux-gnu/tkConfig.sh"],
++        [. "$tcl_dir/lib/x86_64-linux-gnu/tkConfig.sh"],
++        AC_MSG_ERROR([tkConfig.sh not found]))))
+   AC_MSG_RESULT([$tcl_dir])
+   AC_MSG_CHECKING([for Tk version])
+   AS_IF([test "x$TK_VERSION" = "x"],

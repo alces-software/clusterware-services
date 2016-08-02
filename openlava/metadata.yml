@@ -1,9 +1,11 @@
 ---
 install:
   el7: |
-      yum install -y ncurses tcl
+    yum install -y ncurses tcl
   el6: |
-      yum install -y ncurses tcl
+    yum install -y ncurses tcl
+  ubuntu1604: |
+    apt-get install -y libncurses5 tcl
   _: |
     require serviceware
     serviceware_add openlava
@@ -48,6 +50,14 @@ component-base:
               > /etc/systemd/system/clusterware-openlava-$a.service
         done
     }
+  ubuntu1604: |
+    install_services() {
+        for a in lim res sbatchd; do
+          sed -e "s,_cw_ROOT_,${cw_ROOT},g" \
+              init/systemd/clusterware-openlava-$a.service \
+              > /etc/systemd/system/clusterware-openlava-$a.service
+        done
+    }
   _: |
     install_services
     mkdir -p /var/log/openlava
@@ -58,20 +68,20 @@ build:
     yum install -y ncurses-devel tcl-devel
   el6: |
     yum install -y ncurses-devel tcl-devel
+  ubuntu1604: |
+    apt-get install -y libncurses5-dev tcl-dev
   _: |
-    # curl -L "http://www.openlava.org/tarball/openlava-3.3.tar.gz -o /tmp/openlava-source.tar.gz
-    # tar -C /tmp -xzf "/tmp/openlava-source.tar.gz"
-    # yum install -y tcl-devel ncurses-devel
-    # cd /tmp/openlava-3.3
-    # ./configure --prefix=/opt/clusterware/opt/openlava
-    # make
-    # make install
-    # for a in lsb.hosts lsb.params lsb.queues lsb.resources lsb.users lsf.cluster.openlava lsf.conf lsf.shared lsf.task; do
-    #   cp /tmp/openlava-3.3/config/$a /opt/clusterware/opt/openlava/etc
-    # done
-    # rm -f /opt/clusterware/opt/openlava/etc/openlava
-
-    tar -C ${cw_ROOT} -xzf /vagrant/openlava.tar.gz
+    curl -L http://www.openlava.org/tarball/openlava-3.3.tar.gz -o /tmp/openlava-source.tar.gz
+    tar -C /tmp -xzf "/tmp/openlava-source.tar.gz"
+    pushd /tmp/openlava-3.3
+    ./configure --prefix=/opt/clusterware/opt/openlava
+    make
+    make install
+    for a in lsb.hosts lsb.params lsb.queues lsb.resources lsb.users lsf.cluster.openlava lsf.conf lsf.shared lsf.task; do
+      cp /tmp/openlava-3.3/config/$a /opt/clusterware/opt/openlava/etc
+    done
+    rm -f /opt/clusterware/opt/openlava/etc/openlava
+    popd
     # install environment module
     mkdir -p "${cw_ROOT}"/etc/modules/services
     sed -e "s,_cw_ROOT_,${cw_ROOT},g" openlava-module.template > "${cw_ROOT}"/etc/modules/services/openlava

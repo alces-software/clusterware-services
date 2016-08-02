@@ -25,6 +25,8 @@ install:
       yum install -y openssl net-tools lzo-minilzo
   el6: |
       yum install -y openssl net-tools lzo-minilzo
+  ubuntu1604: |
+    apt-get install -y openssl libssl1.0.0 net-tools liblzo2-2
   _: |
     . "${cw_ROOT}"/etc/clusterware.rc
     case "${cw_VERSION:-1.0.0}" in
@@ -39,6 +41,17 @@ install:
       ;;
     esac
 component-base:
+  ubuntu1604: |
+    enable_openvpn() {
+        sed -e "s,_cw_ROOT_,${cw_ROOT},g" \
+            init/systemd/clusterware-openvpn@.service \
+            > /etc/systemd/system/clusterware-openvpn@.service
+        mkdir -p /run/clusterware-openvpn
+        cat <<EOF > /etc/tmpfiles.d/clusterware-openvpn.conf
+    # Clusterware OpenVPN runtime directory
+    d /run/clusterware-openvpn 0755 root root -
+    EOF
+    }
   el7: |
     enable_openvpn() {
         sed -e "s,_cw_ROOT_,${cw_ROOT},g" \
@@ -61,10 +74,15 @@ component-base:
     enable_openvpn
     mkdir -p "${cw_ROOT}"/etc/openvpn
 build:
+  el7: |
+    yum install -y openssl-devel net-tools lzo-devel pam-devel
+  el6: |
+    yum install -y openssl-devel net-tools lzo-devel pam-devel
+  ubuntu1604: |
+    apt-get install -y libssl-dev net-tools liblzo2-dev libpam0g-dev
   _: |
     curl -L "https://swupdate.openvpn.org/community/releases/openvpn-2.3.10.tar.gz" -o /tmp/openvpn-source.tar.gz
     tar -C /tmp -xzf "/tmp/openvpn-source.tar.gz"
-    yum install -y openssl-devel net-tools lzo-devel pam-devel
     cd /tmp/openvpn-2.3.10
     ./configure --prefix=/opt/clusterware/opt/openvpn
     make

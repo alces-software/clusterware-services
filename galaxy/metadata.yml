@@ -21,6 +21,9 @@
 #==============================================================================
 ---
 install:
+  ubuntu1604: |
+    echo "Sorry, Galaxy is not currently supported under Ubuntu 16.04."
+    exit 1
   _: |
     . "${cw_ROOT}"/etc/clusterware.rc
     case "${cw_VERSION:-1.0.0}" in
@@ -345,6 +348,9 @@ component-pulsar:
 
     enable_pulsar
 build:
+  ubuntu1604: |
+    echo "Sorry, Galaxy is not currently supported under Ubuntu 16.04."
+    exit 1
   el6: |
     yum install -y postgresql-server pcre-devel openssl-devel \
       postgresql-devel sqlite-devel libffi-devel python-devel \

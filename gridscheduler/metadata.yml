@@ -69,6 +69,21 @@ component-qmaster:
     restart_qmaster() {
         systemctl restart clusterware-gridscheduler-qmaster.service
     }
+  ubuntu1604: |
+    enable_qmaster() {
+        sed -e "s,_cw_ROOT_,${cw_ROOT},g" \
+            init/systemd/clusterware-gridscheduler-qmaster.service \
+            > /etc/systemd/system/clusterware-gridscheduler-qmaster.service
+        systemctl enable clusterware-gridscheduler-qmaster.service
+    }
+
+    start_qmaster() {
+        systemctl start clusterware-gridscheduler-qmaster.service
+    }
+
+    restart_qmaster() {
+        systemctl restart clusterware-gridscheduler-qmaster.service
+    }
   _: |
     tmr=0
     hn=$(hostname -f)
@@ -152,6 +167,13 @@ component-execd:
         chkconfig clusterware-gridscheduler-execd on
     }
   el7: |
+    enable_execd() {
+        sed -e "s,_cw_ROOT_,${cw_ROOT},g" \
+            init/systemd/clusterware-gridscheduler-execd.service \
+            > /etc/systemd/system/clusterware-gridscheduler-execd.service
+        systemctl enable clusterware-gridscheduler-execd.service
+    }
+  ubuntu1604: |
     enable_execd() {
         sed -e "s,_cw_ROOT_,${cw_ROOT},g" \
             init/systemd/clusterware-gridscheduler-execd.service \

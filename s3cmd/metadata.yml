@@ -44,13 +44,14 @@ build:
     curl -L "https://github.com/s3tools/s3cmd/releases/download/v1.6.1/s3cmd-1.6.1.tar.gz" -o /tmp/s3cmd-source.tar.gz
     tar -C /tmp -xzf "/tmp/s3cmd-source.tar.gz"
     patch -d /tmp/s3cmd-1.6.1 -p1 < dns-style-bucket-names.patch
-    cd /tmp/s3cmd-1.6.1
+    pushd /tmp/s3cmd-1.6.1
     mkdir -p "${cw_ROOT}/opt/s3cmd"/{doc,man/man1}
     cp -R s3cmd S3 "${cw_ROOT}/opt/s3cmd"
     cp README.md "${cw_ROOT}/opt/s3cmd/doc"
     cp s3cmd.1 "${cw_ROOT}/opt/s3cmd/man/man1"
     # install environment module
     mkdir -p "${cw_ROOT}"/etc/modules/services
+    popd
     sed -e "s,_cw_ROOT_,${cw_ROOT},g" s3cmd-module.template > "${cw_ROOT}"/etc/modules/services/s3cmd
     sed -e 's,^module load \(.*\),module load services/s3cmd \1,g' -i "${cw_ROOT}"/etc/skel/modules
     cp motd.sh "${cw_ROOT}"/etc/motd.d/00-tips-20-s3cmd.sh

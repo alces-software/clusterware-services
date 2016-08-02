@@ -4,6 +4,8 @@ install:
     yum install -e0 -y openssl libxml2
   el6: |
     yum install -e0 -y openssl libxml2
+  ubuntu1604: |
+    apt-get install -y openssl libssl1.0.0 libxml2
   _: |
     # Download built Slurm and MUNGE.
     require serviceware
@@ -33,6 +35,12 @@ component-mom:
             init/systemd/clusterware-torque-mom.service \
             > /etc/systemd/system/clusterware-torque-mom.service
     }
+  ubuntu1604: |
+    enable_mom() {
+        sed -e "s,_cw_ROOT_,${cw_ROOT},g" \
+            init/systemd/clusterware-torque-mom.service \
+            > /etc/systemd/system/clusterware-torque-mom.service
+    }
   _: |
     if [ ! -d /var/spool/torque ]; then
       mkdir /var/spool/torque
@@ -46,6 +54,12 @@ component-trqauthd:
             init/systemd/clusterware-torque-trqauthd.service \
             > /etc/systemd/system/clusterware-torque-trqauthd.service
     }
+  ubuntu1604: |
+    enable_trqauthd() {
+        sed -e "s,_cw_ROOT_,${cw_ROOT},g" \
+            init/systemd/clusterware-torque-trqauthd.service \
+            > /etc/systemd/system/clusterware-torque-trqauthd.service
+    }
   _: |
     if [ ! -d /var/spool/torque ]; then
       mkdir /var/spool/torque
@@ -54,6 +68,20 @@ component-trqauthd:
     enable_trqauthd
 component-server:
   el7: |
+    enable_server() {
+        sed -e "s,_cw_ROOT_,${cw_ROOT},g" \
+            init/systemd/clusterware-torque-server.service \
+            > /etc/systemd/system/clusterware-torque-server.service
+    }
+
+    start_trqauthd() {
+        systemctl start clusterware-torque-trqauthd
+    }
+
+    stop_trqauthd() {
+        systemctl stop clusterware-torque-trqauthd
+    }
+  ubuntu1604: |
     enable_server() {
         sed -e "s,_cw_ROOT_,${cw_ROOT},g" \
             init/systemd/clusterware-torque-server.service \
@@ -98,6 +126,12 @@ component-sched:
             init/systemd/clusterware-torque-sched.service \
             > /etc/systemd/system/clusterware-torque-sched.service
     }
+  ubuntu1604: |
+    enable_sched() {
+        sed -e "s,_cw_ROOT_,${cw_ROOT},g" \
+            init/systemd/clusterware-torque-sched.service \
+            > /etc/systemd/system/clusterware-torque-sched.service
+    }
   _: |
     "${cw_ROOT}"/bin/alces service enable torque/server
     enable_sched
@@ -106,6 +140,8 @@ build:
     yum install -e0 -y gcc-c++ openssl-devel libxml2-devel boost-devel gperf pam-devel
   el6: |
     yum install -e0 -y gcc-c++ openssl-devel libxml2-devel boost-devel gperf pam-devel
+  ubuntu1604: |
+    apt-get install -y g++ libssl-dev libxml2-dev libboost-dev gperf libpam0g-dev
   _: |
     curl -L http://wpfilebase.s3.amazonaws.com/torque/torque-6.0.1-1456945733_daea91b.tar.gz -o /tmp/torque.tar.gz
     tar -C /tmp -xzf /tmp/torque.tar.gz

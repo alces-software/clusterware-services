@@ -23,6 +23,16 @@ component-base:
         chmod 755 "${cw_ROOT}"/libexec/alces-storage-manager-daemon/alces-storage-manager-daemon-starter
         systemctl enable clusterware-alces-storage-manager-daemon.service
     }
+  ubuntu1604: |
+    enable_alces_storage_manager_daemon() {
+        sed -e "s,_cw_ROOT_,${cw_ROOT},g" \
+            init/systemd/clusterware-alces-storage-manager-daemon.service \
+            > /etc/systemd/system/clusterware-alces-storage-manager-daemon.service
+        mkdir -p "${cw_ROOT}"/libexec/alces-storage-manager-daemon
+        cp libexec/alces-storage-manager-daemon-starter "${cw_ROOT}"/libexec/alces-storage-manager-daemon
+        chmod 755 "${cw_ROOT}"/libexec/alces-storage-manager-daemon/alces-storage-manager-daemon-starter
+        systemctl enable clusterware-alces-storage-manager-daemon.service
+    }
   _: |
     port="${1:-25268}"
     mkdir -p /var/log/alces-storage-manager-daemon "${cw_ROOT}"/etc/ssl
@@ -49,9 +59,10 @@ component-base:
     enable_alces_storage_manager_daemon
 build:
   el7: |
-    yum install -y gmp-devel
+    yum install -y gmp-devel pam-devel openssl-devel gcc-c++
+  ubuntu1604: |
+    apt-get install -y libgmp-dev libpam0g-dev openssl libssl-dev g++
   _: |
-    yum install -y pam-devel openssl-devel gcc-c++
     curl -L "https://github.com/alces-software/alces-storage-manager-daemon/archive/master.zip" -o /tmp/asmd.zip
     cd "${cw_ROOT}"/opt
     unzip /tmp/asmd.zip

@@ -32,6 +32,12 @@ build:
     _post_build() {
       :
     }
+  ubuntu1604: |
+    apt-get install -y libffi-dev openssl libssl-dev python-setuptools
+    pyver=2.7
+    _post_build() {
+      :
+    }
   el6: |
     yum install -y libffi-devel openssl-devel
     pyver=2.6

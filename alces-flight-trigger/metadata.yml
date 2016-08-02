@@ -7,19 +7,26 @@ install:
 component-base:
   el7: |
     enable_alces_flight_trigger() {
+      enable_alces_flight_trigger_systemd
+    }
+  ubuntu1604: |
+    enable_alces_flight_trigger() {
+      enable_alces_flight_trigger_systemd
+    }
+  _: |
+    require serviceware
+
+    enable_alces_flight_trigger_systemd() {
         sed -e "s,_cw_ROOT_,${cw_ROOT},g" \
             init/systemd/clusterware-alces-flight-trigger.service \
             > /etc/systemd/system/clusterware-alces-flight-trigger.service
         systemctl enable clusterware-alces-flight-trigger.service
+
+        TRIGGER_LIBEXEC_DIR="${cw_ROOT}/libexec/alces-flight-trigger"
+        mkdir -p "${TRIGGER_LIBEXEC_DIR}"
+        cp libexec/alces-flight-trigger-starter "${TRIGGER_LIBEXEC_DIR}"
+        chmod 755 "${TRIGGER_LIBEXEC_DIR}/alces-flight-trigger-starter"
     }
-
-    TRIGGER_LIBEXEC_DIR="${cw_ROOT}/libexec/alces-flight-trigger"
-    mkdir -p "${TRIGGER_LIBEXEC_DIR}"
-    cp libexec/alces-flight-trigger-starter "${TRIGGER_LIBEXEC_DIR}"
-    chmod 755 "${TRIGGER_LIBEXEC_DIR}/alces-flight-trigger-starter"
-
-  _: |
-    require serviceware
 
     # If alces-flight-www service is enabled we add in config so requests to
     # `/trigger/*` will be sent to the `alces-flight-trigger` server.
@@ -46,6 +53,10 @@ component-base:
     enable_alces_flight_trigger
 
 build:
+  el7: |
+    yum install -y -e0 openssl-devel gmp-devel
+  ubuntu1604: |
+    apt-get install -y openssl libssl-dev libgmp-dev
   _: |
     TREE=master
     curl -L "https://github.com/alces-software/alces-flight-trigger/archive/$TREE.zip" -o /tmp/aft.zip
@@ -54,6 +65,7 @@ build:
     mv alces-flight-trigger-$TREE alces-flight-trigger
 
     cd alces-flight-trigger
-    export cw_ROOT
-    bin/install
+    PATH="${cw_ROOT}"/opt/git/bin:"${cw_ROOT}"/opt/ruby/bin:$PATH
+    bundle install --without="development test" --path=vendor
+
     rm -rf Rakefile tests bin

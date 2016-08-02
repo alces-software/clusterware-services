@@ -4,6 +4,8 @@ install:
     yum install -y openssl
   el6: |
     yum install -y openssl
+  ubuntu1604: |
+    apt-get install -y openssl libssl1.0.0
   _: |
     # Download built Slurm and MUNGE.
     require serviceware
@@ -57,6 +59,17 @@ component-slurmctld:
             init/systemd/clusterware-slurm-slurmctld.service \
             > /etc/systemd/system/clusterware-slurm-slurmctld.service
     }
+  ubuntu1604: |
+    enable_munged() {
+        sed -e "s,_cw_ROOT_,${cw_ROOT},g" \
+            init/systemd/clusterware-slurm-munged.service \
+            > /etc/systemd/system/clusterware-slurm-munged.service
+    }
+    enable_slurmctld() {
+        sed -e "s,_cw_ROOT_,${cw_ROOT},g" \
+            init/systemd/clusterware-slurm-slurmctld.service \
+            > /etc/systemd/system/clusterware-slurm-slurmctld.service
+    }
   _: |
     enable_munged
     enable_slurmctld
@@ -72,10 +85,25 @@ component-slurmd:
             init/systemd/clusterware-slurm-slurmd.service \
             > /etc/systemd/system/clusterware-slurm-slurmd.service
     }
+  ubuntu1604: |
+    enable_munged() {
+        sed -e "s,_cw_ROOT_,${cw_ROOT},g" \
+            init/systemd/clusterware-slurm-munged.service \
+            > /etc/systemd/system/clusterware-slurm-munged.service
+    }
+    enable_slurmd() {
+        sed -e "s,_cw_ROOT_,${cw_ROOT},g" \
+            init/systemd/clusterware-slurm-slurmd.service \
+            > /etc/systemd/system/clusterware-slurm-slurmd.service
+    }
   _: |
     enable_munged
     enable_slurmd
 build:
+  el7: |
+    yum install -y openssl-devel
+  ubuntu1604: |
+    apt-get install -y libssl-dev
   _: |
     # Note: Instructions for building/installing Slurm available at
     # http://slurm.schedmd.com/quickstart_admin.html.
@@ -84,10 +112,9 @@ build:
     MUNGE_SOURCE='https://github.com/dun/munge/archive/munge-0.5.12.zip'
     MUNGE_PATH="${cw_ROOT}/opt/munge"
     rm -rf "${MUNGE_PATH}" # Get rid of any old version of MUNGE so not building on top of.
-    yum install -y openssl-devel
     curl -L "${MUNGE_SOURCE}" -o /tmp/munge.zip
     unzip /tmp/munge.zip
-    cd munge-munge-*
+    pushd munge-munge-*
     ./configure \
       --prefix="${MUNGE_PATH}" \
       --sysconfdir="${MUNGE_PATH}/etc" \
@@ -120,6 +147,7 @@ build:
     getent passwd slurm &>/dev/null || useradd --uid 364 --gid 364 \
         --shell /sbin/nologin --home-dir "${cw_ROOT}/opt/slurm" slurm
 
+    popd
     # Copy Slurm config.
     mkdir -p "${cw_ROOT}/opt/slurm/etc"
     cp slurm.conf.template "${cw_ROOT}/opt/slurm/etc/slurm.conf"

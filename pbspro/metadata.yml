@@ -4,6 +4,8 @@ install:
     yum install -e0 -y openssl
   el6: |
     yum install -e0 -y openssl
+  ubuntu1604: |
+    apt-get install -y openssl libssl1.0.0
   _: |
     require serviceware
     serviceware_add pbspro
@@ -34,6 +36,14 @@ component-mom:
             init/systemd/clusterware-pbspro-mom.service \
             > /etc/systemd/system/clusterware-pbspro-mom.service
     }
+  ubuntu1604: |
+    apt-get install -y libhwloc5
+
+    enable_mom() {
+        sed -e "s,_cw_ROOT_,${cw_ROOT},g" \
+            init/systemd/clusterware-pbspro-mom.service \
+            > /etc/systemd/system/clusterware-pbspro-mom.service
+    }
   _: |
     if [ ! -d /var/spool/pbs ]; then
       mkdir /var/spool/pbs
@@ -42,6 +52,12 @@ component-mom:
     enable_mom
 component-comm:
   el7: |
+    enable_comm() {
+        sed -e "s,_cw_ROOT_,${cw_ROOT},g" \
+            init/systemd/clusterware-pbspro-comm.service \
+            > /etc/systemd/system/clusterware-pbspro-comm.service
+    }
+  ubuntu1604: |
     enable_comm() {
         sed -e "s,_cw_ROOT_,${cw_ROOT},g" \
             init/systemd/clusterware-pbspro-comm.service \
@@ -62,12 +78,28 @@ component-server:
             init/systemd/clusterware-pbspro-server.service \
             > /etc/systemd/system/clusterware-pbspro-server.service
     }
+  ubuntu1604: |
+    apt-get install -y postgresql libical1a libpython2.7
+
+    enable_server() {
+        sed -e "s,_cw_ROOT_,${cw_ROOT},g" \
+            init/systemd/clusterware-pbspro-server.service \
+            > /etc/systemd/system/clusterware-pbspro-server.service
+    }
   _: |
     "${cw_ROOT}"/bin/alces service enable pbspro/comm
     enable_server
 component-sched:
   el7: |
     yum install -e0 -y libical
+
+    enable_sched() {
+        sed -e "s,_cw_ROOT_,${cw_ROOT},g" \
+            init/systemd/clusterware-pbspro-sched.service \
+            > /etc/systemd/system/clusterware-pbspro-sched.service
+    }
+  ubuntu1604: |
+    apt-get install -y libical1a libpython2.7
 
     enable_sched() {
         sed -e "s,_cw_ROOT_,${cw_ROOT},g" \
@@ -84,12 +116,21 @@ build:
   el6: |
     yum install -e0 -y openssl-devel tcl-devel libXt-devel postgresql-devel \
       libedit-devel hwloc-devel libical-devel tk-devel python-devel
+  ubuntu1604: |
+    apt-get install -y libssl-dev tcl-dev libxt-dev libpq-dev postgresql \
+      libedit-dev libhwloc-dev libical-dev tk-dev python-dev autoconf
   _: |
     curl -L https://github.com/PBSPro/pbspro/archive/v14.1.0.tar.gz -o /tmp/pbspro.tar.gz
     tar -C /tmp/ -xzf /tmp/pbspro.tar.gz
-    pushd /tmp/pbspro-*
+    if [ "$cw_DIST" == "ubuntu1604" ]; then
+      patch -d /tmp/pbspro-* -p1 < ubuntu-compat.patch
+      pushd /tmp/pbspro-*
+      ./autogen.sh
+    else
+      pushd /tmp/pbspro-*
+    fi
     ./configure --prefix="${cw_ROOT}"/opt/pbspro \
-      --with-pbs-conf-file="${cw_ROOT}"/opt/pbspro/pbs.conf
+      --with-pbs-conf-file="${cw_ROOT}"/opt/pbspro/pbs.conf "${build_args[@]}"
     make
     make install
     popd
