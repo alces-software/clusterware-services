@@ -24,10 +24,6 @@ Centralized web server based on NGINX which provides a convention-driven directo
 
 Provides support for the Alces Storage Manager appliance.
 
-### `alces-websocket-proxy`
-
-Web server based on NGINX that provides proxying capabilities to websocket services.
-
 ### `aws`
 
 AWS Command Line Interface tool for managing AWS services.
