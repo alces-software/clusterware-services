@@ -52,6 +52,10 @@ OpenLava, a 100% free, open-source, LSF-compatible workload scheduler that suppo
 
 Provides an OpenVPN server.
 
+### `pbspro`
+
+PBS Professional open source job scheduler.
+
 ### `s3cmd`
 
 The command-line S3 client.
