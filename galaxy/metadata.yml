@@ -241,16 +241,9 @@ component-webapp:
       "${cw_ROOT}"/libexec/share/allocate-ssl-certificate "${sane_cluster_name}"
     fi
 
-    files_load_config meta
-
-    if [ -z "${cw_META_fqdn}" ]; then
+    if ! files_load_config --optional access; then
       # SSL allocation was skipped, use our current hostname for meta
-      cw_META_fqdn="$(hostname -f)"
-      cw_META_hostname="$(hostname -s)"
-      echo "cw_META_fqdn_desc=\"Public host name\"" >> "${cw_ROOT}"/etc/meta.rc
-      echo "cw_META_fqdn=\"${cw_META_fqdn}\"" >> "${cw_ROOT}"/etc/meta.rc
-      echo "cw_META_hostname_desc=\"Clusterware name\"" >> "${cw_ROOT}"/etc/meta.rc
-      echo "cw_META_hostname=\"${cw_META_hostname}\"" >> "${cw_ROOT}"/etc/meta.rc
+      cw_ACCESS_fqdn="$(hostname -f)"
     fi
 
     if [ -f "${cw_ROOT}"/etc/ssl/cluster/cert.pem ]; then
@@ -260,7 +253,7 @@ component-webapp:
       ln -s "${cw_ROOT}/etc/ssl/cluster/key.pem" "${cw_ROOT}/etc/ssl/clusterware-galaxy-proxy_key.pem"
     fi
 
-    domain="${cw_META_fqdn:-${sane_cluster_name}.alces.network}"
+    domain="${cw_ACCESS_fqdn:-${sane_cluster_name}.alces.network}"
     password=$(_generate_password)
 
     pushd "${GALAXYDIR}"
@@ -272,12 +265,24 @@ component-webapp:
         sleep 5
       done
       curl -X POST --data "create_user_button=Submit&email=admin%40${domain}&password=${password}&confirm=${password}&username=galaxy-admin" http://localhost:6414/user/create &>/dev/null
-      echo "cw_META_galaxy_admin_desc=\"Galaxy - admin username\"" >> "${cw_ROOT}"/etc/meta.rc
-      echo "cw_META_galaxy_admin=\"admin@${domain}\"" >> "${cw_ROOT}"/etc/meta.rc
-      echo "cw_META_galaxy_admin_password_desc=\"Galaxy - admin password\"" >> "${cw_ROOT}"/etc/meta.rc
-      echo "cw_META_galaxy_admin_password=\"${password}\"" >> "${cw_ROOT}"/etc/meta.rc
-      echo "cw_META_galaxy_url_desc=\"Galaxy - access point\"" >> "${cw_ROOT}"/etc/meta.rc
-      echo "cw_META_galaxy_url=\"https://${domain}:64443/\"" >> "${cw_ROOT}"/etc/meta.rc
+      cat <<EOF > "${cw_ROOT}"/etc/meta.d/galaxy.rc
+: '
+: SYNOPSIS: Galaxy access details
+: HELP: Display information about the Galaxy configuration.
+: '
+################################################################################
+##
+## Alces Clusterware - Metadata file
+## Copyright (c) 2016 Alces Software Ltd
+##
+################################################################################
+EOF
+      echo "cw_META_galaxy_admin_desc=\"Galaxy - admin username\"" >> "${cw_ROOT}"/etc/meta.d/galaxy.rc
+      echo "cw_META_galaxy_admin=\"admin@${domain}\"" >> "${cw_ROOT}"/etc/meta.d/galaxy.rc
+      echo "cw_META_galaxy_admin_password_desc=\"Galaxy - admin password\"" >> "${cw_ROOT}"/etc/meta.d/galaxy.rc
+      echo "cw_META_galaxy_admin_password=\"${password}\"" >> "${cw_ROOT}"/etc/meta.d/galaxy.rc
+      echo "cw_META_galaxy_url_desc=\"Galaxy - access point\"" >> "${cw_ROOT}"/etc/meta.d/galaxy.rc
+      echo "cw_META_galaxy_url=\"https://${domain}:64443/\"" >> "${cw_ROOT}"/etc/meta.d/galaxy.rc
       sed -i -e "s/^admin_users = .*/admin_users = admin@${domain}/g" \
         "$DATADIR"/config/galaxy.ini
       # kill background process
