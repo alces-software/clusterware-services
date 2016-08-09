@@ -1,7 +1,7 @@
 ---
 install:
   _: |
-    . "${cw_ROOT}"/etc/serviceware.rc
+    require serviceware
     serviceware_add gridscheduler
 
     if [ -f "${cw_ROOT}"/opt/gridscheduler/etc/common/host_aliases ]; then

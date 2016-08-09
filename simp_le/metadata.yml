@@ -22,7 +22,7 @@
 ---
 install:
   _: |
-    . "${cw_ROOT}"/etc/serviceware.rc
+    require serviceware
     serviceware_add simp_le
 build:
   el7: |

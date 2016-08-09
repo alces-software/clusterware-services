@@ -1,7 +1,7 @@
 ---
 install:
   _: |
-    . "${cw_ROOT}"/etc/serviceware.rc
+    require serviceware
     serviceware_add alces-access-manager-daemon
 component-base:
   el6: |
