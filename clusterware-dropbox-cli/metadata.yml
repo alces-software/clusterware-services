@@ -22,18 +22,8 @@
 ---
 install:
   _: |
-    . "${cw_ROOT}"/etc/clusterware.rc
-    case "${cw_VERSION:-1.0.0}" in
-      1.[012].*)
-        . "${cw_ROOT}"/etc/serviceware.rc
-        . "${cw_ROOT}"/etc/distro.rc
-        curl -# -L "${cw_DIST_URL}/${cw_DIST}"/clusterware-dropbox-cli.tar.gz | tar -C "${cw_ROOT}" -xz
-      ;;
-      *)
-        require serviceware
-        serviceware_add clusterware-dropbox-cli
-      ;;
-    esac
+    require serviceware
+    serviceware_add clusterware-dropbox-cli
 build:
   _: |
     curl -L "https://github.com/alces-software/clusterware-dropbox-cli/archive/master.zip" -o /tmp/dropbox-cli.zip

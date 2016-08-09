@@ -28,18 +28,8 @@ install:
   ubuntu1604: |
     apt-get install -y openssl libssl1.0.0 net-tools liblzo2-2
   _: |
-    . "${cw_ROOT}"/etc/clusterware.rc
-    case "${cw_VERSION:-1.0.0}" in
-      1.[012].*)
-        . "${cw_ROOT}"/etc/serviceware.rc
-        . "${cw_ROOT}"/etc/distro.rc
-        curl -# -L "${cw_DIST_URL}/${cw_DIST}"/openvpn.tar.gz | tar -C "${cw_ROOT}" -xz
-      ;;
-      *)
-        require serviceware
-        serviceware_add openvpn
-      ;;
-    esac
+    require serviceware
+    serviceware_add openvpn
 component-base:
   ubuntu1604: |
     enable_openvpn() {

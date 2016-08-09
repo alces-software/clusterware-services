@@ -2,8 +2,7 @@
 install:
   _: |
     . "${cw_ROOT}"/etc/serviceware.rc
-    . "${cw_ROOT}"/etc/distro.rc
-    curl -# -L "${cw_DIST_URL}/${cw_DIST}"/alces-access-manager-daemon.tar.gz | tar -C "${cw_ROOT}" -xz
+    serviceware_add alces-access-manager-daemon
 component-base:
   el6: |
     enable_alces_access_manager_daemon() {

@@ -2,8 +2,7 @@
 install:
   _: |
     . "${cw_ROOT}"/etc/serviceware.rc
-    . "${cw_ROOT}"/etc/distro.rc
-    curl -# -L "${cw_DIST_URL}/${cw_DIST}"/gridscheduler.tar.gz | tar -C "${cw_ROOT}" -xz
+    serviceware_add gridscheduler
 
     if [ -f "${cw_ROOT}"/opt/gridscheduler/etc/common/host_aliases ]; then
         mv "${cw_ROOT}"/opt/gridscheduler/etc/common/host_aliases "${cw_ROOT}"/opt/gridscheduler/etc/common/host_aliases.disabled
