@@ -34,7 +34,8 @@ proc ModulesHelp { } {
                 =====================================
 
 This module sets up your environment for the use of the 's3cmd'
-service. This module sets up version '1.6.1' of the service.
+service. This module sets up version '1.6.1-ba5196f1f6' of the
+service.
 
 
 >> SYNOPSIS <<
@@ -94,7 +95,7 @@ module-whatis   "
               URL: http://s3tools.org/
 
              Name: s3cmd
-          Version: 1.6.1
+          Version: 1.6.1-ba5196f1f6
            Module: [alces pretty services/s3cmd]
       Module path: _cw_ROOT_/etc/modules/services/s3cmd
      Package path: _cw_ROOT_/opt/s3cmd
