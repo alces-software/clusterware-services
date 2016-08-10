@@ -5,7 +5,7 @@
 ##
 ################################################################################
 gridscheduler_features() {
-    echo ":autoscaling:"
+    echo ":autoscaling:configurable:"
 }
 
 gridscheduler_setup_environment() {
@@ -97,4 +97,91 @@ ram_gb = (ram_kb / 1_048_576)
 config["tags"]["ram_gb"] = ram_gb.to_s
 File.write('${target}', config.to_json)
 RUBY
+}
+
+gridscheduler_set_allocation_strategy() {
+    local strategy tmpfile
+    strategy="$1"
+    gridscheduler_setup_environment
+    tmpfile="$(mktemp /tmp/gridscheduler.setup.XXXXXXXX)"
+    qconf -ssconf > "${tmpfile}"
+    case ${strategy} in
+        packing)
+            sed -i 's/^load_formula.*/load_formula slots/g' "${tmpfile}"
+        ;;
+        spanning)
+            sed -i 's/^load_formula.*/load_formula np_load_avg/g' "${tmpfile}"
+        ;;
+        *)
+            echo "unrecognized or unsupported allocation strategy: ${strategy}"
+            errlvl=1
+        ;;
+    esac
+    if [ -z "$errlvl" ]; then
+        qconf -Msconf "${tmpfile}" 2>&1
+        errlvl=$?
+    fi
+    rm -f "${tmpfile}"
+    return $errlvl
+}
+
+gridscheduler_set_submission_strategy() {
+    local strategy nodeattr
+    strategy="$1"
+    gridscheduler_setup_environment
+    nodeattr="${cw_ROOT}/opt/genders/bin/nodeattr"
+    case ${strategy} in
+        all)
+            for a in $(${nodeattr} -f ${cw_ROOT}/etc/genders -q all); do
+                qconf -as "${a}"
+            done
+            if ! grep -q "^cw_CLUSTER_SGE_submission=" "${cw_ROOT}"/etc/cluster-sge.rc; then
+                echo "cw_CLUSTER_SGE_submission=\"all\"" >> "${cw_ROOT}"/etc/cluster-sge.rc
+            fi
+        ;;
+        master|none)
+            if [ "${strategy}" == "master" ]; then
+                disable_gender="slave"
+                for a in $(${nodeattr} -f ${cw_ROOT}/etc/genders -q master); do
+                    qconf -as "${a}"
+                done
+            else
+                disable_gender="all"
+            fi
+            for a in $(${nodeattr} -f ${cw_ROOT}/etc/genders -q ${disable_gender}); do
+                qconf -ds "${a}"
+            done
+            tmpfile="$(mktemp /tmp/gridscheduler.setup.XXXXXXXX)"
+            grep -v "^cw_CLUSTER_SGE_submission=" "${cw_ROOT}"/etc/cluster-sge.rc > \
+                 "${tmpfile}"
+            cat "${tmpfile}" > "${cw_ROOT}"/etc/cluster-sge.rc
+            rm -f "${tmpfile}"
+        ;;
+        *)
+            echo "unrecognized or unsupported submission strategy: ${strategy}"
+            return 1
+        ;;
+    esac
+}
+
+gridscheduler_status() {
+    local allocation_strategy submission_strategy
+    gridscheduler_setup_environment 2>/dev/null
+    allocation_strategy=$(qconf -ssconf | grep "load_formula" | sed 's/.*\s*\(\S*\)/\1/')
+    if [ "$allocation_strategy" == "np_load_avg" ]; then
+        allocation_strategy="spanning"
+    else
+        allocation_strategy="packing"
+    fi
+    printf "%35s: %s\n" "Allocation strategy" "${allocation_strategy}"
+
+    submission_strategy=$(qconf -ss 2>/dev/null| wc -l)
+    if [ "$submission_strategy" == 1 ]; then
+        submission_strategy="master"
+    elif [ "$submission_strategy" == 0 ]; then
+        submission_strategy="none"
+    else
+        submission_strategy="all"
+    fi
+    printf "%35s: %s\n" "Submission strategy" "${submission_strategy}"
 }
