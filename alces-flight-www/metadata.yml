@@ -53,7 +53,8 @@ component-base:
       srcname="$1"
       target="$2"
       tgtname="${3:-${srcname}}"
-      sed -e "s,_ROOT_,${cw_ROOT},g" ${srcname}.conf.tpl \
+      sed -e "s,_ROOT_,${cw_ROOT},g" \
+        ${srcname}.conf.tpl \
         > "${cw_ROOT}"/etc/alces-flight-www/${target}.d/${tgtname}.conf
     }
 
@@ -104,15 +105,26 @@ component-base:
         naming_issue_self_signed_cert flight.cluster.alces.network \
           "Alces Flight WWW Server" \
           "${cw_ROOT}"/etc/ssl/alces-flight-www
+      elif [ "${cw_ALCES_FLIGHT_WWW_ssl_strategy}" == "allocate" ]; then
+        files_load_config --optional config config/cluster
+        "${cw_ROOT}"/libexec/share/allocate-ssl-certificate ${cw_CLUSTER_name}
+        mkdir -p "${cw_ROOT}"/etc/ssl/alces-flight-www
+        cp -p "${cw_ROOT}"/etc/ssl/cluster/* "${cw_ROOT}"/etc/ssl/alces-flight-www
       fi
 
       if [ "${cw_ALCES_FLIGHT_WWW_http_redirect_enabled:-true}" == "true" ]; then
-        _install_nginx_conf redirect-http-to-https server-http
+        if [ "${cw_ALCES_FLIGHT_WWW_ssl_strategy}" == "allocate" ]; then
+          files_load_config access
+          _install_nginx_conf redirect-http-to-named-https server-http redirect-http-to-https
+        else
+          _install_nginx_conf redirect-http-to-https server-http
+        fi
         https_port=":${cw_ALCES_FLIGHT_WWW_https_port:-443}"
         if [ "${https_port}" == ":443" ]; then
           https_port=""
         fi
         sed -i -e "s,_HTTPS_PORT_,${https_port},g" \
+          -e "s,_SERVER_NAME_,${cw_ACCESS_fqdn},g" \
           "${cw_ROOT}"/etc/alces-flight-www/server-http.d/redirect-http-to-https.conf
       fi
       firewall_rules+=(https)
