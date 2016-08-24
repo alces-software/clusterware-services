@@ -1,5 +1,11 @@
 ---
 install:
+  el6: |
+    yum install -y -e0 pcre openssl
+  el7: |
+    yum install -y -e0 pcre openssl
+  ubuntu1604: |
+    apt-get install -y -e0 libpcre3 openssl libssl1.0.0
   _: |
     require serviceware
     serviceware_add alces-flight-www
@@ -17,13 +23,13 @@ install:
     #cw_ALCES_FLIGHT_WWW_https_enabled=true
     #cw_ALCES_FLIGHT_WWW_https_port=443
     #cw_ALCES_FLIGHT_WWW_ssl_strategy=selfsigned
+    #cw_ALCES_FLIGHT_WWW_ssl_name=
     EOF
 component-websocket-proxy:
   _: |
     cp websocket-proxy.conf.tpl "${cw_ROOT}"/etc/alces-flight-www/server-https.d/websocket-proxy.conf
 component-base:
   el6: |
-    yum install -y -e0 pcre openssl
     enable_alces_flight_www() {
         sed -e "s,_cw_ROOT_,${cw_ROOT},g" \
             init/sysv/clusterware-alces-flight-www.el6 \
@@ -32,7 +38,6 @@ component-base:
         chkconfig clusterware-alces-flight-www on
     }
   el7: |
-    yum install -y -e0 pcre openssl
     enable_alces_flight_www() {
         sed -e "s,_cw_ROOT_,${cw_ROOT},g" \
             init/systemd/clusterware-alces-flight-www.service \
@@ -40,7 +45,6 @@ component-base:
         systemctl enable clusterware-alces-flight-www.service
     }
   ubuntu1604: |
-    apt-get install -y -e0 libpcre3 openssl libssl1.0.0
     enable_alces_flight_www() {
         sed -e "s,_cw_ROOT_,${cw_ROOT},g" \
             init/systemd/clusterware-alces-flight-www.service \
@@ -102,12 +106,12 @@ component-base:
       mkdir -p "${cw_ROOT}"/etc/ssl/alces-flight-www
 
       if [ "${cw_ALCES_FLIGHT_WWW_ssl_strategy:-selfsigned}" == "selfsigned" ]; then
-        naming_issue_self_signed_cert flight.cluster.alces.network \
+        naming_issue_self_signed_cert ${cw_ALCES_FLIGHT_WWW_ssl_name:-${cw_CLUSTER_name}}.cloud.alces.network \
           "Alces Flight WWW Server" \
           "${cw_ROOT}"/etc/ssl/alces-flight-www
       elif [ "${cw_ALCES_FLIGHT_WWW_ssl_strategy}" == "allocate" ]; then
         files_load_config --optional config config/cluster
-        "${cw_ROOT}"/libexec/share/allocate-ssl-certificate ${cw_CLUSTER_name}
+        "${cw_ROOT}"/libexec/share/allocate-ssl-certificate ${cw_ALCES_FLIGHT_WWW_ssl_name:-${cw_CLUSTER_name}}
         mkdir -p "${cw_ROOT}"/etc/ssl/alces-flight-www
         cp -p "${cw_ROOT}"/etc/ssl/cluster/* "${cw_ROOT}"/etc/ssl/alces-flight-www
       fi
