@@ -167,7 +167,7 @@ gridscheduler_set_submission_strategy() {
 gridscheduler_status() {
     local allocation_strategy submission_strategy
     gridscheduler_setup_environment 2>/dev/null
-    allocation_strategy=$(qconf -ssconf | grep "load_formula" | sed 's/.*\s*\(\S*\)/\1/')
+    allocation_strategy=$(qconf -ssconf | grep "load_formula" | sed 's/\S*\s*\(\S*\)/\1/')
     if [ "$allocation_strategy" == "np_load_avg" ]; then
         allocation_strategy="spanning"
     else
