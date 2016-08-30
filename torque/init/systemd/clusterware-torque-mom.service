@@ -20,8 +20,8 @@ KillMode=process
 PIDFile=/var/spool/torque/mom_priv/mom.lock
 Environment=LD_LIBRARY_PATH=_cw_ROOT_/opt/torque/lib
 Environment=PBS_HOME=/var/spool/torque
-Environment=PBS_ARGS=
-ExecStart=_cw_ROOT_/opt/torque/sbin/pbs_mom -d $PBS_HOME $PBS_ARGS
+EnvironmentFile=_cw_ROOT_/etc/network.rc
+ExecStart=_cw_ROOT_/opt/torque/sbin/pbs_mom -d $PBS_HOME -H $cw_NETWORK_fqdn
 ExecStop=/bin/bash -c " \
   for i in {1..5}; do \
     kill -0 $MAINPID &>/dev/null || exit 0; \
