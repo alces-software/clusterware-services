@@ -121,7 +121,7 @@ following example command:
    `squeue`
 
 Use the command `man squeue` for more specific information on using 
-`sequeue`.
+`squeue`.
 
 ## SEE ALSO
 
