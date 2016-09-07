@@ -47,7 +47,7 @@ component-mom:
   _: |
     if [ ! -d /var/spool/pbs ]; then
       mkdir /var/spool/pbs
-      tar -C /var/spool/pbs -xzf pbs-spool.tar.gz
+      tar -C /var/spool/pbs -xzf pbspro-spool.tar.gz
     fi
     enable_mom
 component-comm:
