@@ -16,7 +16,7 @@ To gain an interactive session on one of the available cluster compute hosts - u
 
     `qsub -I`
 
-You may use the same syntax as the `sbatch` command to request additional resources for your interactive shell. For example, to request an interactive session with access to 32GB of RAM and a maximum runtime of 72 hours, use the following command:
+You may use the same syntax as the `qsub` command to request additional resources for your interactive shell. For example, to request an interactive session with access to 32GB of RAM and a maximum runtime of 72 hours, use the following command:
 
     `qsub -l walltime=72:00:00,mem=32768mb -I`
 

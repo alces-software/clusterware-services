@@ -73,14 +73,15 @@ command.
 
  * `--time=0-2:00`:
 
-   How long you will potentially keep the session open for (d-hh:mm);
-   the session will be terminated when this time is exceeded
+   How long you will potentially keep the session open for
+   (days-hours:mins); the session will be terminated when this time 
+   is exceeded
 
  * `--mem 512`:
 
-   How much memory you will potentially want to use in this session.
-   Note that this request is per node, not per core requested. The
-   above option will indicate you wish to use 512MB memory. 
+   How much memory (in MB) you will potentially want to use in this 
+   session. Note that this request is per node, not per core requested.
+   The above option will indicate you wish to use 512MB memory. 
 
  * `--ntasks=2`:
 

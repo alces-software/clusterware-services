@@ -36,9 +36,9 @@ your best guess for the resources it will require. If you find the job
 gets terminated, increase your resource request to allow your job to
 run. It's often worth starting with the defaults as these are usually
 sufficient for most applications and then alter them if you have
-problems. Once your job has run for the first time, you can use `qacct
--j <JOB_ID>` to ascertain how much resource your job actually used and
-then tune your request accordingly in future runs.
+problems. Once your job has run for the first time, you can use 
+`bjobs <JOB_ID>` to ascertain how much resource your job actually used 
+and then tune your request accordingly in future runs.
 
 Requesting resources as close to your jobs requirements as possible
 will ensure that your job is scheduled as quickly as possible. Jobs
@@ -48,7 +48,7 @@ use jobs with smaller resource requests to backfill if it knows that
 the smaller job will complete before enough resources will become
 available for a larger, potentially higher priority, job to
 start. This allows users requesting the correct resources &mdash; in
-particular `h_rt` (runtime) and `h_vmem` (maximum memory usage)
+particular `-W` (runtime) and `-R "rusage[mem=xxxMB]"` (maximum memory usage)
 &mdash; to jump the queue and start their jobs more quickly.
 
 ## INTERACTIVE JOBS
@@ -69,12 +69,12 @@ session by specifying them on the command line. For example:
 
  * `-W 120`:
 
-   How long you will potentially keep the session open for (mm);
+   How long you will potentially keep the session open for (minutes);
    the session will be terminated when this time is exceeded
 
  * `-R "rusage[mem=4096]`:
 
-   How much memory you will potentially want to use in this session;
+   How much memory (in MB) you will potentially want to use in this session;
    the session will be terminated if you use more than you
    request. Note that this request is per slot, so if you are
    requesting multiple slots/cores for your job, you should divide the

@@ -69,8 +69,9 @@ command.
 
  * `-l walltime=[hh:mm:ss]`:
 
-   How long you will potentially keep the session open for (d-hh:mm);
-   the session will be terminated when this time is exceeded
+   How long you will potentially keep the session open for 
+   (hours:minutes:seconds); the session will be terminated when this
+   time is exceeded.
 
  * `-l mem=512mb`:
 
