@@ -1,4 +1,4 @@
-# run-jobs(5) -- How to run jobs
+# run-jobs(5) -- How to run jobs (Slurm)
 
 ## DESCRIPTION
 

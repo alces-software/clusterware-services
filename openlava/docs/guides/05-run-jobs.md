@@ -1,4 +1,4 @@
-# run-jobs(7) -- How to run jobs
+# run-jobs(7) -- How to run jobs (OpenLava)
 
 ## DESCRIPTION
 

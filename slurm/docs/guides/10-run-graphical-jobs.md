@@ -1,4 +1,4 @@
-# run-graphical-jobs(7) -- How to run graphical jobs
+# run-graphical-jobs(7) -- How to run graphical jobs (Slurm)
 
 ## DESCRIPTION
 
