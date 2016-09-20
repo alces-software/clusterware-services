@@ -72,7 +72,7 @@ session by specifying them on the command line. For example:
    How long (in minutes) you will potentially keep the session open
    for; the session will be terminated when this time is exceeded.
 
- * `-R "rusage[mem=4096]`:
+ * `-R "rusage[mem=4096]"`:
 
    How much memory (in MB) you will potentially want to use in this session;
    the session will be terminated if you use more than you
