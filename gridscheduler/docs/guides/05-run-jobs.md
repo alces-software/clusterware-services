@@ -67,10 +67,11 @@ Calling `qrsh` on its own will allocate all the default resource
 limits, however you can request more resources for your `qrsh` session
 by specifying them on the command line. For example:
 
- * `-l h_rt=72:0:0`:
+ * `-l h_rt=2:0:0`:
 
-   How long you will potentially keep the session open for (hh:mm:ss);
-   the session will be terminated when this time is exceeded
+   How long (in hourse, minutes and seconds) you will potentially keep
+   the session open for; the session will be terminated when this time
+   is exceeded.
 
  * `-l h_vmem=4g`:
 
@@ -84,7 +85,7 @@ by specifying them on the command line. For example:
  * `-pe smp 2`:
 
    Inform the scheduler that you intend to run a multi-core job across
-   two cores
+   two cores.
 
 Use the command `man qrsh` for more specific information on using
 `qrsh`.
@@ -148,4 +149,4 @@ information.
 
 ## COPYRIGHT
 
-Copyright (C) 2009-2015 Alces Software Ltd.
+Copyright (C) 2009-2016 Alces Software Ltd.

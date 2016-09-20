@@ -36,8 +36,8 @@ your best guess for the resources it will require. If you find the job
 gets terminated, increase your resource request to allow your job to
 run. It's often worth starting with the defaults as these are usually
 sufficient for most applications and then alter them if you have
-problems. Once your job has run for the first time, you can use 
-`bjobs <JOB_ID>` to ascertain how much resource your job actually used 
+problems. Once your job has run for the first time, you can use
+`bjobs <JOB_ID>` to ascertain how much resource your job actually used
 and then tune your request accordingly in future runs.
 
 Requesting resources as close to your jobs requirements as possible
@@ -48,7 +48,7 @@ use jobs with smaller resource requests to backfill if it knows that
 the smaller job will complete before enough resources will become
 available for a larger, potentially higher priority, job to
 start. This allows users requesting the correct resources &mdash; in
-particular `-W` (runtime) and `-R "rusage[mem=xxxMB]"` (maximum memory usage)
+particular `-W` (runtime) and `-R "rusage[mem=<n>]"` (maximum memory usage)
 &mdash; to jump the queue and start their jobs more quickly.
 
 ## INTERACTIVE JOBS
@@ -69,8 +69,8 @@ session by specifying them on the command line. For example:
 
  * `-W 120`:
 
-   How long you will potentially keep the session open for (minutes);
-   the session will be terminated when this time is exceeded
+   How long (in minutes) you will potentially keep the session open
+   for; the session will be terminated when this time is exceeded.
 
  * `-R "rusage[mem=4096]`:
 
@@ -84,7 +84,7 @@ session by specifying them on the command line. For example:
  * `-n 2`:
 
    Inform the scheduler that you intend to run a multi-core job across
-   two cores
+   two cores.
 
 Use the command `man bsub` for more specific information on interactive
 session creation.
@@ -100,10 +100,10 @@ your workflow script if your workflow script is written in bash or by
 writing a bash submission script that calls your workflow script).
 
 Your job submission scripts can be submitted to the HPC job scheduler
-via the `bsub` command. You can provide options for your submitted job 
+via the `bsub` command. You can provide options for your submitted job
 either through the job submission command, or more reliably by including
 them within your job submission script. Any submission directives included
-within the job script must begin the line with: 
+within the job script must begin the line with:
 
   `#BSUB <option>`
 

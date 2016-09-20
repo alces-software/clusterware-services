@@ -36,7 +36,7 @@ your best guess for the resources it will require. If you find the job
 gets terminated, increase your resource request to allow your job to
 run. It's often worth starting with the defaults as these are usually
 sufficient for most applications and then alter them if you have
-problems. 
+problems.
 
 Requesting resources as close to your jobs requirements as possible
 will ensure that your job is scheduled as quickly as possible. Jobs
@@ -75,18 +75,18 @@ command.
 
    How long you will potentially keep the session open for
    (days-hours:mins); the session will be terminated when this time 
-   is exceeded
+   is exceeded.
 
  * `--mem 512`:
 
-   How much memory (in MB) you will potentially want to use in this 
+   How much memory (in MB) you will potentially want to use in this
    session. Note that this request is per node, not per core requested.
-   The above option will indicate you wish to use 512MB memory. 
+   The above option will indicate you wish to use 512MB memory.
 
  * `--ntasks=2`:
 
    Inform the scheduler that you intend to run a multi-core job across
-   two cores
+   two cores.
 
 Use the command `man srun` for more specific information on using
 `srun`.
@@ -117,11 +117,11 @@ Use the command `man sbatch` for more specific information on using
 
 You can view the status of the cluster scheduler queues, viewing information
 about any running jobs. The cluster scheduler queue can be queried with the
-following example command: 
+following example command:
 
    `squeue`
 
-Use the command `man squeue` for more specific information on using 
+Use the command `man squeue` for more specific information on using
 `squeue`.
 
 ## SEE ALSO

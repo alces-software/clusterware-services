@@ -36,7 +36,7 @@ your best guess for the resources it will require. If you find the job
 gets terminated, increase your resource request to allow your job to
 run. It's often worth starting with the defaults as these are usually
 sufficient for most applications and then alter them if you have
-problems. 
+problems.
 
 Requesting resources as close to your jobs requirements as possible
 will ensure that your job is scheduled as quickly as possible. Jobs
@@ -46,15 +46,15 @@ use jobs with smaller resource requests to backfill if it knows that
 the smaller job will complete before enough resources will become
 available for a larger, potentially higher priority, job to
 start. This allows users requesting the correct resources &mdash; in
-particular `-l walltime=[hh:mm:ss]` (runtime) and `-l mem=[mb]` (maximum
+particular `-l walltime=<hh:mm:ss>` (runtime) and `-l mem=<n>` (maximum
 memory usage) &mdash; to jump the queue and start their jobs more quickly.
 
 ## INTERACTIVE JOBS
 
 Interactive jobs can be run via the scheduler using the interactive
 shell command `qsub -I`. Running `qsub -I` will launch an interactive
-session which will allocate you a shell on the chosen compute node. 
-From there, you can then load your required application modules and 
+session which will allocate you a shell on the chosen compute node.
+From there, you can then load your required application modules and
 start running.
 
 Often when experimenting with a new application it can be useful to
@@ -67,21 +67,22 @@ maximum memory, number of CPU cores to allocate. These can be provided
 using some of the following options together with the above `qsub -I`
 command.
 
- * `-l walltime=[hh:mm:ss]`:
+ * `-l walltime=2:0:0`:
 
-   How long you will potentially keep the session open for (hh:mm:ss);
-   the session will be terminated when this time is exceeded
+   How long (in hours, minutes and seconds) you will potentially keep
+   the session open for; the session will be terminated when this time
+   is exceeded.
 
  * `-l mem=512mb`:
 
    How much memory you will potentially want to use in this session.
    Note that this request is per node, not per core requested. The
-   above option will indicate you wish to use 512MB memory. 
+   above option will indicate you wish to use 512MB memory.
 
  * `-l ncpus=2`:
 
    Inform the scheduler that you intend to run a multi-core job across
-   two cores
+   two cores.
 
 Use the command `man qsub` for more specific information on using
 `qsub`.
@@ -98,7 +99,7 @@ writing a bash submission script that calls your workflow script).
 Your job submission scripts can be submitted to the HPC job scheduler
 via the `qsub` command. You can provide options for your submitted job
 either through the job submission command, or more reliably by including
-them within your job submission script. 
+them within your job submission script.
 
 You can submit a basic job script to the cluster scheduler with the
 following example command:
@@ -112,11 +113,11 @@ Use the command `man qsub` for more specific information on using
 
 You can view the status of the cluster scheduler queues, viewing information
 about any running jobs. The cluster scheduler queue can be queried with the
-following example command: 
+following example command:
 
    `qstat`
 
-Use the command `man qstat` for more specific information on using 
+Use the command `man qstat` for more specific information on using
 `qstat`.
 
 ## SEE ALSO
