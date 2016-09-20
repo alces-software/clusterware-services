@@ -69,7 +69,7 @@ by specifying them on the command line. For example:
 
  * `-l h_rt=2:0:0`:
 
-   How long (in hourse, minutes and seconds) you will potentially keep
+   How long (in hours, minutes and seconds) you will potentially keep
    the session open for; the session will be terminated when this time
    is exceeded.
 
