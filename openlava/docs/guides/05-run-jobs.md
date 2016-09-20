@@ -36,9 +36,9 @@ your best guess for the resources it will require. If you find the job
 gets terminated, increase your resource request to allow your job to
 run. It's often worth starting with the defaults as these are usually
 sufficient for most applications and then alter them if you have
-problems. Once your job has run for the first time, you can use `qacct
--j <JOB_ID>` to ascertain how much resource your job actually used and
-then tune your request accordingly in future runs.
+problems. Once your job has run for the first time, you can use
+`bjobs <JOB_ID>` to ascertain how much resource your job actually used
+and then tune your request accordingly in future runs.
 
 Requesting resources as close to your jobs requirements as possible
 will ensure that your job is scheduled as quickly as possible. Jobs
@@ -48,47 +48,47 @@ use jobs with smaller resource requests to backfill if it knows that
 the smaller job will complete before enough resources will become
 available for a larger, potentially higher priority, job to
 start. This allows users requesting the correct resources &mdash; in
-particular `h_rt` (runtime) and `h_vmem` (maximum memory usage)
+particular `-W` (runtime) and `-R "rusage[mem=<n>]"` (maximum memory usage)
 &mdash; to jump the queue and start their jobs more quickly.
 
 ## INTERACTIVE JOBS
 
 Interactive jobs can be run via the scheduler using the interactive
-shell command `qrsh`. Running `qrsh` will allocate you a single slot
-on an available compute node and give you a shell on that node. From
-there you can then load your required application modules and start
-running.
+shell command `bsub -Is bash`. Running the command will allocate you
+a single slot on an available compute node and give you a shell on that
+node. From there you can then load your required application modules and
+start running.
 
 Often when experimenting with a new application it can be useful to
 start an interactive session to understand the way it behaves and the
 command line options available before you write a job script.
 
-Calling `qrsh` on its own will allocate all the default resource
-limits, however you can request more resources for your `qrsh` session
-by specifying them on the command line. For example:
+Calling `bsub -Is bash` on its own will allocate all the default resource
+limits, however you can request more resources for your interactive
+session by specifying them on the command line. For example:
 
- * `-l h_rt=2:0:0`:
+ * `-W 120`:
 
-   How long (in hourse, minutes and seconds) you will potentially keep
-   the session open for; the session will be terminated when this time
-   is exceeded.
+   How long (in minutes) you will potentially keep the session open
+   for; the session will be terminated when this time is exceeded.
 
- * `-l h_vmem=4g`:
+ * `-R "rusage[mem=4096]`:
 
-   How much memory you will potentially want to use in this session;
+   How much memory (in MB) you will potentially want to use in this session;
    the session will be terminated if you use more than you
    request. Note that this request is per slot, so if you are
    requesting multiple slots/cores for your job, you should divide the
    total amount of memory you want to use by the number of slots you
    are requesting.
 
- * `-pe smp 2`:
+ * `-n 2`:
 
    Inform the scheduler that you intend to run a multi-core job across
    two cores.
 
-Use the command `man qrsh` for more specific information on using
-`qrsh`.
+Use the command `man bsub` for more specific information on interactive
+session creation.
+
 
 ## BATCH (SCRIPTED) JOBS
 
@@ -100,44 +100,33 @@ your workflow script if your workflow script is written in bash or by
 writing a bash submission script that calls your workflow script).
 
 Your job submission scripts can be submitted to the HPC job scheduler
-via the `qsub` command.
+via the `bsub` command. You can provide options for your submitted job
+either through the job submission command, or more reliably by including
+them within your job submission script. Any submission directives included
+within the job script must begin the line with:
 
-There are some example job submission scripts for this compute
-environment. Use the `alces template` tool to find out more about them
-and to copy them to your work directory before modifying them to meet
-your requirements:
+  `#BSUB <option>`
 
- * `simple`:
+You can submit a basic job script to the cluster scheduler with the
+following example command:
 
-   A simple job script for submitting single thread workflows.
+  `bsub < my_example_job.sh`
 
- * `mpi-slots`:
+Use the command `man bsub` for more specific information on using `bsub`.
 
-   A job script to run workflows/applications that will run on
-   multiple cores which don't necessarily have to be on the same
-   compute node (e.g. MPI).
+## CHECKING JOB STATUS
 
- * `mpi-nodes`:
+You can view the status of the cluster scheduler queues, viewing information
+about any running jobs. The cluster scheduler queue can be queried with the
+following example command:
 
-   Similar to `mpi-slots` but with exclusive use of each allocated
-   node.
+  `bjobs [job-ID]`
 
- * `smp`:
-
-   A job script to run workflows/applications that will run on
-   multiple cores on the same compute node, limited by the number of
-   cores in the node.
-
- * `simple-array`:
-
-   A job script to submit an array of similar jobs as one.
-
-Use the command `man qsub` for more specific information on using
-`qsub`.
+Use the command `bjobs` for more specific information on using `bjobs`.
 
 ## SEE ALSO
 
-run-graphical-jobs, qacct(1), qsub(1), qrsh(1)
+run-graphical-jobs, bsub(1), bjobs(1)
 
 ## LICENSE
 

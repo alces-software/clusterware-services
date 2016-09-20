@@ -1,4 +1,4 @@
-# run-jobs(7) -- How to run jobs
+# run-jobs(5) -- How to run jobs
 
 ## DESCRIPTION
 
@@ -36,9 +36,7 @@ your best guess for the resources it will require. If you find the job
 gets terminated, increase your resource request to allow your job to
 run. It's often worth starting with the defaults as these are usually
 sufficient for most applications and then alter them if you have
-problems. Once your job has run for the first time, you can use `qacct
--j <JOB_ID>` to ascertain how much resource your job actually used and
-then tune your request accordingly in future runs.
+problems. 
 
 Requesting resources as close to your jobs requirements as possible
 will ensure that your job is scheduled as quickly as possible. Jobs
@@ -48,47 +46,46 @@ use jobs with smaller resource requests to backfill if it knows that
 the smaller job will complete before enough resources will become
 available for a larger, potentially higher priority, job to
 start. This allows users requesting the correct resources &mdash; in
-particular `h_rt` (runtime) and `h_vmem` (maximum memory usage)
-&mdash; to jump the queue and start their jobs more quickly.
+particular `-l walltime=[hh:mm:ss]` (runtime) and `-l mem=[mb]` (maximum
+memory usage) &mdash; to jump the queue and start their jobs more quickly.
 
 ## INTERACTIVE JOBS
 
 Interactive jobs can be run via the scheduler using the interactive
-shell command `qrsh`. Running `qrsh` will allocate you a single slot
-on an available compute node and give you a shell on that node. From
-there you can then load your required application modules and start
-running.
+shell command `qsub -I`. Running `qsub -I` will launch an interactive
+session which will allocate you a shell on the chosen compute node. 
+From there, you can then load your required application modules and 
+start running.
 
 Often when experimenting with a new application it can be useful to
 start an interactive session to understand the way it behaves and the
 command line options available before you write a job script.
 
-Calling `qrsh` on its own will allocate all the default resource
-limits, however you can request more resources for your `qrsh` session
-by specifying them on the command line. For example:
+You can optionally choose to provide information to the scheduler
+about the interactive session you are creating - for example duration,
+maximum memory, number of CPU cores to allocate. These can be provided
+using some of the following options together with the above `qsub -I`
+command.
 
- * `-l h_rt=2:0:0`:
+ * `-l walltime=[hh:mm:ss]`:
 
-   How long (in hourse, minutes and seconds) you will potentially keep
-   the session open for; the session will be terminated when this time
-   is exceeded.
+   How long you will potentially keep the session open for 
+   (hours:minutes:seconds); the session will be terminated when this
+   time is exceeded.
 
- * `-l h_vmem=4g`:
+ * `-l mem=512mb`:
 
-   How much memory you will potentially want to use in this session;
-   the session will be terminated if you use more than you
-   request. Note that this request is per slot, so if you are
-   requesting multiple slots/cores for your job, you should divide the
-   total amount of memory you want to use by the number of slots you
-   are requesting.
+   How much memory you will potentially want to use in this session.
+   Note that this request is per node, not per core requested. The
+   above option will indicate you wish to use 512MB memory. 
 
- * `-pe smp 2`:
+ * `-l mppwidth=2`:
 
    Inform the scheduler that you intend to run a multi-core job across
-   two cores.
+   two cores
 
-Use the command `man qrsh` for more specific information on using
-`qrsh`.
+Use the command `man qsub` for more specific information on using
+`qsub`.
 
 ## BATCH (SCRIPTED) JOBS
 
@@ -100,44 +97,32 @@ your workflow script if your workflow script is written in bash or by
 writing a bash submission script that calls your workflow script).
 
 Your job submission scripts can be submitted to the HPC job scheduler
-via the `qsub` command.
+via the `qsub` command. You can provide options for your submitted job
+either through the job submission command, or more reliably by including
+them within your job submission script. 
 
-There are some example job submission scripts for this compute
-environment. Use the `alces template` tool to find out more about them
-and to copy them to your work directory before modifying them to meet
-your requirements:
+You can submit a basic job script to the cluster scheduler with the
+following example command:
 
- * `simple`:
-
-   A simple job script for submitting single thread workflows.
-
- * `mpi-slots`:
-
-   A job script to run workflows/applications that will run on
-   multiple cores which don't necessarily have to be on the same
-   compute node (e.g. MPI).
-
- * `mpi-nodes`:
-
-   Similar to `mpi-slots` but with exclusive use of each allocated
-   node.
-
- * `smp`:
-
-   A job script to run workflows/applications that will run on
-   multiple cores on the same compute node, limited by the number of
-   cores in the node.
-
- * `simple-array`:
-
-   A job script to submit an array of similar jobs as one.
+   `qsub my_example_job.sh`
 
 Use the command `man qsub` for more specific information on using
 `qsub`.
 
+## CHECKING JOB STATUS
+
+You can view the status of the cluster scheduler queues, viewing information
+about any running jobs. The cluster scheduler queue can be queried with the
+following example command: 
+
+   `qstat`
+
+Use the command `man qstat` for more specific information on using 
+`qstat`.
+
 ## SEE ALSO
 
-run-graphical-jobs, qacct(1), qsub(1), qrsh(1)
+run-graphical-jobs, qstat(1), qsub(1)
 
 ## LICENSE
 
