@@ -23,8 +23,9 @@ install:
 
     cp etc/logrotate.d/* "${cw_ROOT}"/etc/logrotate.d
 
-    #cp -R docs/templates/* "${cw_ROOT}"/var/lib/docs/templates
-    #cp -R docs/guides/* "${cw_ROOT}"/var/lib/docs/guides
+    mkdir -p "${cw_ROOT}"/var/lib/docs/torque
+    cp -R docs/templates "${cw_ROOT}"/var/lib/docs/torque
+    cp -R docs/guides "${cw_ROOT}"/var/lib/docs/torque
 
     mkdir -p "${cw_ROOT}"/var/lib/scheduler
     cp torque.functions.sh "${cw_ROOT}"/var/lib/scheduler

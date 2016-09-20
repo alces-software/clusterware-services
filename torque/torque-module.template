@@ -111,4 +111,5 @@ setenv ${appcaps}SHARE ${appdir}/share
 
 prepend-path PATH ${appdir}/bin
 prepend-path MANPATH ${appdir}/share/man
+prepend-path CW_DOCPATH _cw_ROOT_/var/lib/docs/torque
 prepend-path LD_LIBRRY_PATH ${appdir}/lib

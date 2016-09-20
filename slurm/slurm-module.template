@@ -112,3 +112,4 @@ setenv ${appcaps}BIN ${appdir}/bin
 prepend-path PATH ${appdir}/bin
 prepend-path MANPATH ${appdir}/share/man
 prepend-path LD_LIBRARY_PATH ${appdir}/lib
+prepend-path CW_DOCPATH _cw_ROOT_/var/lib/docs/slurm
