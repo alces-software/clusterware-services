@@ -67,7 +67,7 @@ maximum memory, number of CPU cores to allocate. These can be provided
 using some of the following options together with the above `qsub -I`
 command.
 
- * `-l walltime=[hh:mm:ss]`:
+ * `-l walltime=2:0:0`:
 
    How long you will potentially keep the session open for 
    (hours:minutes:seconds); the session will be terminated when this
