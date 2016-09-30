@@ -111,13 +111,57 @@ component-server:
     qmgr -c 'set server scheduling = true'
     qmgr -c 'set server keep_completed = 300'
     qmgr -c 'set server mom_job_sync = true'
-    qmgr -c 'create queue batch'
-    qmgr -c 'set queue batch queue_type = execution'
-    qmgr -c 'set queue batch started = true'
-    qmgr -c 'set queue batch enabled = true'
-    qmgr -c 'set queue batch resources_default.walltime = 1:00:00'
-    qmgr -c 'set queue batch resources_default.nodes = 1'
-    qmgr -c 'set server default_queue = batch'
+    qmgr -c 'set server queue_centric_limits=True'
+
+    ## create the routing queue
+    qmgr -c 'create queue default'
+    qmgr -c 'set queue default queue_type=Route'
+    qmgr -c 'set queue default route_destinations=serial'
+    qmgr -c 'set queue default route_destinations+=smp'
+    qmgr -c 'set queue default route_destinations+=mpi'
+    qmgr -c 'set queue default enabled=True'
+    qmgr -c 'set queue default started=True'
+    qmgr -c 'set server default_queue = default'
+
+    ## create the serial queue
+    qmgr -c 'create queue serial'
+    qmgr -c 'set queue serial queue_type=Execution'
+    qmgr -c 'set queue serial Priority=100'
+    qmgr -c 'set queue serial resources_max.nodes=1'
+    qmgr -c 'set queue serial resources_max.ncpus=1'
+    qmgr -c 'set queue serial resources_max.procct=1'
+    qmgr -c 'set queue serial resources_default.nodes=1'
+    qmgr -c 'set queue serial resources_default.ncpus=1'
+    qmgr -c 'set queue serial resources_default.procct=1'
+    qmgr -c 'set queue serial resources_default.walltime = 1:00:00'
+    qmgr -c 'set queue serial enabled=True'
+    qmgr -c 'set queue serial started=True'
+
+    ## create the smp queue
+    qmgr -c 'create queue smp'
+    qmgr -c 'set queue smp queue_type=Execution'
+    qmgr -c 'set queue smp Priority=95'
+    qmgr -c 'set queue smp resources_max.nodes=1'
+    qmgr -c 'set queue smp resources_default.nodes=1'
+    qmgr -c 'set queue smp resources_default.walltime = 1:00:00'
+    qmgr -c 'set queue smp resources_min.ncpus=2'
+    qmgr -c 'set queue smp resources_min.procct=2'
+    qmgr -c 'set queue smp enabled=True'
+    qmgr -c 'set queue smp started=True'
+
+    ## create the mpi queue
+    qmgr -c 'create queue mpi'
+    qmgr -c 'set queue mpi queue_type=Execution'
+    qmgr -c 'set queue mpi Priority=90'
+    qmgr -c 'set queue mpi resources_default.nodes=2'
+    qmgr -c 'set queue mpi resources_default.ncpus=2'
+    qmgr -c 'set queue mpi resources_default.procct=2'
+    qmgr -c 'set queue mpi resources_default.walltime = 1:00:00'
+    qmgr -c 'set queue mpi resources_min.ncpus=2'
+    qmgr -c 'set queue mpi resources_min.procct=2'
+    qmgr -c 'set queue mpi enabled=True'
+    qmgr -c 'set queue mpi started=True'
+
     qterm
     stop_trqauthd
 component-sched:
