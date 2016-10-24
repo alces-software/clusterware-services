@@ -38,7 +38,7 @@ component-base:
     cp etc/logrotate.d/* "${cw_ROOT}"/etc/logrotate.d
     cp -R etc/ssl/* "${cw_ROOT}"/etc/ssl
 
-    cp dist/pam.d/rpam /etc/pam.d
+    cp dist/pam.d/alces-storage-manager-daemon /etc/pam.d
 
     cat <<EOF > "${cw_ROOT}"/opt/alces-storage-manager-daemon/config/storage-manager-daemon.yml
     interfaces: ['*']
