@@ -10,8 +10,8 @@ pbspro_features() {
 
 pbspro_setup_environment() {
     export MODULEPATH="${cw_ROOT}"/etc/modules
-    eval $("${cw_ROOT}"/opt/Modules/bin/modulecmd bash purge)
-    eval $("${cw_ROOT}"/opt/Modules/bin/modulecmd bash load services/pbspro)
+    eval $("${cw_ROOT}"/opt/modules/bin/modulecmd bash purge)
+    eval $("${cw_ROOT}"/opt/modules/bin/modulecmd bash load services/pbspro)
 }
 
 pbspro_empty_nodes() {
