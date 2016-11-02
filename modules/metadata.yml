@@ -21,9 +21,43 @@
 #==============================================================================
 ---
 install:
+  el7: |
+    yum install -y -e0 tcl
+  el6: |
+    yum install -y -e0 tcl
+  ubuntu1604: |
+    apt-get install -y tcl
   _: |
     require serviceware
     serviceware_add modules
+
+    cp -R etc/* "${cw_ROOT}"/etc
+    sed -i -e "s,_ROOT_,${cw_ROOT},g" "${cw_ROOT}/etc/modulerc/modulespath" \
+        "${cw_ROOT}/etc/profile.d/10-modules.csh"
+build:
+  el6: |
+    yum -e0 -y install tcl-devel
+  el7: |
+    yum -e0 -y install tcl-devel
+  ubuntu1604: |
+    apt-get install -y tcl8.6-dev
+  _: |
+    curl -L "http://downloads.sourceforge.net/project/modules/Modules/modules-3.2.10/modules-3.2.10.tar.gz" -o /tmp/modules-source.tar.gz
+    tar -C /tmp -xzf /tmp/modules-source.tar.gz
+    pushd /tmp/modules-*
+    if [ -f /usr/lib64/tclConfig.sh ]; then
+      TCLLIB=/usr/lib64
+    elif [ -f /usr/lib/tcl8.6/tclConfig.sh ]; then
+      TCLLIB=/usr/lib/tcl8.6
+    else
+      TCLLIB=/usr/lib
+    fi
+    ./configure --disable-versioning --with-tcl=$TCLLIB \
+      --prefix="${cw_ROOT}/opt"
+    make CFLAGS="-DUSE_INTERP_ERRORLINE"
+    make install
+    mv "${cw_ROOT}"/opt/Modules "${cw_ROOT}"/opt/modules
+    popd
 
     cp -R etc/* "${cw_ROOT}"/etc
     sed -i -e "s,_ROOT_,${cw_ROOT},g" "${cw_ROOT}/etc/modulerc/modulespath" \

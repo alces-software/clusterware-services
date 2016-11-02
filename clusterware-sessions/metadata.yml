@@ -21,6 +21,15 @@
 #==============================================================================
 ---
 install:
+  el7: |
+    yum install -y -e0 mesa-libGL libXdmcp pixman xorg-x11-fonts-misc
+    yum -e0 -y install uuid netpbm-progs iproute xauth xkeyboard-config xorg-x11-xkb-utils xorg-x11-apps xorg-x11-server-utils xterm
+  el6: |
+    yum install -y -e0 mesa-libGL libXdmcp pixman xorg-x11-fonts-misc
+    yum -e0 -y install uuid netpbm-progs iproute xauth xkeyboard-config xorg-x11-xkb-utils xorg-x11-apps xorg-x11-server-utils xterm
+  ubuntu1604: |
+    apt-get install -y libgl1-mesa-glx libglapi-mesa libxdmcp6 libpixman-1-0 xfonts-base x11-xserver-utils libjpeg8
+    apt-get install -y uuid netpbm iproute xauth xkb-data x11-xkb-utils x11-apps x11-utils xterm software-properties-common
   _: |
     require serviceware
     serviceware_add tigervnc
@@ -49,3 +58,122 @@ install:
             "${cw_ROOT}/bin/alces" session enable default
         fi
     fi
+build:
+  el7: |
+    # tigervnc: libSM-devel required only for building vncpasswd and vncconfig
+    yum -e0 -y install cmake automake autoconf libtool \
+        gettext gettext-devel zlib-devel \
+        xorg-x11-server-source xorg-x11-util-macros \
+        xorg-x11-font-utils xorg-x11-xtrans-devel \
+        libX11-devel libXext-devel libXfont-devel libXdmcp-devel \
+        libxkbfile-devel libdrm-devel libjpeg-turbo-devel \
+        mesa-libGL-devel pixman-devel freetype-devel \
+        openssl-devel gnutls-devel pam-devel \
+        libSM-devel
+    # xwd
+    yum -e0 -y install libxkbfile-devel
+    curl -L "https://github.com/TigerVNC/tigervnc/archive/v1.6.90.tar.gz" -o /tmp/tigervnc-source.tar.gz
+  el6: |
+    # tigervnc: libSM-devel required only for building vncpasswd and vncconfig
+    yum -e0 -y install cmake automake autoconf libtool \
+        gettext gettext-devel zlib-devel \
+        xorg-x11-server-source xorg-x11-util-macros \
+        xorg-x11-font-utils xorg-x11-xtrans-devel \
+        libX11-devel libXext-devel libXfont-devel libXdmcp-devel \
+        libxkbfile-devel libdrm-devel libjpeg-turbo-devel \
+        mesa-libGL-devel pixman-devel freetype-devel \
+        openssl-devel gnutls-devel pam-devel \
+        libSM-devel
+    # xwd
+    yum -e0 -y install libxkbfile-devel
+    curl -L "https://github.com/TigerVNC/tigervnc/archive/v1.6.90.tar.gz" -o /tmp/tigervnc-source.tar.gz
+  ubuntu1604: |
+    # tigervnc
+    apt-get install -y cmake automake autoconf libtool \
+      gettext zlib1g-dev \
+      xorg-server-source xutils-dev\
+      xfonts-utils xtrans-dev \
+      libx11-dev libxext-dev libxfont-dev libxdmcp-dev \
+      libxkbfile-dev libdrm-dev libjpeg8-dev \
+      libgl1-mesa-dev libpixman-1-dev libfreetype6-dev \
+      libssl-dev libgnutls-dev libpam0g-dev \
+      libsm-dev \
+      x11proto-xcmisc-dev x11proto-bigreqs-dev x11proto-randr-dev \
+      x11proto-render-dev x11proto-video-dev x11proto-composite-dev \
+      x11proto-record-dev x11proto-scrnsaver-dev x11proto-resource-dev
+    # xwd
+    apt-get install -y libxkbfile-dev
+    curl -L "https://github.com/TigerVNC/tigervnc/archive/v1.5.0.tar.gz" -o /tmp/tigervnc-source.tar.gz
+  _: |
+    tar -C /tmp -xzf /tmp/tigervnc-source.tar.gz
+    patch -d /tmp/tigervnc-* -p1 < remove-fltk-requirement.patch
+    pushd /tmp/tigervnc-*
+    topdir=$(pwd)
+    cmake -G "unix Makefiles" -DFLTK_FOUND=1 \
+      -DCMAKE_INSTALL_PREFIX="${cw_ROOT}/opt/tigervnc"
+    cd "${topdir}/common"
+    make
+    cd "${topdir}/unix/vncpasswd"
+    make
+    cd "${topdir}/unix/vncconfig"
+    make
+    cd "${topdir}/unix/xserver"
+    if [ -f /usr/src/xorg-server.tar.xz ]; then
+      tar --strip-components=1 -xJf /usr/src/xorg-server.tar.xz
+      popd
+      patch -d /tmp/tigervnc-*/unix/xserver -p1 < xserver118.patch
+      pushd "${topdir}/unix/xserver"
+      build_args=()
+    elif [ -d /usr/share/xorg-x11-server-source ]; then
+      cp -R /usr/share/xorg-x11-server-source/* .
+      patch -p1 < ../xserver115.patch
+      build_args=(--disable-config-dbus --enable-install-libxf86config)
+    else
+      echo "Can't find xorg source."
+    fi
+    autoreconf -fiv
+    ./configure --with-pic --without-dtrace --disable-static --disable-dri \
+      --disable-xinerama --disable-xvfb --disable-xnest --disable-xorg \
+      --disable-dmx --disable-xwin --disable-xephyr --disable-kdrive \
+      --disable-config-hal --disable-config-udev \
+      --disable-dri2 --disable-present \
+      --disable-unit-tests \
+      --enable-glx \
+      --with-default-font-path="catalogue:/etc/X11/fontpath.d,built-ins" \
+      --with-fontrootdir=/usr/share/X11/fonts \
+      --with-xkb-path=/usr/share/X11/xkb \
+      --with-xkb-output=/var/lib/xkb \
+      --with-xkb-bin-directory=/usr/bin \
+      --with-serverconfig-path=/usr/lib64/xorg \
+      "${build_args[@]}" \
+      --prefix="${cw_ROOT}/opt/tigervnc"
+    make
+    cd "${topdir}/unix/vncpasswd"
+    make install
+    cd "${topdir}/unix/vncconfig"
+    make install
+    cd "${topdir}/unix/xserver"
+    make install
+    popd
+
+    curl -L "https://github.com/kanaka/websockify/archive/v0.7.0.tar.gz" -o /tmp/websockify-source.tar.gz
+    tar -C /tmp -xzf "/tmp/websockify-source.tar.gz"
+    pushd /tmp/websockify-*
+    mkdir -p "${target}/opt/websockify/lib"
+    cat <<\EOF > "${cw_ROOT}"/opt/websockify/websockify
+    #!/bin/bash
+    pushd $(dirname "$BASH_SOURCE")/lib > /dev/null
+    exec ./run "$@"
+    EOF
+    chmod 755 "${cw_ROOT}"/opt/websockify/websockify
+    cp -R websockify run README.md LICENSE.txt docs "${cw_ROOT}"/opt/websockify/lib
+    popd
+
+    curl -L "http://xorg.freedesktop.org/archive/individual/app/xwd-1.0.6.tar.bz2" -o /tmp/xwd-source.tar.bz2
+    tar -C /tmp -xjf /tmp/xwd-source.tar.bz2
+    cd /tmp/xwd-*
+    ./configure --prefix="${cw_ROOT}/opt/xwd"
+    make
+    make install
+    mkdir "${cw_ROOT}/opt/xwd/doc"
+    cp COPYING "${cw_ROOT}/opt/xwd/doc"

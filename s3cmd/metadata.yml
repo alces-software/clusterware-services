@@ -21,6 +21,12 @@
 #==============================================================================
 ---
 install:
+  el7: |
+    yum -e0 -y install python-dateutil
+  el6: |
+    yum -e0 -y install python-dateutil
+  ubuntu1604: |
+    apt-get install -y python-dateutil
   _: |
     require serviceware
     serviceware_add s3cmd

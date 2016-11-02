@@ -21,6 +21,12 @@
 #==============================================================================
 ---
 install:
+  el7: |
+    yum install -y -e0 wget sqlite3 patch bzip2 xz-utils file which sudo
+  el6: |
+    yum install -y -e0 wget sqlite3 patch bzip2 xz-utils file which sudo
+  ubuntu1604: |
+    apt-get install -y gawk wget sqlite3 patch xz-utils debianutils sudo libcurl3
   _: |
     alces service install modules
     require serviceware
@@ -98,8 +104,12 @@ install:
         chgrp -R gridware "${cw_ROOT}"/var/lib/gridware/depots/official/data
     fi
 build:
+  el6: |
+    yum install -y gcc-c++ gmp-devel sqlite-devel
   el7: |
     yum install -y gcc-c++ gmp-devel sqlite-devel
+  ubuntu1604: |
+    apt-get install -y libsqlite3-dev
   _: |
     TREE="${1:-master}"
     if [ ! -f /tmp/gridware.zip ]; then
