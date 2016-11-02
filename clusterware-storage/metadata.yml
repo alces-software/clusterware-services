@@ -22,6 +22,8 @@
 ---
 install:
   _: |
+    . "${cw_ROOT}"/etc/serviceware.rc
+
     cp -pR libexec/* "${cw_ROOT}"/libexec
     cp -R etc/* "${cw_ROOT}"/etc
     rm -f "${cw_ROOT}"/etc/storage/.gitkeep
@@ -38,7 +40,7 @@ install:
             mkdir -p "${cw_ROOT}"/var/lib/storage/repos/base
             tar -C "${cw_ROOT}"/var/lib/storage/repos/base -xzf /tmp/clusterware-storage.tar.gz
         else
-            export cw_STORAGE_rev
+            export cw_STORAGE_rev cw_STORAGE_track
             "${cw_ROOT}/bin/alces" storage update
         fi
     fi

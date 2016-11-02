@@ -36,6 +36,7 @@ main() {
         url="${cw_SESSION_DEFAULT_REPO_URL}"
     fi
     rev="${cw_SESSION_rev}"
+    track="${cw_SESSION_track:-master}"
 
     if [ ! -d "${cw_SESSION_REPODIR}/${repo}" ]; then
         if [ -z "$url" ]; then
@@ -44,7 +45,7 @@ main() {
         echo "Initializing sessions: ${repo}"
         doing 'Clone'
 	if [ "${rev}" ]; then
-            git_clone_rev "${url}" "${cw_SESSION_REPODIR}/${repo}" "${rev}"
+            git_clone_rev "${url}" "${cw_SESSION_REPODIR}/${repo}" "${rev}" "${track}"
 	else
             git_clone "${url}" "${cw_SESSION_REPODIR}/${repo}"
 	fi
