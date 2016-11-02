@@ -10,8 +10,8 @@ gridscheduler_features() {
 
 gridscheduler_setup_environment() {
     export MODULEPATH="${cw_ROOT}"/etc/modules
-    eval $("${cw_ROOT}"/opt/Modules/bin/modulecmd bash purge)
-    eval $("${cw_ROOT}"/opt/Modules/bin/modulecmd bash load services/gridscheduler)
+    eval $("${cw_ROOT}"/opt/modules/bin/modulecmd bash purge)
+    eval $("${cw_ROOT}"/opt/modules/bin/modulecmd bash load services/gridscheduler)
 }
 
 gridscheduler_empty_nodes() {
@@ -130,6 +130,10 @@ gridscheduler_set_submission_strategy() {
     strategy="$1"
     gridscheduler_setup_environment
     nodeattr="${cw_ROOT}/opt/genders/bin/nodeattr"
+    if [ ! -x "${nodeattr}" ]; then
+        echo "unable to change submission strategy as nodeattr is not installed; try 'alces service install pdsh' first"
+        return 1
+    fi
     case ${strategy} in
         all)
             for a in $(${nodeattr} -f ${cw_ROOT}/etc/genders -q all); do
