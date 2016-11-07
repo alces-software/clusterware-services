@@ -51,7 +51,7 @@ install:
     fi
 
     echo "Updating gridware permissions"
-    access_targets=(/var/cache/gridware /var/log/gridware "${cw_ROOT}"/etc/modulerc/modulespath)
+    access_targets=(/var/cache/gridware /var/log/gridware "${cw_ROOT}"/etc/modulerc)
     chmod -R g+rw "${access_targets[@]}"
     find "${access_targets[@]}" -type d -exec chmod 2775 {} \;
     chgrp -R gridware "${access_targets[@]}"
