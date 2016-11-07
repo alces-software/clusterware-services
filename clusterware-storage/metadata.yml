@@ -24,6 +24,8 @@ install:
   _: |
     . "${cw_ROOT}"/etc/serviceware.rc
 
+    "${cw_ROOT}"/bin/alces service install pdsh
+
     cp -pR libexec/* "${cw_ROOT}"/libexec
     cp -R etc/* "${cw_ROOT}"/etc
     rm -f "${cw_ROOT}"/etc/storage/.gitkeep
