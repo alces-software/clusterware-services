@@ -21,7 +21,7 @@ EOF
 ---
 :source: :home
 :encrypt:
-- ".ssh/id_*"
+- ".ssh/*"
 - ".config/clusterware/storage*"
 EOF
     fi
