@@ -110,5 +110,5 @@ setenv PBS_CONF_FILE ${appdir}/etc/pbs.conf
 
 prepend-path PATH ${appdir}/bin
 prepend-path MANPATH ${appdir}/share/man
-prepend-path LD_LIBRRY_PATH ${appdir}/lib
+prepend-path LD_LIBRARY_PATH ${appdir}/lib
 prepend-path CW_DOCPATH _cw_ROOT_/var/lib/docs/pbspro
