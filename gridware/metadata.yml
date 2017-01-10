@@ -1,0 +1,202 @@
+#==============================================================================
+# Copyright (C) 2016 Stephen F. Norledge and Alces Software Ltd.
+#
+# This file/package is part of Alces Clusterware.
+#
+# Alces Clusterware is free software: you can redistribute it and/or
+# modify it under the terms of the GNU Affero General Public License
+# as published by the Free Software Foundation, either version 3 of
+# the License, or (at your option) any later version.
+#
+# Alces Clusterware is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this package.  If not, see <http://www.gnu.org/licenses/>.
+#
+# For more information on the Alces Clusterware, please visit:
+# https://github.com/alces-software/clusterware
+#==============================================================================
+---
+install:
+  el7: |
+    yum install -y -e0 wget sqlite3 patch bzip2 xz-utils file which sudo
+  el6: |
+    yum install -y -e0 wget sqlite3 patch bzip2 xz-utils file which sudo
+  ubuntu1604: |
+    apt-get install -y gawk wget sqlite3 patch xz-utils debianutils sudo libcurl3
+  _: |
+    alces service install modules
+    require serviceware
+    serviceware_add gridware
+    serviceware_add xxd
+
+    cp -pR libexec/* "${cw_ROOT}"/libexec
+    cp -R etc/* "${cw_ROOT}"/etc
+    cp -R docs/guides/* "${cw_ROOT}"/var/lib/docs/base/guides
+
+    sed -i -e "s,_ROOT_,${cw_ROOT},g" "${cw_ROOT}/etc/profile.d/05-packager.csh" \
+        "${cw_ROOT}"/etc/sudoers.d/*
+    chmod 0400 "${cw_ROOT}"/etc/sudoers.d/*
+    mkdir -p /var/cache/gridware/{archives,archives/depots,src} /var/log/gridware
+
+    sed -e "/^#=Alces Serviceware/i #=Alces Gridware Depots" \
+      -i "${cw_ROOT}"/etc/modulerc/modulespath
+
+    if ! /usr/bin/getent group gridware >/dev/null; then
+        echo "Configuring gridware group"
+        /usr/bin/getent group gridware >/dev/null || /usr/sbin/groupadd -g 341 gridware
+    fi
+
+    echo "Updating gridware permissions"
+    access_targets=(/var/cache/gridware /var/log/gridware "${cw_ROOT}"/etc/modulerc)
+    chmod -R g+rw "${access_targets[@]}"
+    find "${access_targets[@]}" -type d -exec chmod 2775 {} \;
+    chgrp -R gridware "${access_targets[@]}"
+
+    echo "Setting up default gridware package repositories"
+    if [ ! -d "${cw_ROOT}/var/lib/gridware/repos" ]; then
+        if [ ! -f "${cw_ROOT}"/var/lib/gridware/repos/main/repo.yml ]; then
+            mkdir -p "${cw_ROOT}"/var/lib/gridware/repos/main
+            cp dist/repos/main/repo.yml "${cw_ROOT}"/var/lib/gridware/repos/main/repo.yml
+        fi
+        if [ ! -f "${cw_ROOT}"/var/lib/gridware/repos/volatile/repo.yml ]; then
+            mkdir -p "${cw_ROOT}"/var/lib/gridware/repos/volatile
+            cp dist/repos/volatile/repo.yml "${cw_ROOT}"/var/lib/gridware/repos/volatile/repo.yml
+        fi
+
+        cat <<EOF > "${cw_ROOT}"/etc/gridware.yml
+    :last_update_filename: .last_update
+    :log_root: /var/log/gridware
+    :repo_paths:
+     - ${cw_ROOT}/var/lib/gridware/repos/main
+     - ${cw_ROOT}/var/lib/gridware/repos/volatile
+    EOF
+        "${cw_ROOT}/bin/alces" gridware update main 2>&1
+        "${cw_ROOT}/bin/alces" gridware update volatile 2>&1
+        rm -f "${cw_ROOT}"/etc/gridware.yml
+
+        chmod -R g+rw "${cw_ROOT}"/var/lib/gridware/repos/*
+        find "${cw_ROOT}"/var/lib/gridware/repos/* -type d -exec chmod 2775 {} \;
+        chgrp -R gridware "${cw_ROOT}"/var/lib/gridware/repos/*
+    fi
+
+    echo "Setting up default gridware depot repository"
+    if [ ! -d "${cw_ROOT}/var/lib/gridware/depots" ]; then
+        if [ ! -f "${cw_ROOT}"/var/lib/gridware/depots/official/repo.yml ]; then
+            mkdir -p "${cw_ROOT}"/var/lib/gridware/depots/official
+            cp dist/depots/official/repo.yml "${cw_ROOT}"/var/lib/gridware/depots/official/repo.yml
+        fi
+
+        cat <<EOF > "${cw_ROOT}"/etc/gridware.yml
+    :last_update_filename: .last_update
+    :log_root: /var/log/gridware
+    :depot_repo_paths:
+     - ${cw_ROOT}/var/lib/gridware/depots/official
+    EOF
+        "${cw_ROOT}/bin/alces" gridware depot update official 2>&1
+        rm -f "${cw_ROOT}"/etc/gridware.yml
+
+        chmod -R g+rw "${cw_ROOT}"/var/lib/gridware/depots/official/data
+        find "${cw_ROOT}"/var/lib/gridware/depots/official/data -type d -exec chmod 2775 {} \;
+        chgrp -R gridware "${cw_ROOT}"/var/lib/gridware/depots/official/data
+    fi
+build:
+  el6: |
+    yum install -y gcc-c++ gmp-devel sqlite-devel
+  el7: |
+    yum install -y gcc-c++ gmp-devel sqlite-devel
+  ubuntu1604: |
+    apt-get install -y libsqlite3-dev
+  _: |
+    TREE="${1:-master}"
+    if [ ! -f /tmp/gridware.zip ]; then
+      curl -L "https://github.com/alces-software/gridware/archive/$TREE.zip" -o /tmp/gridware.zip
+    fi
+    pushd "${cw_ROOT}"/opt
+    unzip /tmp/gridware.zip
+    mv gridware-$TREE gridware
+
+    cd gridware
+    PATH="${cw_ROOT}"/opt/git/bin:"${cw_ROOT}"/opt/ruby/bin:$PATH
+    bundle install --local --without="development test" --path=vendor
+
+    rm -rf Rakefile vendor/cache
+    popd
+
+    cp -pR libexec/* "${cw_ROOT}"/libexec
+    cp -R etc/* "${cw_ROOT}"/etc
+    cp -R docs/guides/* "${cw_ROOT}"/var/lib/docs/base/guides
+
+    sed -i -e "s,_ROOT_,${cw_ROOT},g" "${cw_ROOT}/etc/profile.d/05-packager.csh" \
+        "${cw_ROOT}"/etc/sudoers.d/*
+    chmod 0400 "${cw_ROOT}"/etc/sudoers.d/*
+    mkdir -p /var/cache/gridware/{archives,archives/depots,src} /var/log/gridware
+
+    if ! /usr/bin/getent group gridware >/dev/null; then
+        echo "Configuring gridware group"
+        /usr/bin/getent group gridware >/dev/null || /usr/sbin/groupadd -g 341 gridware
+    fi
+
+    echo "Updating gridware permissions"
+    access_targets=(/var/cache/gridware /var/log/gridware "${cw_ROOT}"/etc/modulerc/modulespath)
+    chmod -R g+rw "${access_targets[@]}"
+    find "${access_targets[@]}" -type d -exec chmod 2775 {} \;
+    chgrp -R gridware "${access_targets[@]}"
+
+    echo "Setting up default gridware package repositories"
+    if [ ! -d "${cw_ROOT}/var/lib/gridware/repos" ]; then
+        if [ ! -f "${cw_ROOT}"/var/lib/gridware/repos/main/repo.yml ]; then
+            mkdir -p "${cw_ROOT}"/var/lib/gridware/repos/main
+            cp dist/repos/main/repo.yml "${cw_ROOT}"/var/lib/gridware/repos/main/repo.yml
+        fi
+        if [ ! -f "${cw_ROOT}"/var/lib/gridware/repos/volatile/repo.yml ]; then
+            mkdir -p "${cw_ROOT}"/var/lib/gridware/repos/volatile
+            cp dist/repos/volatile/repo.yml "${cw_ROOT}"/var/lib/gridware/repos/volatile/repo.yml
+        fi
+
+        if [ -f "/tmp/gridware-packages-main.tar.gz" ]; then
+            mkdir -p "${cw_ROOT}"/var/lib/gridware/repos/main
+            tar -C "${cw_ROOT}"/var/lib/gridware/repos/main -xzf /tmp/gridware-packages-main.tar.gz
+            mkdir -p "${cw_ROOT}"/var/lib/gridware/repos/volatile/pkg
+            tar -C "${cw_ROOT}"/var/lib/gridware/repos/volatile/pkg -xzf /tmp/gridware-packages-volatile.tar.gz
+        else
+            cat <<EOF > "${cw_ROOT}"/etc/gridware.yml
+    :last_update_filename: .last_update
+    :log_root: /var/log/gridware
+    :repo_paths:
+     - ${cw_ROOT}/var/lib/gridware/repos/main
+     - ${cw_ROOT}/var/lib/gridware/repos/volatile
+    EOF
+            "${cw_ROOT}/bin/alces" gridware update main 2>&1
+            "${cw_ROOT}/bin/alces" gridware update volatile 2>&1
+            rm -f "${cw_ROOT}"/etc/gridware.yml
+        fi
+
+        chmod -R g+rw "${cw_ROOT}"/var/lib/gridware/repos/*
+        find "${cw_ROOT}"/var/lib/gridware/repos/* -type d -exec chmod 2775 {} \;
+        chgrp -R gridware "${cw_ROOT}"/var/lib/gridware/repos/*
+    fi
+
+    echo "Setting up default gridware depot repository"
+    if [ ! -d "${cw_ROOT}/var/lib/gridware/depots" ]; then
+        if [ ! -f "${cw_ROOT}"/var/lib/gridware/depots/official/repo.yml ]; then
+            mkdir -p "${cw_ROOT}"/var/lib/gridware/depots/official
+            cp dist/depots/official/repo.yml "${cw_ROOT}"/var/lib/gridware/depots/official/repo.yml
+        fi
+
+        cat <<EOF > "${cw_ROOT}"/etc/gridware.yml
+    :last_update_filename: .last_update
+    :log_root: /var/log/gridware
+    :depot_repo_paths:
+     - ${cw_ROOT}/var/lib/gridware/depots/official
+    EOF
+        "${cw_ROOT}/bin/alces" gridware depot update official 2>&1
+        rm -f "${cw_ROOT}"/etc/gridware.yml
+
+        chmod -R g+rw "${cw_ROOT}"/var/lib/gridware/depots/official/data
+        find "${cw_ROOT}"/var/lib/gridware/depots/official/data -type d -exec chmod 2775 {} \;
+        chgrp -R gridware "${cw_ROOT}"/var/lib/gridware/depots/official/data
+    fi
