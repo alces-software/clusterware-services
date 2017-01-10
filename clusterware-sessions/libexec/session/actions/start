@@ -280,4 +280,8 @@ if [ -f "${cw_ROOT}/etc/session.rc" ]; then
     . "${cw_ROOT}/etc/session.rc"
 fi
 
+if [ -d "${cw_ROOT}"/var/lib/sessions/lib ]; then
+    export LD_LIBRARY_PATH="${cw_ROOT}/var/lib/sessions/lib:$LD_LIBRARY_PATH"
+fi
+
 main "$@"
