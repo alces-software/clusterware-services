@@ -55,19 +55,49 @@ gridscheduler_parse_job_states() {
 require 'rexml/document'
 pending_job_ids = IO.popen("qstat -u '*' -s p | tail -n+3 | awk '{print \$1;}'").read.split("\n")
 running_job_ids = IO.popen("qstat -u '*' -s r | tail -n+3 | awk '{print \$1;}'").read.split("\n")
+
+autoscaling_queues = IO.popen("qconf -sql | grep FlightComputeGroup").read.split("\n")
+
 nodes = 0.0
 cores = 0
 cores_per_node = ${cores_per_node:-2}
+
+specified_queue_nodes = {}
+autoscaling_queues.each do |q|
+  specified_queue_nodes[q] = { :nodes => 0.0, :cores => 0 }
+end
+
 pending_job_ids.each do |jid|
   doc = REXML::Document.new(IO.popen("qstat -xml -j #{jid}"))
   slots = (doc.text('//JB_pe_range/ranges/RN_max') || 1).to_i
   pe = doc.text('//JB_pe')
-  if pe == "mpinodes" || pe == "mpinodes-verbose"
-    nodes += slots
-    cores += (cores_per_node * slots)
-  else
-    cores += (slots || 1)
-    nodes += ((slots || 1) * 1.0 / cores_per_node)
+
+  specific_queue = doc.text('//JB_hard_queue_list/destin_ident_list/QR_name')
+  counted = false
+
+  if specific_queue
+    autoscaling_queues.each do |q|
+      if File.fnmatch(specific_queue, q)
+        if pe == "mpinodes" || pe == "mpinodes-verbose"
+          specified_queue_nodes[q][:nodes] += slots
+          specified_queue_nodes[q][:cores] += (cores_per_node * slots)
+        else
+          specified_queue_nodes[q][:cores] += (slots || 1)
+          specified_queue_nodes[q][:nodes] += ((slots || 1) * 1.0 / cores_per_node)
+        end
+        counted = true
+        break
+      end
+    end
+  end
+  if !counted
+    if pe == "mpinodes" || pe == "mpinodes-verbose"
+      nodes += slots
+      cores += (cores_per_node * slots)
+    else
+      cores += (slots || 1)
+      nodes += ((slots || 1) * 1.0 / cores_per_node)
+    end
   end
 end
 results = {
@@ -79,6 +109,11 @@ results = {
 }
 results.each do |k,v|
   puts "#{k}=#{v}"
+end
+
+specified_queue_nodes.each do |k,v|
+  puts "gridscheduler_queue_#{k}_cores_req=#{v[:cores]}"
+  puts "gridscheduler_queue_#{k}_nodes_req=#{v[:nodes].ceil}"
 end
 RUBY
 }
