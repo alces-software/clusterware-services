@@ -111,6 +111,13 @@ results.each do |k,v|
   puts "#{k}=#{v}"
 end
 
+# Add any non-queue-specific demand arbitrarily to the first queue if we have one
+# Much easier to do it in here than in Bash!
+if specified_queue_nodes.first
+  specified_queue_nodes.first[:nodes] += nodes.ceil
+  specified_queue_nodes.first[:cores] += cores
+end
+
 specified_queue_nodes.each do |k,v|
   puts "gridscheduler_queue_#{k}_cores_req=#{v[:cores]}"
   puts "gridscheduler_queue_#{k}_nodes_req=#{v[:nodes].ceil}"
