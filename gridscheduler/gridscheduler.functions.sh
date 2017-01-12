@@ -46,16 +46,15 @@ gridscheduler_enable_node() {
 }
 
 gridscheduler_parse_job_states() {
-    local tgtfile cores_per_node queue_wildcard
+    local tgtfile cores_per_node
     tgtfile="$1"
     cores_per_node="$2"
-    queue_wildcard="${3:-*}"
     require ruby
     gridscheduler_setup_environment
     ruby_run <<RUBY > "${tgtfile}"
 require 'rexml/document'
-pending_job_ids = IO.popen("qstat -u '*' -s p -q '$queue_wildcard' | tail -n+3 | awk '{print \$1;}'").read.split("\n")
-running_job_ids = IO.popen("qstat -u '*' -s r -q '$queue_wildcard' | tail -n+3 | awk '{print \$1;}'").read.split("\n")
+pending_job_ids = IO.popen("qstat -u '*' -s p | tail -n+3 | awk '{print \$1;}'").read.split("\n")
+running_job_ids = IO.popen("qstat -u '*' -s r | tail -n+3 | awk '{print \$1;}'").read.split("\n")
 nodes = 0.0
 cores = 0
 cores_per_node = ${cores_per_node:-2}
