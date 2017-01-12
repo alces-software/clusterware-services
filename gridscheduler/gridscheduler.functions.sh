@@ -67,7 +67,10 @@ autoscaling_queues.each do |q|
   specified_queue_nodes[q] = { :nodes => 0.0, :cores => 0 }
 end
 
-pending_job_ids.each do |jid|
+# In order to get a value for "total required size of autoscaling group" we need
+# to consider _both_ pending and running jobs.
+
+(running_job_ids + pending_job_ids).each do |jid|
   doc = REXML::Document.new(IO.popen("qstat -xml -j #{jid}"))
   slots = (doc.text('//JB_pe_range/ranges/RN_max') || 1).to_i
   pe = doc.text('//JB_pe')
