@@ -133,7 +133,9 @@ vnc_write_detail_file() {
 
 vnc_emit_details() {
     local sessionid host access_host display password websocket port \
-    sessiontype vpn_address primary_address alternative_access_details
+    sessiontype vpn_address primary_address alternative_access_details \
+    access_info
+
     sessionid="$1"
     host="$2"
     access_host="$3"
@@ -144,9 +146,28 @@ vnc_emit_details() {
     sessiontype="$7"
     vpn_address="$8"
 
-    # If we have an address on the VPN we want to show this as the recommended
-    # access address, as it's more secure by default.
+    # If we have been given an address on the VPN we want to show this as the
+    # recommended access address, as it's more secure by default. Note: if we
+    # have not been given this the access_host might still be an address on the
+    # VPN, e.g. if this is a node without a public IP.
     primary_address="${vpn_address:-$access_host}"
+
+    # The primary address to show may or may not be on the cluster VPN; we
+    # should show an appropriate method in each case.
+    if [[ $primary_address =~ ^10. ]];then
+      access_info=$(cat <<EOF
+Depending on your client, you can securely connect to the session while
+connected to your cluster VPN using:
+EOF
+      )
+
+    else
+      access_info=$(cat <<EOF
+Depending on your client, you can (insecurely by default) connect to the
+session using:
+EOF
+)
+    fi
 
     host_str="        Host: ${access_host}"
     if [ "${access_host}" != "${host}" ]; then
@@ -185,8 +206,7 @@ $host_str
     Password: $password
    Websocket: $websocket
 
-Depending on your client, you can securely connect to the session while
-connected to your cluster VPN using:
+${access_info}
 
   vnc://${USER}:${password}@${primary_address}:${port}
   ${primary_address}:${port}
