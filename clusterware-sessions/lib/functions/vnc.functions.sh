@@ -132,7 +132,8 @@ vnc_write_detail_file() {
 }
 
 vnc_emit_details() {
-    local sessionid host access_host display password websocket port sessiontype
+    local sessionid host access_host display password websocket port \
+    sessiontype vpn_address primary_address alternative_access_details
     sessionid="$1"
     host="$2"
     access_host="$3"
@@ -141,11 +142,37 @@ vnc_emit_details() {
     websocket="$6"
     port=$(($display+5900))
     sessiontype="$7"
+    vpn_address="$8"
+
+    # If we have an address on the VPN we want to show this as the recommended
+    # access address, as it's more secure by default.
+    primary_address="${vpn_address:-$access_host}"
 
     host_str="        Host: ${access_host}"
     if [ "${access_host}" != "${host}" ]; then
         host_str="$host_str
 Service host: ${host}"
+    fi
+
+    # If we have an address on the VPN we want to show this, and also show the
+    # alternative, default insecure access method without using this.
+    if [ -n "$vpn_address" ]; then
+      host_str="$host_str
+ VPN address: ${vpn_address}"
+
+    alternative_access_details="$(cat <<EOF
+
+Alternatively, you can connect to the session directly using:
+
+  vnc://${USER}:${password}@${access_host}:${port}
+  ${access_host}:${port}
+  ${access_host}:${display}
+
+Note that this method is insecure by default, unless you take steps to secure
+your VNC connection.
+
+EOF
+)"
     fi
 
     cat <<EOF
@@ -158,11 +185,13 @@ $host_str
     Password: $password
    Websocket: $websocket
 
-Depending on your client, you can connect to the session using:
+Depending on your client, you can securely connect to the session while
+connected to your cluster VPN using:
 
-  vnc://${USER}:${password}@${access_host}:${port}
-  ${access_host}:${port}
-  ${access_host}:${display}
+  vnc://${USER}:${password}@${primary_address}:${port}
+  ${primary_address}:${port}
+  ${primary_address}:${display}
+${alternative_access_details}
 
 If prompted, you should supply the following password: ${password}
 
