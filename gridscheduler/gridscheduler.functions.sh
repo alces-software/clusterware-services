@@ -119,7 +119,7 @@ end
 if !specified_queue_nodes.empty?
   k = specified_queue_nodes.keys.first
   specified_queue_nodes[k][:nodes] += nodes.ceil
-  specified_queue_nodes[k]][:cores] += cores
+  specified_queue_nodes[k][:cores] += cores
 end
 
 specified_queue_nodes.each do |k,v|
