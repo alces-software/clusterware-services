@@ -108,6 +108,7 @@ vnc_write_vars_file() {
     password="$5"
     websocket="$6"
     sessiontype="$7"
+    vpn_address="$8"
 
     metadata_file="${cw_VNC_SESSIONSDIR}/${sessionid}/metadata.vars.sh"
 
@@ -122,6 +123,7 @@ vnc[HOSTNAME]="$(hostname -s)"
 vnc[ACCESS_HOST]="${access_host}"
 vnc[WEBSOCKET]="${websocket}"
 vnc[TYPE]="${sessiontype}"
+vnc[VPN_ADDRESS]="${vpn_address}"
 EOF
     chmod 0600 "${metadata_file}"
 }

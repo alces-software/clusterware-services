@@ -45,10 +45,17 @@ main() {
             else
                 . "${sessiondir}"/metadata.vars.sh
                 host="Host address: ${vnc[ACCESS_HOST]}"
+
                 if [ "${vnc[ACCESS_HOST]}" != "${vnc[HOST]}" ]; then
                     host="$host
 Service host: ${vnc[HOST]}"
                 fi
+
+                if [ -n "${vnc[VPN_ADDRESS]}" ]; then
+                    host="$host
+VPN address:  ${vnc[VPN_ADDRESS]}"
+                fi
+
                 cat <<EOF
 Identity:     ${sessionid}
 Type:         ${vnc[TYPE]}
