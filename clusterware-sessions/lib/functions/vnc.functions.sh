@@ -19,6 +19,11 @@
 # For more information on the Alces Clusterware, please visit:
 # https://github.com/alces-software/clusterware
 #==============================================================================
+#ALCES_META
+# Refer to `clusterware/scripts/development/propagate`.
+#path=/opt/clusterware/lib/functions/vnc.functions.sh
+#ALCES_META_END
+
 require xdg
 require repo
 require files

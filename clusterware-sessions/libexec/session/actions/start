@@ -20,6 +20,11 @@
 # For more information on the Alces Clusterware, please visit:
 # https://github.com/alces-software/clusterware
 #==============================================================================
+#ALCES_META
+# Refer to `clusterware/scripts/development/propagate`.
+#path=/opt/clusterware/libexec/session/actions/start
+#ALCES_META_END
+
 require action
 require files
 require network
