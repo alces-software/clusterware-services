@@ -116,9 +116,10 @@ end
 
 # Add any non-queue-specific demand arbitrarily to the first queue if we have one
 # Much easier to do it in here than in Bash!
-if specified_queue_nodes.first
-  specified_queue_nodes.first[:nodes] += nodes.ceil
-  specified_queue_nodes.first[:cores] += cores
+if !specified_queue_nodes.empty?
+  k = specified_queue_nodes.keys.first
+  specified_queue_nodes[k][:nodes] += nodes.ceil
+  specified_queue_nodes[k]][:cores] += cores
 end
 
 specified_queue_nodes.each do |k,v|
