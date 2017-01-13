@@ -123,8 +123,8 @@ if !specified_queue_nodes.empty?
 end
 
 specified_queue_nodes.each do |k,v|
-  puts "gridscheduler_queue_#{k.gsub("-", "_")}_cores_req=#{v[:cores]}"
-  puts "gridscheduler_queue_#{k.gsub("-", "_")}_nodes_req=#{v[:nodes].ceil}"
+  puts "gridscheduler_queue_#{k.gsub(/[-\.]/, "_")}_cores_req=#{v[:cores]}"
+  puts "gridscheduler_queue_#{k.gsub(/[-\.]/, "_")}_nodes_req=#{v[:nodes].ceil}"
 end
 RUBY
 }
