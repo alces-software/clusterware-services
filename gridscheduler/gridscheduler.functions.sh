@@ -15,17 +15,16 @@ gridscheduler_setup_environment() {
 }
 
 gridscheduler_empty_nodes() {
-    require ruby
-    gridscheduler_setup_environment
-    ruby_run <<RUBY
+  require ruby
+  gridscheduler_setup_environment
+  ruby_run <<RUBY
 require 'rexml/document'
-doc = REXML::Document.new(IO.popen('qstat -f -xml -q bynode.q@*'))
-doc.each_element('//Queue-List') do |el|
-  used = el.text('slots_used')
-  name = el.text('name')
-  state = el.text('state')
-  if state != 'S' && used == "0"
-    puts name.split('@').last.split('.').first
+doc = REXML::Document.new(IO.popen('qhost -j -xml'))
+doc.each_element('//host') do |el|
+  name = el.attribute('name')
+  jobs = el.get_elements('job')
+  if jobs.empty?
+    puts name
   end
 end
 RUBY
