@@ -23,7 +23,7 @@ doc = REXML::Document.new(IO.popen('qhost -j -xml'))
 doc.each_element('//host') do |el|
   name = el.attribute('name')
   jobs = el.get_elements('job')
-  if jobs.empty?
+  if jobs.empty? and name != "global"
     puts name
   end
 end
