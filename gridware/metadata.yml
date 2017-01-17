@@ -22,9 +22,9 @@
 ---
 install:
   el7: |
-    yum install -y -e0 wget sqlite3 patch bzip2 xz-utils file which sudo
+    yum install -y -e0 wget sqlite patch bzip2 xz file which sudo
   el6: |
-    yum install -y -e0 wget sqlite3 patch bzip2 xz-utils file which sudo
+    yum install -y -e0 wget sqlite patch bzip2 xz file which sudo
   ubuntu1604: |
     apt-get install -y gawk wget sqlite3 patch xz-utils debianutils sudo libcurl3
   _: |
