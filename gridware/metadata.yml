@@ -1,5 +1,5 @@
 #==============================================================================
-# Copyright (C) 2016 Stephen F. Norledge and Alces Software Ltd.
+# Copyright (C) 2017 Stephen F. Norledge and Alces Software Ltd.
 #
 # This file/package is part of Alces Clusterware.
 #
@@ -123,7 +123,7 @@ build:
     PATH="${cw_ROOT}"/opt/git/bin:"${cw_ROOT}"/opt/ruby/bin:$PATH
     bundle install --local --without="development test" --path=vendor
 
-    rm -rf Rakefile vendor/cache
+    rm -rf Rakefile vendor/cache bin .gitignore README.md
     popd
 
     cp -pR libexec/* "${cw_ROOT}"/libexec
