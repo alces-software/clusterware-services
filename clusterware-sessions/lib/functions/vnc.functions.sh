@@ -19,6 +19,11 @@
 # For more information on the Alces Clusterware, please visit:
 # https://github.com/alces-software/clusterware
 #==============================================================================
+#ALCES_META
+# Refer to `clusterware/scripts/development/propagate`.
+#path=/opt/clusterware/lib/functions/vnc.functions.sh
+#ALCES_META_END
+
 require xdg
 require repo
 require files
@@ -103,6 +108,7 @@ vnc_write_vars_file() {
     password="$5"
     websocket="$6"
     sessiontype="$7"
+    vpn_address="$8"
 
     metadata_file="${cw_VNC_SESSIONSDIR}/${sessionid}/metadata.vars.sh"
 
@@ -117,6 +123,7 @@ vnc[HOSTNAME]="$(hostname -s)"
 vnc[ACCESS_HOST]="${access_host}"
 vnc[WEBSOCKET]="${websocket}"
 vnc[TYPE]="${sessiontype}"
+vnc[VPN_ADDRESS]="${vpn_address}"
 EOF
     chmod 0600 "${metadata_file}"
 }
@@ -132,7 +139,10 @@ vnc_write_detail_file() {
 }
 
 vnc_emit_details() {
-    local sessionid host access_host display password websocket port sessiontype
+    local sessionid host access_host display password websocket port \
+    sessiontype vpn_address primary_address alternative_access_details \
+    access_info
+
     sessionid="$1"
     host="$2"
     access_host="$3"
@@ -141,11 +151,56 @@ vnc_emit_details() {
     websocket="$6"
     port=$(($display+5900))
     sessiontype="$7"
+    vpn_address="$8"
+
+    # If we have been given an address on the VPN we want to show this as the
+    # recommended access address, as it's more secure by default. Note: if we
+    # have not been given this the access_host might still be an address on the
+    # VPN, e.g. if this is a node without a public IP.
+    primary_address="${vpn_address:-$access_host}"
+
+    # The primary address to show may or may not be on the cluster VPN; we
+    # should show an appropriate method in each case.
+    if [[ $primary_address =~ ^10. ]];then
+      access_info=$(cat <<EOF
+Depending on your client, you can securely connect to the session while
+connected to your cluster VPN using:
+EOF
+      )
+
+    else
+      access_info=$(cat <<EOF
+Depending on your client, you can (insecurely by default) connect to the
+session using:
+EOF
+)
+    fi
 
     host_str="        Host: ${access_host}"
     if [ "${access_host}" != "${host}" ]; then
         host_str="$host_str
 Service host: ${host}"
+    fi
+
+    # If we have an address on the VPN we want to show this, and also show the
+    # alternative, default insecure access method without using this.
+    if [ -n "$vpn_address" ]; then
+      host_str="$host_str
+ VPN address: ${vpn_address}"
+
+    alternative_access_details="$(cat <<EOF
+
+Alternatively, you can connect to the session directly using:
+
+  vnc://${USER}:${password}@${access_host}:${port}
+  ${access_host}:${port}
+  ${access_host}:${display}
+
+Note that this method is insecure by default, unless you take steps to secure
+your VNC connection.
+
+EOF
+)"
     fi
 
     cat <<EOF
@@ -158,11 +213,12 @@ $host_str
     Password: $password
    Websocket: $websocket
 
-Depending on your client, you can connect to the session using:
+${access_info}
 
-  vnc://${USER}:${password}@${access_host}:${port}
-  ${access_host}:${port}
-  ${access_host}:${display}
+  vnc://${USER}:${password}@${primary_address}:${port}
+  ${primary_address}:${port}
+  ${primary_address}:${display}
+${alternative_access_details}
 
 If prompted, you should supply the following password: ${password}
 
