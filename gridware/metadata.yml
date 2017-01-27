@@ -103,6 +103,11 @@ install:
         find "${cw_ROOT}"/var/lib/gridware/depots/official/data -type d -exec chmod 2775 {} \;
         chgrp -R gridware "${cw_ROOT}"/var/lib/gridware/depots/official/data
     fi
+
+    echo "Installing container data files"
+    if [ ! -d "${cw_ROOT}/var/lib/gridware/docker" ]; then
+        cp -R docker "${cw_ROOT}"/var/lib/gridware
+    fi
 build:
   el6: |
     yum install -y gcc-c++ gmp-devel sqlite-devel

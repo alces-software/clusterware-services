@@ -43,9 +43,12 @@ end
 
 File.umask(0002)
 
-if ARGV[0] == 'init'
+if (ARGV[0].length >= 3 && 'init'.start_with?(ARGV[0]))
   ARGV.shift
-  Kernel.exec "#{ENV['cw_ROOT']}/libexec/gridware/init", *ARGV
+  Kernel.exec "#{ENV['cw_ROOT']}/libexec/gridware/actions/init", *ARGV
+elsif (ARGV[0].length >= 2 && 'docker'.start_with?(ARGV[0]))
+  ARGV.shift
+  Kernel.exec "#{ENV['cw_ROOT']}/libexec/gridware/actions/docker", *ARGV
 else
   unless ENV['cw_GRIDWARE_root']
     v = `bash -c 'source #{ENV['cw_ROOT']}/etc/gridware.rc 2> /dev/null && echo ${cw_GRIDWARE_root}'`.chomp
