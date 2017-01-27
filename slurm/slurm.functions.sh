@@ -40,7 +40,7 @@ slurm_parse_job_states() {
     require ruby
     slurm_setup_environment
     ruby_run <<RUBY > "${tgtfile}"
-r = IO.popen("squeue -O state,numcpus,numnodes | tail -n+2").read.split("\n").map do |l|
+r = IO.popen("squeue -O state,numcpus,numnodes -h").read.split("\n").map do |l|
   {}.tap do |h|
     vals = l.split(/\s+/)
     h[:state], h[:cores], h[:nodes] = vals
