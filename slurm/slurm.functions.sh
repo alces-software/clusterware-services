@@ -40,7 +40,7 @@ slurm_parse_job_states() {
     require ruby
     slurm_setup_environment
     ruby_run <<RUBY > "${tgtfile}"
-r = IO.popen("squeue -O state,numcpus,numnodes | tail -n+2").read.split("\n").map do |l|
+r = IO.popen("squeue -O state,numcpus,numnodes -h").read.split("\n").map do |l|
   {}.tap do |h|
     vals = l.split(/\s+/)
     h[:state], h[:cores], h[:nodes] = vals
@@ -64,6 +64,48 @@ results = {
   end.ceil
 }
 results.each { |k,v| puts "#{k}=#{v}" }
+
+# Now consider autoscaling groups (== (partitions - "all"))
+
+groups = IO.popen("sinfo -h -o '%R'").read.split("\n")
+
+group_results = {}
+
+groups.each { |group|
+
+  group_jobs = IO.popen("squeue -O state,numcpus,numnodes -h -p #{group}").read.split("\n").map do |l|
+    {}.tap do |h|
+      vals = l.split(/\s+/)
+      h[:state], h[:cores], h[:nodes] = vals
+    end
+  end.select { |o| o[:state] == "PENDING" || o[:state] == "RUNNING" }
+
+  group_results[group] = {
+    :cores_req => group_jobs.reduce(0) { |memo, o| memo + o[:cores].to_i },
+    :nodes_req => group_jobs.reduce(0.0) do |memo, o|
+     if (o[:cores].to_f / cores_per_node).ceil < o[:nodes].to_i
+       memo + o[:nodes].to_i
+     else
+       memo + o[:cores].to_f / cores_per_node
+     end
+    end.ceil
+  }
+}
+
+all_partition = group_results.delete("all")
+if all_partition
+  # Jobs outside a specific scaling group (e.g. in 'all') we arbitrarily add to
+  # the first of the autoscaling groups
+  first_autoscaling_group = groups.reject { |g| g == "all" }.first
+  group_results[first_autoscaling_group][:cores_req] += all_partition[:cores_req]
+  group_results[first_autoscaling_group][:nodes_req] += all_partition[:nodes_req]
+end
+
+group_results.each do |k,v|
+  puts "slurm_queue_#{k.gsub(/[-\.]/, "_")}_cores_req=#{v[:cores_req]}"
+  puts "slurm_queue_#{k.gsub(/[-\.]/, "_")}_nodes_req=#{v[:nodes_req]}"
+end
+
 RUBY
 }
 

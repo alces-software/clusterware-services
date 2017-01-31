@@ -63,7 +63,7 @@ cores_per_node = ${cores_per_node:-2}
 
 specified_queue_nodes = {}
 autoscaling_queues.each do |q|
-  specified_queue_nodes[q] = { :nodes => 0.0, :cores => 0 }
+  specified_queue_nodes[q.gsub(/_by(slot|node)_q/, "")] = { :nodes => 0.0, :cores => 0 }
 end
 
 # In order to get a value for "total required size of autoscaling group" we need
@@ -80,12 +80,13 @@ end
   if specific_queue
     autoscaling_queues.each do |q|
       if File.fnmatch(specific_queue, q)
+        groupname = q.gsub(/_by(slot|node)_q/, "")
         if pe == "mpinodes" || pe == "mpinodes-verbose"
-          specified_queue_nodes[q][:nodes] += slots
-          specified_queue_nodes[q][:cores] += (cores_per_node * slots)
+          specified_queue_nodes[groupname][:nodes] += slots
+          specified_queue_nodes[groupname][:cores] += (cores_per_node * slots)
         else
-          specified_queue_nodes[q][:cores] += (slots || 1)
-          specified_queue_nodes[q][:nodes] += ((slots || 1) * 1.0 / cores_per_node)
+          specified_queue_nodes[groupname][:cores] += (slots || 1)
+          specified_queue_nodes[groupname][:nodes] += ((slots || 1) * 1.0 / cores_per_node)
         end
         counted = true
         break
