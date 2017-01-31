@@ -12,3 +12,6 @@ cw_GRIDWARE_prefer_binary=false
 cw_GRIDWARE_use_default_params=false
 cw_GRIDWARE_var=/var
 #cw_GRIDWARE_init_depots=site
+#cw_GRIDWARE_docker_registry=docker.io
+#cw_GRIDWARE_docker_registry_user=alces
+#cw_GRIDWARE_docker_gridware_repo=main

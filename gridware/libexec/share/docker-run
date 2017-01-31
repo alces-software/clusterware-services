@@ -1,0 +1,116 @@
+#!/bin/bash -e
+#==============================================================================
+# Copyright (C) 2017 Stephen F. Norledge and Alces Software Ltd.
+#
+# This file/package is part of Alces Clusterware.
+#
+# Alces Clusterware is free software: you can redistribute it and/or
+# modify it under the terms of the GNU Affero General Public License
+# as published by the Free Software Foundation, either version 3 of
+# the License, or (at your option) any later version.
+#
+# Alces Clusterware is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this package.  If not, see <http://www.gnu.org/licenses/>.
+#
+# For more information on the Alces Clusterware, please visit:
+# https://github.com/alces-software/clusterware
+#==============================================================================
+if [ "$cw_DEBUG" ]; then
+    set -x
+fi
+
+setup() {
+    local a xdg_config
+    IFS=: read -a xdg_config <<< "${XDG_CONFIG_HOME:-$HOME/.config}:${XDG_CONFIG_DIRS:-/etc/xdg}"
+    for a in "${xdg_config[@]}"; do
+        if [ -e "${a}"/clusterware/config.vars.sh ]; then
+            source "${a}"/clusterware/config.vars.sh
+            break
+        fi
+    done
+    if [ -z "${cw_ROOT}" ]; then
+        echo "$0: unable to locate clusterware configuration"
+        exit 1
+    fi
+    kernel_load
+}
+
+main() {
+    local image work_dir input_dir output_dir job_uuid launcher entrypoint interactive workload
+    image="$1"
+    work_dir="$2"
+    input_dir="${3:-$work_dir}"
+    output_dir="${4:-$work_dir}"
+    run_args=("${@:5}")
+
+    if [ -z "$work_dir" ]; then
+        action_die "please specify work directory and, optionally, input and output directories"
+    fi
+
+    job_uuid=$(uuid)
+    if [ "${run_args[0]}" == "--interactive" ]; then
+        interactive="-it"
+        if [ "${run_args[1]}" ]; then
+            launcher=(${run_args[@]:1})
+        else
+            launcher=(/bin/bash)
+        fi
+    else
+        entrypoint="$(docker inspect ${image} | ${_JQ} -Mrc '.[].Config.Entrypoint | join(" ")')"
+        if [ "${run_args[0]}" == "--script" ]; then
+            launcher=(${entrypoint} $_INTERNAL_ROOT/work/workload.sh "${run_args[@]:1}")
+        elif [ "${run_args[0]}" == "--command" ]; then
+            launcher=("${run_args[@]:1}")
+        else
+            launcher=(${entrypoint} "${run_args[@]}")
+        fi
+    fi
+
+    docker run \
+           --entrypoint "" \
+           --name $job_uuid \
+           "${image}" \
+           useradd -m -u $SUDO_UID $SUDO_USER \
+           >> $work_dir/docker.log
+
+    docker commit \
+           $(docker ps -aq --filter name=${job_uuid}$) \
+           $job_uuid \
+           >> $work_dir/docker.log
+
+    docker rm $job_uuid >> $work_dir/docker.log
+
+    set +e
+    docker run $interactive --rm=true \
+           -v "$work_dir:$_INTERNAL_ROOT/work" \
+           -v "$input_dir:$_INTERNAL_ROOT/input" \
+           -v "$output_dir:$_INTERNAL_ROOT/output" \
+           --env "WORK_DIR=$_INTERNAL_ROOT/work" \
+           --env "INPUT_DIR=$_INTERNAL_ROOT/input" \
+           --env "OUTPUT_DIR=$_INTERNAL_ROOT/output" \
+           --user "$_UID:$_GID" \
+           $job_uuid \
+           "${launcher[@]}"
+
+    docker rmi $job_uuid >> $work_dir/docker.log
+}
+
+setup
+require action
+require process
+
+if ! process_reexec_sg docker --plain "$@"; then
+   action_die "unable to find group: docker"
+fi
+
+_INTERNAL_ROOT=/job
+_UID=${SUDO_UID:-$UID}
+_GID=$(id -g $SUDO_USER)
+_JQ="${cw_ROOT}"/opt/jq/bin/jq
+
+main "$@"
