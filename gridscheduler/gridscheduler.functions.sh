@@ -56,6 +56,7 @@ pending_job_ids = IO.popen("qstat -u '*' -s p | tail -n+3 | awk '{print \$1;}'")
 running_job_ids = IO.popen("qstat -u '*' -s r | tail -n+3 | awk '{print \$1;}'").read.split("\n")
 
 autoscaling_queues = IO.popen("qconf -sql | grep FlightComputeGroup").read.split("\n")
+autoscaling_groups = autoscaling_queues.map { |q| q.gsub(/_by(slot|node)_q/, "") }.uniq
 
 nodes = 0.0
 cores = 0
@@ -77,9 +78,24 @@ end
   specific_queue = doc.text('//JB_hard_queue_list/destin_ident_list/QR_name')
   counted = false
 
-  if specific_queue
+  if pe
+    m = /(?<groupname>.*)-(?<petype>mpinodes|mpislots|smp)(-verbose)?/.match(pe)
+    if m
+      # Job has been submitted to a PE backed by an autoscaling group
+      groupname = m['groupname']
+      if m['petype'] == "mpinodes"
+        specified_queue_nodes[groupname][:nodes] += slots
+        specified_queue_nodes[groupname][:cores] += (cores_per_node * slots)
+      else
+        specified_queue_nodes[groupname][:cores] += (slots || 1)
+        specified_queue_nodes[groupname][:nodes] += ((slots || 1) * 1.0 / cores_per_node)
+      end
+      counted = true
+    end
+  elsif specific_queue
     autoscaling_queues.each do |q|
       if File.fnmatch(specific_queue, q)
+        # Job has been directly submitted to a hard queue backed by autoscaling group
         groupname = q.gsub(/_by(slot|node)_q/, "")
         if pe == "mpinodes" || pe == "mpinodes-verbose"
           specified_queue_nodes[groupname][:nodes] += slots
@@ -94,6 +110,7 @@ end
     end
   end
   if !counted
+    # Job has just been submitted without specificity
     if pe == "mpinodes" || pe == "mpinodes-verbose"
       nodes += slots
       cores += (cores_per_node * slots)
