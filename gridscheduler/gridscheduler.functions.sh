@@ -56,15 +56,15 @@ pending_job_ids = IO.popen("qstat -u '*' -s p | tail -n+3 | awk '{print \$1;}'")
 running_job_ids = IO.popen("qstat -u '*' -s r | tail -n+3 | awk '{print \$1;}'").read.split("\n")
 
 autoscaling_queues = IO.popen("qconf -sql | grep FlightComputeGroup").read.split("\n")
-autoscaling_groups = autoscaling_queues.map { |q| q.gsub(/_by(slot|node)_q/, "") }.uniq
+autoscaling_groups = autoscaling_queues.map { |q| q.gsub(/.by(slot|node).q/, "") }.uniq
 
 nodes = 0.0
 cores = 0
 cores_per_node = ${cores_per_node:-2}
 
 specified_queue_nodes = {}
-autoscaling_queues.each do |q|
-  specified_queue_nodes[q.gsub(/_by(slot|node)_q/, "")] = { :nodes => 0.0, :cores => 0 }
+autoscaling_groups.each do |q|
+  specified_queue_nodes[q] = { :nodes => 0.0, :cores => 0 }
 end
 
 # In order to get a value for "total required size of autoscaling group" we need
