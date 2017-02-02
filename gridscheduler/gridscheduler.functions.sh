@@ -50,6 +50,7 @@ gridscheduler_parse_job_states() {
     cores_per_node="$2"
     require ruby
     gridscheduler_setup_environment
+
     ruby_run <<RUBY > "${tgtfile}"
 require 'rexml/document'
 pending_job_ids = IO.popen("qstat -u '*' -s p | tail -n+3 | awk '{print \$1;}'").read.split("\n")
@@ -133,10 +134,9 @@ end
 
 # Add any non-queue-specific demand arbitrarily to the first queue if we have one
 # Much easier to do it in here than in Bash!
-if !specified_queue_nodes.empty?
-  k = specified_queue_nodes.keys.first
-  specified_queue_nodes[k][:nodes] += nodes.ceil
-  specified_queue_nodes[k][:cores] += cores
+if !specified_queue_nodes.empty? and !"$default_queue".empty?
+  specified_queue_nodes["$default_queue"][:nodes] += nodes.ceil
+  specified_queue_nodes["$default_queue"][:cores] += cores
 end
 
 specified_queue_nodes.each do |k,v|

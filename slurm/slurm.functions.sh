@@ -93,12 +93,11 @@ groups.each { |group|
 }
 
 all_partition = group_results.delete("all")
-if all_partition
-  # Jobs outside a specific scaling group (e.g. in 'all') we arbitrarily add to
-  # the first of the autoscaling groups
-  first_autoscaling_group = groups.reject { |g| g == "all" }.first
-  group_results[first_autoscaling_group][:cores_req] += all_partition[:cores_req]
-  group_results[first_autoscaling_group][:nodes_req] += all_partition[:nodes_req]
+if all_partition and !"$default_queue".empty?
+  # Jobs outside a specific scaling group (e.g. in 'all') we add to the default
+  # autoscaling group
+  group_results["$default_queue"][:cores_req] += all_partition[:cores_req]
+  group_results["$default_queue"][:nodes_req] += all_partition[:nodes_req]
 end
 
 group_results.each do |k,v|
