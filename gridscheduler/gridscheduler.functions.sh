@@ -56,8 +56,7 @@ require 'rexml/document'
 pending_job_ids = IO.popen("qstat -u '*' -s p | tail -n+3 | awk '{print \$1;}'").read.split("\n")
 running_job_ids = IO.popen("qstat -u '*' -s r | tail -n+3 | awk '{print \$1;}'").read.split("\n")
 
-autoscaling_queues = IO.popen("qconf -sql | grep FlightComputeGroup").read.split("\n")
-autoscaling_groups = autoscaling_queues.map { |q| q.gsub(/.by(slot|node).q/, "") }.uniq
+autoscaling_groups = Dir.entries("${cw_ROOT}/etc/config/autoscaling").select { |e| !File.directory?(e) }.reject { |e| e == "default" }
 
 nodes = 0.0
 cores = 0
@@ -94,10 +93,9 @@ end
       counted = true
     end
   elsif specific_queue
-    autoscaling_queues.each do |q|
-      if File.fnmatch(specific_queue, q)
+    autoscaling_groups.each do |groupname|
+      if File.fnmatch(specific_queue, "#{groupname}.byslot.q") || File.fnmatch(specific_queue, "#{groupname}.bynode.q")
         # Job has been directly submitted to a hard queue backed by autoscaling group
-        groupname = q.gsub(/_by(slot|node)_q/, "")
         if pe == "mpinodes" || pe == "mpinodes-verbose"
           specified_queue_nodes[groupname][:nodes] += slots
           specified_queue_nodes[groupname][:cores] += (cores_per_node * slots)
