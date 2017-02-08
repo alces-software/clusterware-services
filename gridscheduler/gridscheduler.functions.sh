@@ -56,7 +56,7 @@ require 'rexml/document'
 pending_job_ids = IO.popen("qstat -u '*' -s p | tail -n+3 | awk '{print \$1;}'").read.split("\n")
 running_job_ids = IO.popen("qstat -u '*' -s r | tail -n+3 | awk '{print \$1;}'").read.split("\n")
 
-autoscaling_groups = Dir.entries("${cw_ROOT}/etc/config/autoscaling/groups").select { |e| !File.directory?(e) }
+autoscaling_groups = Dir.entries("${cw_ROOT}/etc/config/autoscaling/by_label").select { |e| !File.directory?(e) }
 
 nodes = 0.0
 cores = 0
