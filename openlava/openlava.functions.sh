@@ -51,7 +51,8 @@ results = {
   "openlava_job_run" => running_jobs,
   "openlava_job_total" => jobs.length,
   "openlava_cores_req" => cores_req,
-  "openlava_nodes_req" => ((cores_req * 1.0) / cores_per_node).ceil
+  "openlava_nodes_req" => ((cores_req * 1.0) / cores_per_node).ceil,
+  "openlava_queue_${default_queue}_nodes_req" => ((cores_req * 1.0) / cores_per_node).ceil,
 }
 results.each { |k,v| puts "#{k}=#{v}" }
 RUBY
