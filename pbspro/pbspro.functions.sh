@@ -51,7 +51,8 @@ results = {
   "pbspro_job_run" => running_job_count,
   "pbspro_job_total" => running_job_count + pending_jobs.length,
   "pbspro_cores_req" => cores_req,
-  "pbspro_nodes_req" => nodes_req
+  "pbspro_nodes_req" => nodes_req,
+  "pbspro_queue_${default_queue}_nodes_req" => nodes_req
 }
 results.each { |k,v| puts "#{k}=#{v}" }
 RUBY

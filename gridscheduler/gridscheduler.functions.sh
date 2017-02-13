@@ -50,20 +50,21 @@ gridscheduler_parse_job_states() {
     cores_per_node="$2"
     require ruby
     gridscheduler_setup_environment
+
     ruby_run <<RUBY > "${tgtfile}"
 require 'rexml/document'
 pending_job_ids = IO.popen("qstat -u '*' -s p | tail -n+3 | awk '{print \$1;}'").read.split("\n")
 running_job_ids = IO.popen("qstat -u '*' -s r | tail -n+3 | awk '{print \$1;}'").read.split("\n")
 
-autoscaling_queues = IO.popen("qconf -sql | grep FlightComputeGroup").read.split("\n")
+autoscaling_groups = Dir.entries("${cw_ROOT}/etc/config/autoscaling/by-label").select { |e| !File.directory?(e) }
 
 nodes = 0.0
 cores = 0
 cores_per_node = ${cores_per_node:-2}
 
 specified_queue_nodes = {}
-autoscaling_queues.each do |q|
-  specified_queue_nodes[q.gsub(/_by(slot|node)_q/, "")] = { :nodes => 0.0, :cores => 0 }
+autoscaling_groups.each do |q|
+  specified_queue_nodes[q] = { :nodes => 0.0, :cores => 0 }
 end
 
 # In order to get a value for "total required size of autoscaling group" we need
@@ -77,10 +78,24 @@ end
   specific_queue = doc.text('//JB_hard_queue_list/destin_ident_list/QR_name')
   counted = false
 
-  if specific_queue
-    autoscaling_queues.each do |q|
-      if File.fnmatch(specific_queue, q)
-        groupname = q.gsub(/_by(slot|node)_q/, "")
+  if pe
+    m = /(?<groupname>.*)-(?<petype>mpinodes|mpislots|smp)(-verbose)?/.match(pe)
+    if m
+      # Job has been submitted to a PE backed by an autoscaling group
+      groupname = m['groupname']
+      if m['petype'] == "mpinodes"
+        specified_queue_nodes[groupname][:nodes] += slots
+        specified_queue_nodes[groupname][:cores] += (cores_per_node * slots)
+      else
+        specified_queue_nodes[groupname][:cores] += (slots || 1)
+        specified_queue_nodes[groupname][:nodes] += ((slots || 1) * 1.0 / cores_per_node)
+      end
+      counted = true
+    end
+  elsif specific_queue
+    autoscaling_groups.each do |groupname|
+      if File.fnmatch(specific_queue, "#{groupname}.byslot.q") || File.fnmatch(specific_queue, "#{groupname}.bynode.q")
+        # Job has been directly submitted to a hard queue backed by autoscaling group
         if pe == "mpinodes" || pe == "mpinodes-verbose"
           specified_queue_nodes[groupname][:nodes] += slots
           specified_queue_nodes[groupname][:cores] += (cores_per_node * slots)
@@ -94,6 +109,7 @@ end
     end
   end
   if !counted
+    # Job has just been submitted without specificity
     if pe == "mpinodes" || pe == "mpinodes-verbose"
       nodes += slots
       cores += (cores_per_node * slots)
@@ -116,10 +132,9 @@ end
 
 # Add any non-queue-specific demand arbitrarily to the first queue if we have one
 # Much easier to do it in here than in Bash!
-if !specified_queue_nodes.empty?
-  k = specified_queue_nodes.keys.first
-  specified_queue_nodes[k][:nodes] += nodes.ceil
-  specified_queue_nodes[k][:cores] += cores
+if !specified_queue_nodes.empty? and !"$default_queue".empty?
+  specified_queue_nodes["$default_queue"][:nodes] += nodes.ceil
+  specified_queue_nodes["$default_queue"][:cores] += cores
 end
 
 specified_queue_nodes.each do |k,v|
