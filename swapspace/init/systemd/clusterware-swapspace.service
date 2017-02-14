@@ -1,0 +1,18 @@
+################################################################################
+##
+## Alces Clusterware - Systemd service unit file
+## Copyright (c) 2017 Alces Software Ltd
+##
+################################################################################
+# Swapspace daemon (systemd service unit)
+[Unit]
+Description=Alces Clusterware Swapspace daemon
+After=syslog.target
+After=network.target
+
+[Service]
+Type=forking
+ExecStart=_cw_ROOT_/opt/swapspace/bin/swapspace -d -v
+
+[Install]
+WantedBy=multi-user.target
