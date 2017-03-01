@@ -1,0 +1,181 @@
+#!/bin/bash
+#==============================================================================
+# Copyright (C) 2017 Stephen F. Norledge and Alces Software Ltd.
+#
+# This file/package is part of Alces Clusterware.
+#
+# Alces Clusterware is free software: you can redistribute it and/or
+# modify it under the terms of the GNU Affero General Public License
+# as published by the Free Software Foundation, either version 3 of
+# the License, or (at your option) any later version.
+#
+# Alces Clusterware is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this package.  If not, see <http://www.gnu.org/licenses/>.
+#
+# For more information on the Alces Clusterware, please visit:
+# https://github.com/alces-software/clusterware
+#==============================================================================
+require action
+
+main() {
+    action=$1
+    shift
+
+
+    case $action in
+        get-output|help|list-jobs|list-output|list-queues|put|rm|status)
+            help_for_${action}
+            ;;
+        ?*)
+            echo "${cw_BINNAME}: no such topic: ${action}"
+            echo ""
+            general_help
+            ;;
+        *)
+            general_help
+            ;;
+    esac
+}
+
+help_for_get-output() {
+    cat <<EOF
+  SYNOPSIS:
+
+    alces customize job-queue get-output <queue> <job_id> <output_file>
+
+  DESCRIPTION:
+
+    Display the contents of output file <output_file> for job <job_id> in the
+    queue <queue>.
+
+EOF
+}
+
+help_for_help() {
+    cat <<EOF
+  SYNOPSIS:
+
+    alces customize job-queue help [<command>]
+
+  DESCRIPTION:
+
+    Get help with job-queue commands.  If no <command> is specified,
+    show some general help.
+
+EOF
+}
+
+help_for_list-jobs() {
+    cat <<EOF
+  SYNOPSIS:
+
+    alces customize job-queue list-jobs <queue>
+
+  DESCRIPTION:
+
+    List pending jobs in the given <queue>.
+
+EOF
+}
+
+help_for_list-output() {
+    cat <<EOF
+  SYNOPSIS:
+
+    alces customize job-queue list-output <queue>
+
+  DESCRIPTION:
+
+    List output files for <job_id> in <queue>.
+
+EOF
+}
+
+help_for_list-queues() {
+    cat <<EOF
+  SYNOPSIS:
+
+    alces customize job-queue list-queues
+
+  DESCRIPTION:
+
+    List current queues.
+
+EOF
+}
+
+help_for_put() {
+    cat <<EOF
+  SYNOPSIS:
+
+    alces customize job-queue put <queue> <FILE>
+
+  DESCRIPTION:
+
+    Put the <FILE> into the job queue <queue>.
+
+EOF
+}
+
+help_for_rm() {
+    cat <<EOF
+  SYNOPSIS:
+
+    alces customize job-queue rm <queue> <job_id>
+
+  DESCRIPTION:
+
+    Remove the pending job <job_id> from queue <queue>.
+
+EOF
+}
+
+help_for_status() {
+    cat <<EOF
+  SYNOPSIS:
+
+    alces customize job-queue status <queue> <job_id>
+
+  DESCRIPTION:
+
+    Get the status of the job <job_id> in queue <queue>.
+
+EOF
+}
+
+general_help() {
+    local binname
+    binname="${cw_BINNAME% *}"
+    cat <<EOF
+  NAME:
+
+    ${binname}
+
+  DESCRIPTION:
+
+    Manage the Alces cluster job queue
+
+  COMMANDS:
+
+EOF
+printf "    %-28s  %s\n" "$cw_BINNAME get-output" "Get output for a job."
+printf "    %-28s  %s\n" "$cw_BINNAME help" "More help about this command."
+printf "    %-28s  %s\n" "$cw_BINNAME list-jobs" "List pending jobs for a queue."
+printf "    %-28s  %s\n" "$cw_BINNAME list-output" "List output files for a job."
+printf "    %-28s  %s\n" "$cw_BINNAME list-queues" "List current queues."
+printf "    %-28s  %s\n" "$cw_BINNAME put" "Put a job into a queue."
+printf "    %-28s  %s\n" "$cw_BINNAME rm" "Remove a pending job from a queue."
+printf "    %-28s  %s\n" "$cw_BINNAME status" "Get the status of a job."
+cat <<EOF
+
+Please report bugs to support@alces-software.com
+Alces Software home page: <http://alces-software.com>
+EOF
+}
+
+main "$@"

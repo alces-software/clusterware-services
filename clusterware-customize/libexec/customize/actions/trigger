@@ -1,0 +1,85 @@
+#!/bin/bash
+#==============================================================================
+# Copyright (C) 2016 Stephen F. Norledge and Alces Software Ltd.
+#
+# This file/package is part of Alces Clusterware.
+#
+# Alces Clusterware is free software: you can redistribute it and/or
+# modify it under the terms of the GNU Affero General Public License
+# as published by the Free Software Foundation, either version 3 of
+# the License, or (at your option) any later version.
+#
+# Alces Clusterware is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this package.  If not, see <http://www.gnu.org/licenses/>.
+#
+# For more information on the Alces Clusterware, please visit:
+# https://github.com/alces-software/clusterware
+#==============================================================================
+require action
+require process
+require handler
+require member
+
+_run_member_hooks() {
+    local event name ip
+    members="$1"
+    event="$2"
+    shift 3
+    name="$1"
+    ip="$2"
+    if [[ -z "${members}" || ,"$members", == *,"${name}",* ]]; then
+       customize_run_hooks "${event}" \
+                           "${cw_MEMBER_DIR}"/"${name}" \
+                           "${name}" \
+                           "${ip}"
+    fi
+}
+
+main() {
+    local event event_spec members
+    if [ "$1" == "-m" ]; then
+        members="$2"
+        shift 2
+    fi
+    event="$1"
+    if [ -z "$event" ]; then
+        action_die "usage: ${cw_BINNAME} [-m <members>] <event> [<feature>]"
+    fi
+    if [ "$2" ]; then
+        event_spec="${event}:$2"
+    else
+        event_spec="${event}"
+    fi
+
+    case $event in
+        initialize|configure|start|fail|node-started|event-periodic)
+            customize_run_hooks "$event_spec"
+            ;;
+        member-join)
+            # XXX - select one or more members?
+            member_each _run_member_hooks "${members}" "${event_spec}"
+            ;;
+        member-leave)
+            action_die "manual trigger of member-leave hooks is not currently supported"
+            ;;
+        *)
+            action_die "unable to trigger unrecognized event: $event"
+            ;;
+    esac
+}
+
+if [ -d "${cw_ROOT}"/etc/handlers/cluster-customizer/share ]; then
+    handler_add_libdir "${cw_ROOT}"/etc/handlers/cluster-customizer/share
+    require customize
+
+    process_reexec_sudo "$@"
+
+    main "$@"
+else
+    action_die 'cluster-customizer handler is not enabled'
+fi
