@@ -26,6 +26,7 @@
 #ALCES_META_END
 
 require action
+require customize
 require handler
 require process
 require member
@@ -64,19 +65,12 @@ main() {
   fi
 }
 
-if [ -d "${cw_ROOT}"/etc/handlers/cluster-customizer/share ]; then
-    handler_add_libdir "${cw_ROOT}"/etc/handlers/cluster-customizer/share
-    require customize
+if network_has_metadata_service 1; then
+    files_load_config cluster-customizer
+    cw_CLUSTER_CUSTOMIZER_path="${cw_CLUSTER_CUSTOMIZER_path:-${cw_ROOT}/var/lib/customizer}"
+    cw_CLUSTER_CUSTOMIZER_profiles="${cw_CLUSTER_CUSTOMIZER_profiles:-default}"
 
-    if network_has_metadata_service 1; then
-        files_load_config cluster-customizer
-        cw_CLUSTER_CUSTOMIZER_path="${cw_CLUSTER_CUSTOMIZER_path:-${cw_ROOT}/var/lib/customizer}"
-        cw_CLUSTER_CUSTOMIZER_profiles="${cw_CLUSTER_CUSTOMIZER_profiles:-default}"
-
-        main "$@"
-    else
-        action_die 'unable to apply: no cloud metadata service detected'
-    fi
+    main "$@"
 else
-    action_die 'cluster-customizer handler is not enabled'
+    action_die 'unable to apply: no cloud metadata service detected'
 fi

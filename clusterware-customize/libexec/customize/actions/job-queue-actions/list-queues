@@ -22,13 +22,6 @@
 #==============================================================================
 require action
 require handler
+require job-queue
 
-if [ -d "${cw_ROOT}"/etc/handlers/cluster-customizer/share ]; then
-    handler_add_libdir "${cw_ROOT}"/etc/handlers/cluster-customizer/share
-    require job-queue
-
-    job_queue_list_queues "$@"
-else
-    action_die 'cluster-customizer handler is not enabled'
-fi
-
+job_queue_list_queues "$@"
