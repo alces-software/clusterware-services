@@ -28,3 +28,26 @@ customize_repository_type() {
     echo "file"
   fi
 }
+
+customize_repository_list() {
+  local manifest_file repo_name
+  repo_name="$1"
+  manifest_file="$2"
+  ruby_run <<RUBY
+require 'yaml'
+
+def colorize(text, color_code)
+  "\e[#{color_code}m#{text}\e[0m"
+end
+
+def bold(text)
+  colorize(text, 1)
+end
+
+  manifest = YAML.load_file("${manifest_file}")
+
+  manifest["profiles"].each do | profile_name, profile |
+    puts "${repo_name}/#{bold(profile_name)}"
+  end
+RUBY
+}
