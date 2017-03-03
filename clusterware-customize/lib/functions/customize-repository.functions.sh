@@ -7,7 +7,7 @@ customize_repository_get_url() {
   name="$1"
   conffile="${2:-${cw_ROOT}/etc/cluster-customizer/config.yml}"
 
-  ruby_run <<\RUBY
+  ruby_run <<RUBY
 require 'yaml'
 repo_list = YAML.load_file("${conffile}")["repositories"]
 
