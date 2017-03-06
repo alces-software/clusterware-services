@@ -55,11 +55,13 @@ _clear_s3_config() {
 }
 
 customize_repository_s3_index() {
-  local url
+  local retval url
   url="$1"
   _set_s3_config
 
   $S3CMD get "$url/index.yml" -
+  retval=$?
 
   _clear_s3_config
+  return $retval
 }

@@ -25,4 +25,5 @@ customize_repository_http_index() {
   local url
   url="$1"
   curl -s -f "${url}/index.yml"
+  return $?
 }

@@ -40,6 +40,7 @@ customize_repository_index() {
   require "customize-repository-${repo_type}"
 
   customize_repository_${repo_type}_index "$repo_url"
+  return $?
 }
 
 customize_repository_list_profiles() {
@@ -57,10 +58,12 @@ def bold(text)
   colorize(text, 1)
 end
 
-  manifest = YAML.load_file("${manifest_file}")
+  manifest = YAML.load_file("${manifest_file}") || {}
 
-  manifest["profiles"].each do | profile_name, profile |
-    puts "${repo_name}/#{bold(profile_name)}"
+  if manifest.key? "profiles"
+    manifest["profiles"].each do | profile_name, profile |
+      puts "${repo_name}/#{bold(profile_name)}"
+    end
   end
 RUBY
 }

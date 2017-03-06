@@ -25,4 +25,5 @@ customize_repository_file_index() {
   local url
   url="$1"
   cat "${url}/index.yml"
+  return $?
 }
