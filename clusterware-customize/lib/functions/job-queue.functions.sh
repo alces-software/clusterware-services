@@ -114,6 +114,11 @@ job_queue_save_job_output() {
         --no-mime-magic \
         $(job_queue_work_dir_path "${queue}" "${output_dir}"/"${job_id}"/"$(hostname)") \
         $(job_queue_bucket_path "${queue}" "${output_dir}"/"${job_id}")/
+
+    mkdir -p /var/log/clusterware/prime-continuous-delivery/
+    rsync -a $(job_queue_work_dir_path "${queue}" "${output_dir}"/) \
+        /var/log/clusterware/prime-continuous-delivery/"${output_dir}"/
+
 }
 
 # If there are any objects already stored with job_id, the job is invalid.  We
