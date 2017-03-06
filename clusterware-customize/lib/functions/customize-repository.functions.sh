@@ -67,3 +67,23 @@ end
   end
 RUBY
 }
+
+_list_repo_names() {
+  ruby_run <<RUBY
+require 'yaml'
+repo_list = YAML.load_file("${_DEFAULT_CONF_FILE}")["repositories"]
+
+repo_list.keys.each do |name|
+  puts name
+end
+RUBY
+}
+
+customize_repository_each() {
+  local callback r repos
+  callback="$1"
+  repos=$(_list_repo_names)
+  for r in $repos; do
+    $callback "$r"
+  done
+}

@@ -349,13 +349,13 @@ customize_list() {
   tmpfile=$(mktemp "/tmp/cluster-customizer.s3cfg.XXXXXXXX")
 
   if [[ "$repo_name" == "" ]]; then
-    echo "No repo name specified"
+    customize_repository_each customize_list
   else
     customize_repository_index "$repo_name" > "$tmpfile"
     if [ "$?" == 0 ]; then
       customize_repository_list_profiles "$repo_name" "$tmpfile"
     else
-      echo "Could not retrieve repository index."
+      echo "Could not retrieve repository index for ${repo_name}."
     fi
     rm "$tmpfile"
   fi
