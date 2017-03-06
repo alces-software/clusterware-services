@@ -2,10 +2,12 @@
 
 require ruby
 
+_DEFAULT_CONF_FILE="${cw_ROOT}/etc/cluster-customizer/config.yml"
+
 customize_repository_get_url() {
   local conffile name
   name="$1"
-  conffile="${2:-${cw_ROOT}/etc/cluster-customizer/config.yml}"
+  conffile="${2:-$_DEFAULT_CONF_FILE}"
 
   ruby_run <<RUBY
 require 'yaml'
@@ -27,6 +29,17 @@ customize_repository_type() {
   elif [[ "$url" == "/"* ]]; then
     echo "file"
   fi
+}
+
+customize_repository_index() {
+  local repo_name repo_url repo_type
+  repo_name="$1"
+  repo_url=$(customize_repository_get_url "$repo_name")
+  repo_type=$(customize_repository_type "$repo_url")
+
+  require "customize-repository-${repo_type}"
+
+  customize_repository_${repo_type}_index "$repo_url"
 }
 
 customize_repository_list_profiles() {
