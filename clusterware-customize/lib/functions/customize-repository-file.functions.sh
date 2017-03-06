@@ -27,3 +27,13 @@ customize_repository_file_index() {
   cat "${url}/index.yml"
   return $?
 }
+
+customize_repository_file_install() {
+  local repo_name repo_url profile_name target
+  repo_name="$1"
+  repo_url="$2"
+  profile_name="$3"
+  target="$4"
+
+  cp -r "${repo_url}/${profile_name}" "${target}"
+}

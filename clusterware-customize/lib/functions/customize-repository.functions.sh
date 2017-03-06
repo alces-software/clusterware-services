@@ -87,3 +87,27 @@ customize_repository_each() {
     $callback "$r"
   done
 }
+
+customize_repository_apply() {
+  local repo_name profile_name target
+  repo_name="$1"
+  profile_name="$2"
+
+  repo_url=$(customize_repository_get_url "$repo_name")
+  repo_type=$(customize_repository_type "$repo_url")
+
+  require "customize-repository-${repo_type}"
+
+  target="${cw_CLUSTER_CUSTOMIZER_path}/${repo_name}-${profile_name}"
+
+  customize_repository_${repo_type}_install "$repo_name" "$repo_url" "$profile_name" "$target"
+
+  if [[ $? -eq 0 ]]; then
+    chmod -R a+x "${cw_CLUSTER_CUSTOMIZER_path}/${repo_name}-${profile_name}"
+    echo "Running configure for $profile_name"
+    customize_run_hooks "configure:$repo_name-$profile_name"
+    member_each _run_member_hooks "${members}" "member-join:$repo_name-$profile_name"
+    return 0
+  fi
+
+}
