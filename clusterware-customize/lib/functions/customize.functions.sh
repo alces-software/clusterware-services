@@ -341,11 +341,25 @@ customize_list_features() {
 }
 
 customize_list() {
-  customize_set_s3_config
-  customize_set_feature_set
-  customize_list_profiles "${s3cfg}"
-  customize_list_features "${s3cfg}"
-  customize_clear_s3_config
+  local repo_name tmpfile
+
+  require customize-repository
+
+  repo_name="$1"
+  tmpfile=$(mktemp "/tmp/cluster-customizer.s3cfg.XXXXXXXX")
+
+  if [[ "$repo_name" == "" ]]; then
+    echo "No repo name specified"
+  else
+    customize_repository_index "$repo_name" > "$tmpfile"
+    if [ "$?" == 0 ]; then
+      customize_repository_list_profiles "$repo_name" "$tmpfile"
+    else
+      echo "Could not retrieve repository index."
+    fi
+    rm "$tmpfile"
+  fi
+
 }
 
 _run_member_hooks() {

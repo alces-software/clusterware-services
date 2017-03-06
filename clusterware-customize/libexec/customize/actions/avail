@@ -37,7 +37,7 @@ if network_has_metadata_service 1; then
     files_load_config cluster-customizer
     cw_CLUSTER_CUSTOMIZER_path="${cw_CLUSTER_CUSTOMIZER_path:-${cw_ROOT}/var/lib/customizer}"
     cw_CLUSTER_CUSTOMIZER_profiles="${cw_CLUSTER_CUSTOMIZER_profiles:-default}"
-    customize_list
+    customize_list "$@"
 else
     action_die 'unable to list: no cloud metadata service detected'
 fi

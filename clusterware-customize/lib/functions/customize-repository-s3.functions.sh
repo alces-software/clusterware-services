@@ -59,7 +59,7 @@ customize_repository_s3_index() {
   url="$1"
   _set_s3_config
 
-  $S3CMD get "$url" -
+  $S3CMD get "$url/index.yml" -
 
   _clear_s3_config
 }
