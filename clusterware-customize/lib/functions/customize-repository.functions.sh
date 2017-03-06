@@ -29,7 +29,7 @@ customize_repository_type() {
   fi
 }
 
-customize_repository_list() {
+customize_repository_list_profiles() {
   local manifest_file repo_name
   repo_name="$1"
   manifest_file="$2"
