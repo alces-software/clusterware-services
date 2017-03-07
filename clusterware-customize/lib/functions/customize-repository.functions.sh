@@ -35,6 +35,10 @@ customize_repository_index() {
   local repo_name repo_url repo_type
   repo_name="$1"
   repo_url=$(customize_repository_get_url "$repo_name")
+  if [[ ! "$repo_url" ]]; then
+    echo "Unknown repository: ${repo_name}"
+    return 1
+  fi
   repo_type=$(customize_repository_type "$repo_url")
 
   require "customize-repository-${repo_type}"
@@ -94,6 +98,10 @@ customize_repository_apply() {
   profile_name="$2"
 
   repo_url=$(customize_repository_get_url "$repo_name")
+  if [[ ! "$repo_url" ]]; then
+    echo "Unknown repository: ${repo_name}"
+    return 1
+  fi
   repo_type=$(customize_repository_type "$repo_url")
 
   require "customize-repository-${repo_type}"
