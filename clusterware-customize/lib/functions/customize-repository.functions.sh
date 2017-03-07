@@ -99,7 +99,7 @@ customize_repository_apply() {
   require "customize-repository-${repo_type}"
 
   target="${cw_CLUSTER_CUSTOMIZER_path}/${repo_name}-${profile_name}"
-  mkdir "$target"
+  mkdir -p "$target"
 
   customize_repository_${repo_type}_install "$repo_name" "$repo_url" "$profile_name" "$target"
 
