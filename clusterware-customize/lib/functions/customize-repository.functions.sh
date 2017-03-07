@@ -63,10 +63,14 @@ def bold(text)
   colorize(text, 1)
 end
 
+def installed?(profile_name)
+  File.exists?("${cw_CLUSTER_CUSTOMIZER_path}/${repo_name}-#{profile_name}")
+end
+
   manifest = YAML.load_file("${manifest_file}") || {}
 
   if manifest.key? "profiles"
-    manifest["profiles"].each do | profile_name, profile |
+    manifest["profiles"].reject {|p| installed?(p) }.each do | profile_name, profile |
       puts "${repo_name}/#{bold(profile_name)}"
     end
   end
