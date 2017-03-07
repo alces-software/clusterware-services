@@ -22,6 +22,7 @@
 #==============================================================================
 require action
 require handler
+require process
 require job-queue
 
 main() {
@@ -35,4 +36,5 @@ main() {
     job_queue_list_jobs_in_queue "${queue}" "pending"
 }
 
+process_reexec_sudo "$@"
 main "$@"

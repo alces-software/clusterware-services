@@ -22,6 +22,8 @@
 #==============================================================================
 require action
 require handler
+require process
 require job-queue
 
+process_reexec_sudo "$@"
 job_queue_list_queues "$@"
