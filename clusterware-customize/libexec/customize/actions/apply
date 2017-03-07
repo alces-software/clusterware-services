@@ -35,17 +35,17 @@ require network
 process_reexec_sudo "$@"
 
 main() {
-  local type profile_name nodes
+  local repo_name profile_name nodes
 
   if [ "$1" == "-n" ]; then
       nodes="$2"
       shift 2
   fi
 
-  type=${1%%/*}
+  repo_name=${1%%/*}
   profile_name=${1##*/}
-  if [[ "$type" == "$profile_name" ]]; then
-    echo "Incorrect format for customization profile: $type"
+  if [[ "$repo_name" == "$profile_name" ]]; then
+    echo "Incorrect format for customization profile: $repo_name. Please specify as 'repository-name/profile-name'."
     return 1
   fi
 
@@ -55,13 +55,7 @@ main() {
       ssh $node 'alces handler enable cluster-customizer; alces service install s3cmd; alces customize apply "'$1'"' < /dev/null
     done
   else
-    if [[ "$type" == "feature" ]]; then
-      customize_apply_feature "$profile_name"
-    elif [[ "$type" == "profile" ]]; then
-      customize_apply_profile "$profile_name"
-    else
-      echo "Unknown customization type: $type"
-    fi
+    customize_apply "$repo_name" "$profile_name"
   fi
 }
 
