@@ -99,10 +99,16 @@ customize_repository_apply() {
   require "customize-repository-${repo_type}"
 
   target="${cw_CLUSTER_CUSTOMIZER_path}/${repo_name}-${profile_name}"
+  mkdir "$target"
 
   customize_repository_${repo_type}_install "$repo_name" "$repo_url" "$profile_name" "$target"
 
   if [[ $? -eq 0 ]]; then
+    if rmdir "${target}" 2>/dev/null; then
+      # If rmdir succeeds then the directory was empty => install failed
+      echo "No profile found for: ${repo_name}/${profile_name}"
+      return 1
+    fi
     chmod -R a+x "${cw_CLUSTER_CUSTOMIZER_path}/${repo_name}-${profile_name}"
     echo "Running configure for $profile_name"
     customize_run_hooks "configure:$repo_name-$profile_name"

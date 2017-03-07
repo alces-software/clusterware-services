@@ -67,7 +67,7 @@ customize_repository_s3_index() {
 }
 
 customize_repository_s3_install() {
-  local host profile_name repo_name repo_url target
+  local host profile_name repo_name retval repo_url target
   repo_name="$1"
   repo_url="$2"
   profile_name="$3"
@@ -76,11 +76,8 @@ customize_repository_s3_install() {
   _set_s3_config
 
   if [ "${s3cfg}" ]; then
-    $S3CMD get "${repo_url}/${profile_name}" "${target}"
-    if rmdir "${target}" 2>/dev/null; then
-        echo "No profile found for: ${repo_name}/${profile_name}"
-        return 1
-    fi
+    $S3CMD get --force -r "${repo_url}/${profile_name}/" "${target}"
+    retval="$?"
   else
     require customize-repository-http
     echo "Falling back to HTTP installation as S3 configuration unavailable."
@@ -92,6 +89,8 @@ customize_repository_s3_install() {
     fi
 
     customize_repository_http_install "$repo_name" "https://${host}/${repo_url##s3://}" "$profile_name" "$target"
+    retval="$?"
   fi
   _clear_s3_config
+  return $retval
 }
