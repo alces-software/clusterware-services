@@ -242,104 +242,6 @@ customize_fetch() {
     customize_clear_s3_config
 }
 
-customize_list_from_s3() {
-    local all avail prohibited profile_type s3cfg url f
-    s3cfg=$1
-    url=$2
-    profile_type=$3
-    all=$("${cw_ROOT}"/opt/s3cmd/s3cmd -c ${s3cfg} --recursive ls "${url}")
-
-    if [ "$profile_type" == "features" -a -n "${_SET_PREFIX}" ]; then
-        f=6
-    else
-        f=5
-    fi
-
-    prohibited=$(echo "$all" | grep -E "(initialize|preconfigure)\.d" | cut -f$f -d'/' | uniq | grep -v '^$')
-    avail=$(echo "$all" | cut -f$f -d'/' | uniq | grep -v '^$')
-
-    customize_print_list_excluding "$avail" "$prohibited" ""
-}
-
-customize_list_from_http() {
-  local all host prohibited source prefix index
-  source="$1"
-  prefix="$2"
-  if [ "${_REGION:-${cw_CLUSTER_CUSTOMIZER_region:-eu-west-1}}" == "us-east-1" ]; then
-      host=s3.amazonaws.com
-  else
-      host=s3-${_REGION:-${cw_CLUSTER_CUSTOMIZER_region:-eu-west-1}}.amazonaws.com
-  fi
-  index=$(curl -s -f https://${host}/${source}/)
-  if [[ $? -eq 0 ]]; then
-    all=$(echo "$index" | grep -oP '(?<=\<Key>'$prefix'\/)[^\<]+?(?=\/manifest.txt\<\/Key\>)')
-    prohibited=$(echo "$index" | grep -oP '(?<=\<Key>'$prefix'\/)[^\<]+?(?=\/(initialize|preconfigure)\.d.*\<\/Key\>)')
-    customize_print_list_excluding "$all" "$prohibited" ""
-  else
-    echo "HTTPS call failed, customization listing unavailable."
-    return 1
-  fi
-}
-
-customize_print_list_excluding() {
-  local ex existing av avail found prefix
-  avail="$1"
-  existing="$2"
-  prefix="$3"
-  for av in $avail; do
-    found=false
-    for ex in $existing; do
-      if [[ "$av" == "$ex" ]]; then
-        found=true
-        break
-      fi
-    done
-    if [[ "$found" == false ]]; then
-      echo "$prefix$av"
-    fi
-  done
-}
-
-customize_list_profiles() {
-  local bucket existing avail
-  if [ -z "${cw_CLUSTER_CUSTOMIZER_bucket}" ]; then
-      if network_is_ec2; then
-          bucket="alces-flight-$(network_ec2_hashed_account)"
-      else
-          echo "Unable to determine bucket name for customizations"
-          return 0
-      fi
-  else
-      bucket="${cw_CLUSTER_CUSTOMIZER_bucket#s3://}"
-  fi
-  existing=$(ls "${cw_CLUSTER_CUSTOMIZER_path}" | grep -Po "(?<=profile-).*")
-  if ! customize_is_s3_access_available "${s3cfg}" "${bucket}"; then
-      echo "S3 access to '${bucket}' is not available.  Falling back to HTTP manifests."
-      s3cfg=""
-      avail=$(customize_list_from_http "$bucket" "customizer")
-  else
-    avail=$(customize_list_from_s3 "$s3cfg" "s3://${bucket}/customizer" account)
-  fi
-  customize_print_list_excluding "$avail" "$existing" " - profile/"
-}
-
-customize_list_features() {
-  local bucket s3cfg existing avail
-  s3cfg="$1"
-  bucket="alces-flight-profiles-${_REGION}"
-
-  existing=$(ls "${cw_CLUSTER_CUSTOMIZER_path}" | grep -Po "(?<=feature-).*")
-
-  if ! customize_is_s3_access_available "${s3cfg}" "${bucket}"; then
-      echo "S3 access to '${bucket}' is not available.  Falling back to HTTP manifests."
-      s3cfg=""
-      avail=$(customize_list_from_http "$bucket" "${_SET_PREFIX}features")
-  else
-    avail=$(customize_list_from_s3 "$s3cfg" "s3://${bucket}/${_SET_PREFIX}features" features)
-  fi
-  customize_print_list_excluding "$avail" "$existing" " - feature/"
-}
-
 customize_list() {
   local repo_name tmpfile
 
@@ -377,32 +279,6 @@ _run_member_hooks() {
     fi
 }
 
-customize_profile_can_be_installed() {
-  local expression initCount s3cfg source
-  s3cfg="$1"
-  source="$2"
-
-  expression="(initialize|preconfigure)\.d"
-
-  if [ "$s3cfg" ]; then
-    initCount=$("${cw_ROOT}"/opt/s3cmd/s3cmd -c ${s3cfg} ls "s3://${source}"/ | grep -E "$expression" | wc -l)
-  else
-    if [ "${_REGION:-${cw_CLUSTER_CUSTOMIZER_region:-eu-west-1}}" == "us-east-1" ]; then
-        host=s3.amazonaws.com
-    else
-        host=s3-${_REGION:-${cw_CLUSTER_CUSTOMIZER_region:-eu-west-1}}.amazonaws.com
-    fi
-    initCount=$(curl -s -f https://${host}/${source}/manifest.txt | grep -E "$expression" | wc -l)
-  fi
-
-  if [[ $initCount == 0 ]]; then
-    return 0
-  else
-    echo "Cannot apply profile. This profile requires installation before cluster initialization and does not support being applied while the cluster is running."
-    return 1
-  fi
-}
-
 customize_apply() {
   local repo_name profile_name
   repo_name="$1"
@@ -410,45 +286,4 @@ customize_apply() {
 
   require customize-repository
   customize_repository_apply "$repo_name" "$profile_name"
-}
-
-customize_apply_profile() {
-  local bucket profile_name
-  profile_name="$1"
-
-  customize_set_s3_config
-  customize_set_feature_set
-
-  if [ -z "${cw_CLUSTER_CUSTOMIZER_bucket}" ]; then
-      if network_is_ec2; then
-          bucket="alces-flight-$(network_ec2_hashed_account)"
-      else
-          echo "Unable to determine bucket name for customizations"
-          return 0
-      fi
-  else
-      bucket="${cw_CLUSTER_CUSTOMIZER_bucket#s3://}"
-  fi
-
-  echo "Applying profile $profile_name..."
-
-  customize_apply "$bucket" "$profile_name" "profile" "job-queue.d/*"
-
-  customize_clear_s3_config
-}
-
-customize_apply_feature() {
-  local bucket feature_name
-  feature_name="$1"
-
-  customize_set_s3_config
-  customize_set_feature_set
-
-  bucket="alces-flight-profiles-${_REGION}"
-
-  echo "Applying feature $feature_name..."
-
-  customize_apply "$bucket" "$feature_name" "feature"
-
-  customize_clear_s3_config
 }
