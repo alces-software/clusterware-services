@@ -1,6 +1,7 @@
 #!/bin/bash
 
 require ruby
+require member
 
 _DEFAULT_CONF_FILE="${cw_ROOT}/etc/cluster-customizer/config.yml"
 
@@ -90,6 +91,21 @@ customize_repository_each() {
   for r in $repos; do
     $callback "$r"
   done
+}
+
+_run_member_hooks() {
+    local event name ip
+    members="$1"
+    event="$2"
+    shift 3
+    name="$1"
+    ip="$2"
+    if [[ -z "${members}" || ,"$members", == *,"${name}",* ]]; then
+       customize_run_hooks "${event}" \
+                           "${cw_MEMBER_DIR}"/"${name}" \
+                           "${name}" \
+                           "${ip}"
+    fi
 }
 
 customize_repository_apply() {

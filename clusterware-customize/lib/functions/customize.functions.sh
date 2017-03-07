@@ -264,21 +264,6 @@ customize_list() {
 
 }
 
-_run_member_hooks() {
-    local event name ip
-    members="$1"
-    event="$2"
-    shift 3
-    name="$1"
-    ip="$2"
-    if [[ -z "${members}" || ,"$members", == *,"${name}",* ]]; then
-       customize_run_hooks "${event}" \
-                           "${cw_MEMBER_DIR}"/"${name}" \
-                           "${name}" \
-                           "${ip}"
-    fi
-}
-
 customize_apply() {
   local repo_name profile_name
   repo_name="$1"
