@@ -22,7 +22,7 @@
 require files
 
 customize_list_hooks() {
-    local p paths with_events e
+    local b p paths with_events e
     if [ "$1" == "--with-events" ]; then
         with_events=true
         shift
@@ -39,7 +39,8 @@ customize_list_hooks() {
                 echo -e "\e[38;5;221m$(basename "${p}")\e[0m/\e[35m$(basename "${e}" .d)\e[0m"
             done
         else
-            basename "${p}"
+            b=$(basename "${p}")
+            echo -e "${b%%-*}/\e[1m${b#*-}\e[0m"
         fi
     done
 }
