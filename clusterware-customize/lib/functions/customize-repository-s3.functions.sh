@@ -36,8 +36,9 @@ _set_region() {
 
 _set_s3_config() {
   _set_region
-  s3cfg="$(mktemp /tmp/cluster-customizer.s3cfg.XXXXXXXX)"
-  cat <<EOF > "${s3cfg}"
+  if [[ "${cw_CLUSTER_CUSTOMIZER_access_key_id}" ]]; then
+    s3cfg="$(mktemp /tmp/cluster-customizer.s3cfg.XXXXXXXX)"
+    cat <<EOF > "${s3cfg}"
 [default]
 access_key = "${cw_CLUSTER_CUSTOMIZER_access_key_id}"
 secret_key = "${cw_CLUSTER_CUSTOMIZER_secret_access_key}"
@@ -45,7 +46,10 @@ security_token = ""
 use_https = True
 check_ssl_certificate = True
 EOF
-  S3CMD="${cw_ROOT}/opt/s3cmd/s3cmd -c ${s3cfg} -q"
+    S3CMD="${cw_ROOT}/opt/s3cmd/s3cmd -c ${s3cfg} -q"
+  else
+    S3CMD=false
+  fi
 }
 
 _clear_s3_config() {
