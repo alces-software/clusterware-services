@@ -243,7 +243,7 @@ customize_fetch() {
     customize_clear_s3_config
 }
 
-customize_list() {
+customize_avail() {
   local repo_name tmpfile
 
   require customize-repository
@@ -252,7 +252,7 @@ customize_list() {
   tmpfile=$(mktemp "/tmp/cluster-customizer.s3cfg.XXXXXXXX")
 
   if [[ "$repo_name" == "" ]]; then
-    customize_repository_each customize_list
+    customize_repository_each customize_avail
   else
     customize_repository_index "$repo_name" > "$tmpfile"
     if [ "$?" == 0 ]; then
