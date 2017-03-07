@@ -109,6 +109,7 @@ job_queue_save_job_output() {
     # about python-magic not being available.
 
     "${cw_ROOT}"/opt/s3cmd/s3cmd put --recursive \
+        --acl-public \
         --default-mime-type=text/plain \
         --guess-mime-type \
         --no-mime-magic \
