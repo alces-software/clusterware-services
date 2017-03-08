@@ -69,7 +69,7 @@ end
 
   manifest = YAML.load_file("${manifest_file}") || {}
 
-  if manifest.key? "profiles"
+  if manifest.is_a? Hash && manifest.key? "profiles"
     manifest["profiles"].reject {|p| installed?(p) }.each do | profile_name, profile |
       puts "${repo_name}/#{bold(profile_name)}"
     end
