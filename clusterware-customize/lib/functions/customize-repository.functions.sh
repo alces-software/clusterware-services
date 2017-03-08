@@ -67,10 +67,18 @@ def installed?(profile_name)
   File.exists?("${cw_CLUSTER_CUSTOMIZER_path}/${repo_name}-#{profile_name}")
 end
 
+def hidden?(profile)
+  !profile.key? "tags" || !profile["tags"].include("hidden")
+end
+
+def should_list?(profile_name, profile)
+  !installed?(profile_name) && !hidden?(profile)
+end
+
   manifest = YAML.load_file("${manifest_file}") || {}
 
   if manifest.is_a? Hash && manifest.key? "profiles"
-    manifest["profiles"].reject {|p| installed?(p) }.each do | profile_name, profile |
+    manifest["profiles"].select {|prn, pr| should_list?(prn, pr) }.each do | profile_name, profile |
       puts "${repo_name}/#{bold(profile_name)}"
     end
   end
