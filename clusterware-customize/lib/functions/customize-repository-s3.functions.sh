@@ -36,9 +36,8 @@ _set_region() {
 
 _set_s3_config() {
   _set_region
-  if [[ "${cw_CLUSTER_CUSTOMIZER_access_key_id}" ]]; then
-    s3cfg="$(mktemp /tmp/cluster-customizer.s3cfg.XXXXXXXX)"
-    cat <<EOF > "${s3cfg}"
+  s3cfg="$(mktemp /tmp/cluster-customizer.s3cfg.XXXXXXXX)"
+  cat <<EOF > "${s3cfg}"
 [default]
 access_key = "${cw_CLUSTER_CUSTOMIZER_access_key_id}"
 secret_key = "${cw_CLUSTER_CUSTOMIZER_secret_access_key}"
@@ -46,10 +45,7 @@ security_token = ""
 use_https = True
 check_ssl_certificate = True
 EOF
-    S3CMD="${cw_ROOT}/opt/s3cmd/s3cmd -c ${s3cfg} -q"
-  else
-    S3CMD=false
-  fi
+  S3CMD="${cw_ROOT}/opt/s3cmd/s3cmd -c ${s3cfg} -q"
 }
 
 _clear_s3_config() {
@@ -58,13 +54,33 @@ _clear_s3_config() {
   unset S3CMD
 }
 
+_can_access_s3_url() {
+  local url
+  url="$1"
+  "$S3CMD -q ls ${url}" 2>/dev/null
+}
+
 customize_repository_s3_index() {
   local retval url
   url="$1"
   _set_s3_config
 
-  $S3CMD get "$url/index.yml" -
-  retval=$?
+  if _can_access_s3_url "$repo_url"; then
+    $S3CMD get "$url/index.yml" -
+    retval=$?
+  else
+    require customize-repository-http
+    echo "Falling back to HTTP indexing as S3 access unavailable."
+
+    if [ "${_REGION:-${cw_CLUSTER_CUSTOMIZER_region:-eu-west-1}}" == "us-east-1" ]; then
+        host=s3.amazonaws.com
+    else
+        host=s3-${_REGION:-${cw_CLUSTER_CUSTOMIZER_region:-eu-west-1}}.amazonaws.com
+    fi
+
+    customize_repository_http_index "https://${host}/${repo_url##s3://}"
+    retval="$?"
+  fi
 
   _clear_s3_config
   return $retval
@@ -79,12 +95,12 @@ customize_repository_s3_install() {
 
   _set_s3_config
 
-  if [ "${s3cfg}" ]; then
+  if _can_access_s3_url "$repo_url"; then
     $S3CMD get --force -r "${repo_url}/${profile_name}/" "${target}"
     retval="$?"
   else
     require customize-repository-http
-    echo "Falling back to HTTP installation as S3 configuration unavailable."
+    echo "Falling back to HTTP installation as S3 access unavailable."
 
     if [ "${_REGION:-${cw_CLUSTER_CUSTOMIZER_region:-eu-west-1}}" == "us-east-1" ]; then
         host=s3.amazonaws.com
