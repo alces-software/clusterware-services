@@ -51,6 +51,9 @@ case $action in
     jq|jobq|jobqu|jobque|jobqueu|jobqueue|job-q|job-qu|job-que|job-queu|job-queue)
         exec /bin/bash "${cw_ROOT}"/libexec/customize/actions/job-queue "$@"
         ;;
+    mi|midx|makeidx|makeindex)
+        exec /bin/bash "${cw_ROOT}"/libexec/customize/actions/makeindex "$@"
+        ;;
     *)
         cat <<EOF
 Usage: $cw_BINNAME COMMAND [[OPTION]... [ARGS]]
