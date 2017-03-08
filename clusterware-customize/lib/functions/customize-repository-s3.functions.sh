@@ -70,7 +70,7 @@ customize_repository_s3_index() {
     retval=$?
   else
     require customize-repository-http
-    echo "Falling back to HTTP indexing as S3 access unavailable."
+    >&2 echo "Falling back to HTTP indexing as S3 access unavailable."
 
     if [ "${_REGION:-${cw_CLUSTER_CUSTOMIZER_region:-eu-west-1}}" == "us-east-1" ]; then
         host=s3.amazonaws.com
@@ -100,7 +100,7 @@ customize_repository_s3_install() {
     retval="$?"
   else
     require customize-repository-http
-    echo "Falling back to HTTP installation as S3 access unavailable."
+    >&2 echo "Falling back to HTTP installation as S3 access unavailable."
 
     if [ "${_REGION:-${cw_CLUSTER_CUSTOMIZER_region:-eu-west-1}}" == "us-east-1" ]; then
         host=s3.amazonaws.com
