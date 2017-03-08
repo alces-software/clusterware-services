@@ -57,7 +57,7 @@ _clear_s3_config() {
 _can_access_s3_url() {
   local url
   url="$1"
-  "$S3CMD -q ls ${url}" 2>/dev/null
+  $S3CMD ls "${url}" 2>/dev/null
 }
 
 customize_repository_s3_index() {
