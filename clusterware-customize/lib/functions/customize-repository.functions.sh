@@ -77,7 +77,7 @@ end
 
   manifest = YAML.load_file("${manifest_file}") || {}
 
-  if manifest.is_a? Hash && manifest.key? "profiles"
+  if manifest.is_a?(Hash) && manifest.key?("profiles")
     manifest["profiles"].select {|prn, pr| should_list?(prn, pr) }.each do | profile_name, profile |
       puts "${repo_name}/#{bold(profile_name)}"
     end
