@@ -54,6 +54,7 @@ customize_repository_list_profiles() {
   manifest_file="$2"
   ruby_run <<RUBY
 require 'yaml'
+require 'digest/sha1'
 
 def colorize(text, color_code)
   "\e[#{color_code}m#{text}\e[0m"
@@ -61,6 +62,25 @@ end
 
 def bold(text)
   colorize(text, 1)
+end
+
+MAX_COLOUR_CODE = 230
+
+def colour_for_tag(tag)
+  colour_code = (Digest::SHA1.hexdigest(tag).to_i(16) % MAX_COLOUR_CODE) + 1
+  if colour_code == 16
+    colour_code = "16;48;5;15"  # Black on white background
+  end
+  "38;5;#{colour_code}"
+end
+
+def tags_to_string(tags)
+  return "" if not tags
+  tag_strings = []
+  tags.each { |tag|
+    tag_strings << colorize(tag, colour_for_tag(tag))
+  }
+  tag_strings.join(' ')
 end
 
 def installed?(profile_name)
@@ -78,8 +98,10 @@ end
   manifest = YAML.load_file("${manifest_file}") || {}
 
   if manifest.is_a?(Hash) && manifest.key?("profiles")
-    manifest["profiles"].select {|prn, pr| should_list?(prn, pr) }.each do | profile_name, profile |
-      puts "${repo_name}/#{bold(profile_name)}"
+    profiles = manifest["profiles"].select {|prn, pr| should_list?(prn, pr) }
+    max_len = profiles.map { |pf, pp| pf.length }.max + 10
+    profiles.each do | profile_name, profile |
+      puts "${repo_name}/#{bold(profile_name).ljust(max_len)}#{tags_to_string(profile['tags'])}"
     end
   end
 RUBY
