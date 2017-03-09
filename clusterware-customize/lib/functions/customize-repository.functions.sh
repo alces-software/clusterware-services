@@ -68,7 +68,7 @@ def installed?(profile_name)
 end
 
 def hidden?(profile)
-  !profile.key? "tags" || !profile["tags"].include("hidden")
+  profile.key?("tags") && profile["tags"].include?("hidden")
 end
 
 def should_list?(profile_name, profile)
