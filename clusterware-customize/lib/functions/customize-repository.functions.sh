@@ -77,7 +77,7 @@ end
 def tags_to_string(tags)
   return "" if not tags
   tag_strings = []
-  tags.each { |tag|
+  tags.sort.each { |tag|
     tag_strings << colorize(tag, colour_for_tag(tag))
   }
   tag_strings.join(' ')
