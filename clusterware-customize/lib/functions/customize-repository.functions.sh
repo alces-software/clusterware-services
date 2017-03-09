@@ -98,7 +98,7 @@ end
   manifest = YAML.load_file("${manifest_file}") || {}
 
   if manifest.is_a?(Hash) && manifest.key?("profiles")
-    profiles = manifest["profiles"].select {|prn, pr| should_list?(prn, pr) }
+    profiles = manifest["profiles"].select {|prn, pr| should_list?(prn, pr) }.sort
     max_len = profiles.map { |pf, pp| pf.length }.max + 10
     profiles.each do | profile_name, profile |
       puts "${repo_name}/#{bold(profile_name).ljust(max_len)}#{tags_to_string(profile['tags'])}"
