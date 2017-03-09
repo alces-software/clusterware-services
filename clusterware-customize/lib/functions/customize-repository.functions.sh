@@ -181,11 +181,12 @@ _is_installable() {
 }
 
 customize_repository_apply() {
-  local repo_name profile_name target
+  local is_preinit repo_name profile_name target
   repo_name="$1"
   profile_name="$2"
+  is_preinit="$3"
 
-  if _is_installable "$repo_name" "$profile_name"; then
+  if _is_installable "$repo_name" "$profile_name" || [[ "$is_preinit" == "preinit" ]]; then
     repo_url=$(customize_repository_get_url "$repo_name")
     if [[ ! "$repo_url" ]]; then
       echo "Unknown repository: ${repo_name}"
