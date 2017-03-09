@@ -260,9 +260,8 @@ customize_avail() {
     else
       echo "Could not retrieve repository index for ${repo_name}."
     fi
-    rm "$tmpfile"
   fi
-
+  rm "$tmpfile"
 }
 
 customize_apply() {
