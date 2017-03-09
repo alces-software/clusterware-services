@@ -43,7 +43,7 @@ main() {
   fi
 
   repo_name=${1%%/*}
-  profile_name=${1##*/}
+  profile_name=${1#*/}
   if [[ "$repo_name" == "$profile_name" ]]; then
     echo "Incorrect format for customization profile: $repo_name. Please specify as 'repository-name/profile-name'."
     return 1
