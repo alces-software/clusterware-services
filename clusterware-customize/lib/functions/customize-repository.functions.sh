@@ -107,6 +107,32 @@ end
 RUBY
 }
 
+customize_repository_tags_for() {
+  local profile_name repo_name tmpfile
+  repo_name="$1"
+  profile_name="$2"
+  tmpfile=$(mktemp "/tmp/cluster-customizer.repo.XXXXXXXX")
+
+  customize_repository_index "$repo_name" > "$tmpfile"
+
+  ruby_run <<RUBY
+require 'yaml';
+
+idx = YAML.load_file("${tmpfile}")
+
+if idx.is_a?(Hash) && idx.key?('profiles')
+  if idx['profiles'].key?('${profile_name}')
+    if idx['profiles']['${profile_name}'].key?('tags')
+      puts idx['profiles']['${profile_name}']['tags'].join(' ')
+    end
+  end
+end
+
+RUBY
+
+  rm -r "$tmpfile"
+}
+
 _list_repo_names() {
   ruby_run <<RUBY
 require 'yaml'
@@ -142,36 +168,52 @@ _run_member_hooks() {
     fi
 }
 
+_is_installable() {
+  local profile_name repo_name tags
+  repo_name="$1"
+  profile_name="$2"
+  tags=$(customize_repository_tags_for "$repo_name" "$profile_name")
+
+  if [[ "$tags" == *"pre-init"* ]]; then
+    return 1
+  fi
+  return 0
+}
+
 customize_repository_apply() {
   local repo_name profile_name target
   repo_name="$1"
   profile_name="$2"
 
-  repo_url=$(customize_repository_get_url "$repo_name")
-  if [[ ! "$repo_url" ]]; then
-    echo "Unknown repository: ${repo_name}"
-    return 1
-  fi
-  repo_type=$(customize_repository_type "$repo_url")
-
-  require "customize-repository-${repo_type}"
-
-  target="${cw_CLUSTER_CUSTOMIZER_path}/${repo_name}-${profile_name}"
-  mkdir -p "$target"
-
-  customize_repository_${repo_type}_install "$repo_name" "$repo_url" "$profile_name" "$target"
-
-  if [[ $? -eq 0 ]]; then
-    if rmdir "${target}" 2>/dev/null; then
-      # If rmdir succeeds then the directory was empty => install failed
-      echo "No profile found for: ${repo_name}/${profile_name}"
+  if _is_installable "$repo_name" "$profile_name"; then
+    repo_url=$(customize_repository_get_url "$repo_name")
+    if [[ ! "$repo_url" ]]; then
+      echo "Unknown repository: ${repo_name}"
       return 1
     fi
-    chmod -R a+x "${cw_CLUSTER_CUSTOMIZER_path}/${repo_name}-${profile_name}"
-    echo "Running configure for $profile_name"
-    customize_run_hooks "configure:$repo_name-$profile_name"
-    member_each _run_member_hooks "${members}" "member-join:$repo_name-$profile_name"
-    return 0
+    repo_type=$(customize_repository_type "$repo_url")
+
+    require "customize-repository-${repo_type}"
+
+    target="${cw_CLUSTER_CUSTOMIZER_path}/${repo_name}-${profile_name}"
+    mkdir -p "$target"
+
+    customize_repository_${repo_type}_install "$repo_name" "$repo_url" "$profile_name" "$target"
+
+    if [[ $? -eq 0 ]]; then
+      if rmdir "${target}" 2>/dev/null; then
+        # If rmdir succeeds then the directory was empty => install failed
+        echo "No profile found for: ${repo_name}/${profile_name}"
+        return 1
+      fi
+      chmod -R a+x "${cw_CLUSTER_CUSTOMIZER_path}/${repo_name}-${profile_name}"
+      echo "Running configure for $profile_name"
+      customize_run_hooks "configure:$repo_name-$profile_name"
+      member_each _run_member_hooks "${members}" "member-join:$repo_name-$profile_name"
+      return 0
+    fi
+  else
+    echo "The profile ${repo_name}/${profile_name} is not installable as it needs to be configured at boot-time."
   fi
 
 }
