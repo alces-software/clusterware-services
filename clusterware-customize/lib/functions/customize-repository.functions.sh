@@ -174,7 +174,7 @@ _is_installable() {
   profile_name="$2"
   tags=$(customize_repository_tags_for "$repo_name" "$profile_name")
 
-  if [[ "$tags" == *"pre-init"* ]]; then
+  if [[ "$tags" == *"startup"* ]]; then
     return 1
   fi
   return 0
