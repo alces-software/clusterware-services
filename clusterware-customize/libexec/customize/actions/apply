@@ -62,7 +62,7 @@ main() {
 if network_has_metadata_service 1; then
     files_load_config cluster-customizer
     cw_CLUSTER_CUSTOMIZER_path="${cw_CLUSTER_CUSTOMIZER_path:-${cw_ROOT}/var/lib/customizer}"
-    cw_CLUSTER_CUSTOMIZER_profiles="${cw_CLUSTER_CUSTOMIZER_profiles:-default}"
+    cw_CLUSTER_CUSTOMIZER_account_profiles="${cw_CLUSTER_CUSTOMIZER_account_profiles:-default}"
 
     main "$@"
 else

@@ -174,7 +174,7 @@ customize_fetch_features() {
     done
 }
 
-customize_fetch_profiles() {
+customize_fetch_account_profiles() {
     local bucket profile
     if [ -z "${cw_CLUSTER_CUSTOMIZER_bucket}" ]; then
         if network_is_ec2; then
@@ -190,7 +190,7 @@ customize_fetch_profiles() {
         echo "S3 access to '${bucket}' is not available.  Falling back to HTTP manifests."
         s3cfg=""
     fi
-    for profile in ${cw_CLUSTER_CUSTOMIZER_profiles}; do
+    for profile in ${cw_CLUSTER_CUSTOMIZER_account_profiles}; do
         echo "Retrieving customizations from: ${bucket}/customizer/$profile"
         customize_fetch_profile "${s3cfg}" "${bucket}"/customizer/"${profile}" \
                                 "${cw_CLUSTER_CUSTOMIZER_path}"/profile-${profile} \
@@ -238,7 +238,7 @@ customize_fetch() {
         customize_fetch_machine_type "${s3cfg}"
     fi
     customize_fetch_features "${s3cfg}"
-    customize_fetch_profiles "${s3cfg}"
+    customize_fetch_account_profiles "${s3cfg}"
     chmod -R a+x "${cw_CLUSTER_CUSTOMIZER_path}"
     customize_clear_s3_config
 }
