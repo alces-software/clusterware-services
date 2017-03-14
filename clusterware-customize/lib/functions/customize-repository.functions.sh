@@ -221,11 +221,9 @@ customize_repository_apply() {
 
 
 customize_repository_push() {
-  local dest repo_type repo_url src
+  local repo_type repo_url src
   src="$1"
-  dest="${2:-account}"  # By default use account bucket
-  echo "Push $src to $dest"
-
+  repo_name="${2:-account}"  # By default use account bucket
   repo_url=$(customize_repository_get_url "$repo_name")
   if [[ ! "$repo_url" ]]; then
     echo "Unknown repository: ${repo_name}"
@@ -236,16 +234,23 @@ customize_repository_push() {
   require "customize-repository-${repo_type}"
 
   if [[ -d "$src" ]]; then
-    echo "Source is a directory; assuming it's correctly set up as a profile"
-
     # Generate (or re-generate) manifest.txt
-    pushd "$src"
-    find -H */* -type f -print > manifest.txt
-    popd
+    pushd "$src" > /dev/null
+    find -H */* -type f -print > manifest.txt 2>/dev/null
+    if [ $? -gt 0 ]; then
+      echo "No subdirectory hooks found: this is not a valid profile directory"
+      return 5
+    fi
+    popd > /dev/null
 
     # TODO update/create index.yml
 
-    customize_repository_${repo_type}_push "$repo_url" "$src"
+    if customize_repository_${repo_type}_push "$repo_url" "$src"; then
+      echo "Push complete."
+    else
+      echo "Push failed."
+      return 4
+    fi
 
   elif [[ -f "$src" ]]; then
     echo "Source is a file - this is not yet supported"

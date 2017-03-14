@@ -22,7 +22,7 @@
 #==============================================================================
 require action
 require customize-repository
-require handler
+require files
 require network
 require process
 

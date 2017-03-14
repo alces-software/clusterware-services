@@ -121,12 +121,20 @@ customize_repository_s3_push() {
   src="$2"
   _set_s3_config
 
-  if [[ $src == *"/" ]]; then
+  if [[ "$src" == *"/" ]]; then
     # strip trailing slash
     src=${src%%/}
   fi
 
-  $S3CMD sync "$src" "$dest"
+  if [[ "$dest" != "*"/ ]]; then
+    dest="$dest/"
+  fi
+
+  $S3CMD sync --delete-removed \
+              --default-mime-type=text/plain \
+              --guess-mime-type \
+              --no-mime-magic \
+              "$src" "$dest"
   retval=$?
 
   _clear_s3_config
