@@ -221,7 +221,7 @@ customize_repository_apply() {
 
 
 customize_repository_push() {
-  local repo_type repo_url src
+  local profile_name repo_type repo_url retval src tmpdir
   src="$1"
   repo_name="${2:-account}"  # By default use account bucket
   repo_url=$(customize_repository_get_url "$repo_name")
@@ -232,6 +232,15 @@ customize_repository_push() {
   repo_type=$(customize_repository_type "$repo_url")
 
   require "customize-repository-${repo_type}"
+
+  if [[ -f "$src" ]]; then
+    profile_name=$(basename "$src")
+    tmpdir="/tmp/${profile_name%.*}"
+
+    mkdir -p "${tmpdir}/configure.d"
+    cp "$src" "${tmpdir}/configure.d"
+    src="$tmpdir"
+  fi
 
   if [[ -d "$src" ]]; then
     # Generate (or re-generate) manifest.txt
@@ -245,16 +254,17 @@ customize_repository_push() {
 
     # TODO update/create index.yml
 
-    if customize_repository_${repo_type}_push "$repo_url" "$src"; then
+    customize_repository_${repo_type}_push "$repo_url" "$src"
+    retval=$?
+
+    if [[ "$tmpdir" ]]; then rm -rf "$tmpdir"; fi
+
+    if [ $retval -eq 0 ]; then
       echo "Push complete."
     else
       echo "Push failed."
       return 4
     fi
-
-  elif [[ -f "$src" ]]; then
-    echo "Source is a file - this is not yet supported"
-    return 2
   else
     echo "Unknown type: $src"
     return 3
