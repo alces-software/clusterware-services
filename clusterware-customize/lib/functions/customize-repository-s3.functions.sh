@@ -114,3 +114,21 @@ customize_repository_s3_install() {
   _clear_s3_config
   return $retval
 }
+
+customize_repository_s3_push() {
+  local dest retval src
+  dest="$1"
+  src="$2"
+  _set_s3_config
+
+  if [[ $src == *"/" ]]; then
+    # strip trailing slash
+    src=${src%%/}
+  fi
+
+  $S3CMD sync "$src" "$dest"
+  retval=$?
+
+  _clear_s3_config
+  return $retval
+}

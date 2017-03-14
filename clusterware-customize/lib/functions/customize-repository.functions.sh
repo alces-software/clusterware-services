@@ -218,3 +218,41 @@ customize_repository_apply() {
   fi
 
 }
+
+
+customize_repository_push() {
+  local dest repo_type repo_url src
+  src="$1"
+  dest="${2:-account}"  # By default use account bucket
+  echo "Push $src to $dest"
+
+  repo_url=$(customize_repository_get_url "$repo_name")
+  if [[ ! "$repo_url" ]]; then
+    echo "Unknown repository: ${repo_name}"
+    return 1
+  fi
+  repo_type=$(customize_repository_type "$repo_url")
+
+  require "customize-repository-${repo_type}"
+
+  if [[ -d "$src" ]]; then
+    echo "Source is a directory; assuming it's correctly set up as a profile"
+
+    # Generate (or re-generate) manifest.txt
+    pushd "$src"
+    find -H */* -type f -print > manifest.txt
+    popd
+
+    # TODO update/create index.yml
+
+    customize_repository_${repo_type}_push "$repo_url" "$src"
+
+  elif [[ -f "$src" ]]; then
+    echo "Source is a file - this is not yet supported"
+    return 2
+  else
+    echo "Unknown type: $src"
+    return 3
+  fi
+
+}

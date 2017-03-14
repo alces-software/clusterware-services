@@ -39,8 +39,11 @@ case $action in
     t|tr|tri|trig|trigg|trigge|trigger)
         exec /bin/bash "${cw_ROOT}"/libexec/customize/actions/trigger "$@"
         ;;
-    p|pu|pul|pull)
+    pul|pull)
         exec /bin/bash "${cw_ROOT}"/libexec/customize/actions/pull "$@"
+        ;;
+    pus|push)
+        exec /bin/bash "${cw_ROOT}"/libexec/customize/actions/push "$@"
         ;;
     av|ava|avai|avail)
         exec /bin/bash "${cw_ROOT}"/libexec/customize/actions/avail "$@"
@@ -67,6 +70,7 @@ printf "    %-28s  %s\n" "$cw_BINNAME help" "More help about this command."
 printf "    %-28s  %s\n" "$cw_BINNAME job-queue" "Manage the cluster job queues"
 printf "    %-28s  %s\n" "$cw_BINNAME list" "List installed customization profiles."
 printf "    %-28s  %s\n" "$cw_BINNAME pull" "Pull updated customization actions from upstream."
+printf "    %-28s  %s\n" "$cw_BINNAME push" "Push a customization profile to an upstream repository."
 printf "    %-28s  %s\n" "$cw_BINNAME trigger" "Manually trigger customization actions."
 cat <<EOF
 
