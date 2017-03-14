@@ -37,3 +37,11 @@ customize_repository_file_install() {
 
   cp -r "${repo_url}/${profile_name}" "${target}"
 }
+
+customize_repository_file_push() {
+  local dest src
+  dest="$1"
+  src="$2"
+
+  cp -r "$src" "$dest"
+}

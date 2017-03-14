@@ -53,3 +53,8 @@ customize_repository_http_install() {
       return 1
   fi
 }
+
+customize_repository_http_push() {
+  echo "Unable to push to an HTTP repository."
+  return 1
+}
