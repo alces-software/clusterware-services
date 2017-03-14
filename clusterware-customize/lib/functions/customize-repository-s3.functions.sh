@@ -140,3 +140,18 @@ customize_repository_s3_push() {
   _clear_s3_config
   return $retval
 }
+
+customize_repository_s3_set_index() {
+  local index repo_url retval
+  repo_url="$1"
+  index="$2"
+
+  _set_s3_config
+
+  $S3CMD put --no-mime-magic --default-mime-type=text/plain "$index" "${repo_url}/index.yml"
+  retval=$?
+
+  _clear_s3_config
+
+  return $retval
+}

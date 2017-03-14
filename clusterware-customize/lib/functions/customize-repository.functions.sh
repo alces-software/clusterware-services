@@ -221,7 +221,7 @@ customize_repository_apply() {
 
 
 customize_repository_push() {
-  local profile_name repo_type repo_url retval src tmpdir
+  local index profile_name repo_type repo_url retval src tmpdir
   src="$1"
   repo_name="${2:-account}"  # By default use account bucket
   repo_url=$(customize_repository_get_url "$repo_name")
@@ -233,9 +233,11 @@ customize_repository_push() {
 
   require "customize-repository-${repo_type}"
 
+  profile_name=$(basename "$src")
+  profile_name=${profile_name%.*}
+
   if [[ -f "$src" ]]; then
-    profile_name=$(basename "$src")
-    tmpdir="/tmp/${profile_name%.*}"
+    tmpdir="/tmp/${profile_name}"
 
     mkdir -p "${tmpdir}/configure.d"
     cp "$src" "${tmpdir}/configure.d"
@@ -252,17 +254,64 @@ customize_repository_push() {
     fi
     popd > /dev/null
 
-    # TODO update/create index.yml
-
     customize_repository_${repo_type}_push "$repo_url" "$src"
     retval=$?
 
-    if [[ "$tmpdir" ]]; then rm -rf "$tmpdir"; fi
-
     if [ $retval -eq 0 ]; then
       echo "Push complete."
+      index=$(mktemp "/tmp/cluster-customizer.repo.XXXXXXXX")
+      customize_repository_${repo_type}_index "$repo_url" > "$index" 2> /dev/null
+
+      ruby_run <<RUBY
+require 'yaml'
+
+rootDir = '$src'
+profile_name = '$profile_name'
+default_index = {'profiles' => {}}
+
+index = YAML.load_file('$index') || default_index
+
+manifest_file = File.expand_path("manifest.txt", rootDir)
+tags_file = File.expand_path("tags.txt", rootDir)
+
+if File.exists?(manifest_file)
+  profile = {}
+
+  manifest = File.read(manifest_file).split("\n")
+  profile['manifest'] = manifest
+
+  if File.exists?(tags_file)
+    tags = File.read(tags_file).split("\n")
+    profile['tags'] = tags
+  end
+
+  if Dir.exists?("#{rootDir}/initialize.d") || Dir.exists?("#{rootDir}/preconfigure.d")
+    # Automagically tag profile as startup
+    if !profile.key?('tags')
+      profile['tags'] = []
+      File.write(tags_file, "startup\n")
+    end
+    if !profile['tags'].include?('startup')
+      # tags were specified but startup was not. We should fix that:
+      File.open(tags_file, 'a') { |f| f.write("startup\n") }
+      profile['tags'] << 'startup'
+    end
+  end
+
+  index['profiles'][profile_name] = profile
+
+  File.open('$index', 'w') { |outFile|
+    outFile.write index.to_yaml
+  }
+end
+RUBY
+      customize_repository_${repo_type}_set_index "$repo_url" "$index"
+
+      rm -f "$index"
+      if [[ "$tmpdir" ]]; then rm -rf "$tmpdir"; fi
     else
       echo "Push failed."
+      if [[ "$tmpdir" ]]; then rm -rf "$tmpdir"; fi
       return 4
     fi
   else
