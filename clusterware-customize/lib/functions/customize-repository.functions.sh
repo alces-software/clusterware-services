@@ -233,9 +233,10 @@ customize_repository_apply() {
 
 
 customize_repository_push() {
-  local index profile_name repo_type repo_url retval src tmpdir
+  local hook_name index profile_name repo_type repo_url retval src tmpdir
   src="$1"
   repo_name="${2:-account}"  # By default use account bucket
+  hook_name="${3:-configure}" # configure.d is the default hook
   repo_url=$(customize_repository_get_url "$repo_name")
   if [[ ! "$repo_url" ]]; then
     echo "Unknown repository: ${repo_name}"
@@ -251,8 +252,8 @@ customize_repository_push() {
   if [[ -f "$src" ]]; then
     tmpdir="/tmp/${profile_name}"
 
-    mkdir -p "${tmpdir}/configure.d"
-    cp "$src" "${tmpdir}/configure.d"
+    mkdir -p "${tmpdir}/${hook_name}.d"
+    cp "$src" "${tmpdir}/${hook_name}.d"
     src="$tmpdir"
   fi
 
