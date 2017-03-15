@@ -58,3 +58,8 @@ customize_repository_http_push() {
   echo "Unable to push to an HTTP repository."
   return 1
 }
+
+customize_repository_http_set_index() {
+  echo "Unable to set index for an HTTP repository."
+  return 1
+}

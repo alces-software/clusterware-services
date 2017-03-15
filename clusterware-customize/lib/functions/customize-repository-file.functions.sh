@@ -45,3 +45,11 @@ customize_repository_file_push() {
 
   cp -r "$src" "$dest"
 }
+
+customize_repository_file_set_index() {
+  local repo_url src
+  repo_url="$1"
+  src="$2"
+
+  cp "$src" "$repo_url"/index.yml
+}
