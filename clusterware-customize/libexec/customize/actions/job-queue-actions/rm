@@ -22,6 +22,7 @@
 #==============================================================================
 require action
 require handler
+require process
 require job-queue
 
 main() {
@@ -36,4 +37,5 @@ main() {
     job_queue_delete_job "${queue}" "${job_id}"
 }
 
+process_reexec_sudo "$@"
 main "$@"
