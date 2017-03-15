@@ -254,17 +254,25 @@ customize_repository_push() {
     fi
     popd > /dev/null
 
+    echo "Pushing $profile_name to repository $repo_name..."
+
     customize_repository_${repo_type}_push "$repo_url" "$src"
     retval=$?
 
     if [ $retval -eq 0 ]; then
       echo "Push complete."
+      echo "Updating repository index..."
       index=$(mktemp "/tmp/cluster-customizer.repo.XXXXXXXX")
       customize_repository_${repo_type}_index "$repo_url" > "$index" 2> /dev/null
 
       customize_repository_add_to_index "$index" "$src" "$profile_name"
 
       customize_repository_${repo_type}_set_index "$repo_url" "$index"
+      if [ $? -eq 0 ]; then
+        echo "Repository index updated."
+      else
+        echo "Failed to update repository index."
+      fi
 
       rm -f "$index"
       if [[ "$tmpdir" ]]; then rm -rf "$tmpdir"; fi
