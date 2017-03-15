@@ -262,49 +262,8 @@ customize_repository_push() {
       index=$(mktemp "/tmp/cluster-customizer.repo.XXXXXXXX")
       customize_repository_${repo_type}_index "$repo_url" > "$index" 2> /dev/null
 
-      ruby_run <<RUBY
-require 'yaml'
+      customize_repository_add_to_index "$index" "$src" "$profile_name"
 
-rootDir = '$src'
-profile_name = '$profile_name'
-default_index = {'profiles' => {}}
-
-index = YAML.load_file('$index') || default_index
-
-manifest_file = File.expand_path("manifest.txt", rootDir)
-tags_file = File.expand_path("tags.txt", rootDir)
-
-if File.exists?(manifest_file)
-  profile = {}
-
-  manifest = File.read(manifest_file).split("\n")
-  profile['manifest'] = manifest
-
-  if File.exists?(tags_file)
-    tags = File.read(tags_file).split("\n")
-    profile['tags'] = tags
-  end
-
-  if Dir.exists?("#{rootDir}/initialize.d") || Dir.exists?("#{rootDir}/preconfigure.d")
-    # Automagically tag profile as startup
-    if !profile.key?('tags')
-      profile['tags'] = []
-      File.write(tags_file, "startup\n")
-    end
-    if !profile['tags'].include?('startup')
-      # tags were specified but startup was not. We should fix that:
-      File.open(tags_file, 'a') { |f| f.write("startup\n") }
-      profile['tags'] << 'startup'
-    end
-  end
-
-  index['profiles'][profile_name] = profile
-
-  File.open('$index', 'w') { |outFile|
-    outFile.write index.to_yaml
-  }
-end
-RUBY
       customize_repository_${repo_type}_set_index "$repo_url" "$index"
 
       rm -f "$index"
@@ -319,4 +278,59 @@ RUBY
     return 3
   fi
 
+}
+
+customize_repository_add_to_index() {
+  local index_file profile_dir profile_name
+  index_file="$1"
+  profile_dir="$2"
+  profile_name="$3"
+
+  ruby_run <<RUBY
+require 'yaml'
+
+profile_dir = '$profile_dir'
+profile_name = '$profile_name'
+default_index = {'profiles' => {}}
+
+begin
+  index = YAML.load_file('$index_file') || default_index
+rescue
+  index = default_index
+end
+
+manifest_file = File.expand_path("manifest.txt", profile_dir)
+tags_file = File.expand_path("tags.txt", profile_dir)
+
+if File.exists?(manifest_file)
+profile = {}
+
+manifest = File.read(manifest_file).split("\n")
+profile['manifest'] = manifest
+
+if File.exists?(tags_file)
+tags = File.read(tags_file).split("\n")
+profile['tags'] = tags
+end
+
+if Dir.exists?("#{profile_dir}/initialize.d") || Dir.exists?("#{profile_dir}/preconfigure.d")
+# Automagically tag profile as startup
+if !profile.key?('tags')
+  profile['tags'] = []
+  File.write(tags_file, "startup\n")
+end
+if !profile['tags'].include?('startup')
+  # tags were specified but startup was not. We should fix that:
+  File.open(tags_file, 'a') { |f| f.write("startup\n") }
+  profile['tags'] << 'startup'
+end
+end
+
+index['profiles'][profile_name] = profile
+
+File.open('$index_file', 'w') { |outFile|
+outFile.write index.to_yaml
+}
+end
+RUBY
 }
