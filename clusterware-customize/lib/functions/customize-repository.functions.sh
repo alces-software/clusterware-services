@@ -21,6 +21,18 @@ RUBY
 }
 
 customize_repository_type() {
+  # Additional repository types can be added here with a supporting functions
+  # file `customize-repository-<type>.functions.sh`, providing the following
+  # functions:
+  #
+  # - customize_repository_<type>_index "$repo_url"
+  #    - prints repo index YAML to stdout
+  # - customize_repository_<type>_install "$repo_name" "$repo_url" "$profile_name" "$target"
+  #    - copies a profile from a repo to a target directory
+  # - customize_repository_<type>_push "$repo_url" "$src_directory"
+  #    - copies a profile from a directory to a repo
+  # - customize_repository_<type>_set_index "$repo_url" "$index_file"
+  #    - copies an index YAML file to a repo
   local url
   url="$1"
   if [[ "$url" == "http:/"* || "$url" == "https:/"* ]]; then
