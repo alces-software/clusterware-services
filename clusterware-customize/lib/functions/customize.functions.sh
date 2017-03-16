@@ -146,7 +146,7 @@ customize_fetch_profile() {
 }
 
 customize_fetch_machine_type() {
-    local bucket prefix
+    local bucket prefix s3cfg
     s3cfg=$1
     bucket="alces-flight-profiles-${_REGION}"
     if ! customize_is_s3_access_available "${s3cfg}" "${bucket}"; then
@@ -175,7 +175,7 @@ customize_fetch_features() {
 }
 
 customize_fetch_account_profiles() {
-    local bucket profile
+    local bucket profile s3cfg
     if [ -z "${cw_CLUSTER_CUSTOMIZER_bucket}" ]; then
         if network_is_ec2; then
             bucket="alces-flight-$(network_ec2_hashed_account)"
