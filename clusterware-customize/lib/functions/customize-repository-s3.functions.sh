@@ -24,7 +24,7 @@
 require files
 require network
 
-_set_region() {
+_customize_repository_s3_set_region() {
     if [ -z "${_REGION}" ]; then
         if network_is_ec2; then
             eval $(network_fetch_ec2_document | "${cw_ROOT}"/opt/jq/bin/jq -r '"_REGION=\(.region)"')
@@ -34,8 +34,8 @@ _set_region() {
     fi
 }
 
-_set_s3_config() {
-  _set_region
+_customize_repository_s3_set_s3_config() {
+  _customize_repository_s3_set_region
   s3cfg="$(mktemp /tmp/cluster-customizer.s3cfg.XXXXXXXX)"
   cat <<EOF > "${s3cfg}"
 [default]
@@ -48,13 +48,13 @@ EOF
   S3CMD="${cw_ROOT}/opt/s3cmd/s3cmd -c ${s3cfg} -q"
 }
 
-_clear_s3_config() {
+_customize_repository_s3_clear_s3_config() {
   rm -f "${s3cfg}"
   unset s3cfg
   unset S3CMD
 }
 
-_can_access_s3_url() {
+_customize_repository_s3_can_access_s3_url() {
   local url
   url="$1"
   $S3CMD ls "${url}" 2>/dev/null
@@ -63,9 +63,9 @@ _can_access_s3_url() {
 customize_repository_s3_index() {
   local retval url
   url="$1"
-  _set_s3_config
+  _customize_repository_s3_set_s3_config
 
-  if _can_access_s3_url "$repo_url"; then
+  if _customize_repository_s3_can_access_s3_url "$repo_url"; then
     $S3CMD get "$url/index.yml" -
     retval=$?
   else
@@ -82,7 +82,7 @@ customize_repository_s3_index() {
     retval="$?"
   fi
 
-  _clear_s3_config
+  _customize_repository_s3_clear_s3_config
   return $retval
 }
 
@@ -93,9 +93,9 @@ customize_repository_s3_install() {
   profile_name="$3"
   target="$4"
 
-  _set_s3_config
+  _customize_repository_s3_set_s3_config
 
-  if _can_access_s3_url "$repo_url"; then
+  if _customize_repository_s3_can_access_s3_url "$repo_url"; then
     $S3CMD get --force -r "${repo_url}/${profile_name}/" "${target}"
     retval="$?"
   else
@@ -111,7 +111,7 @@ customize_repository_s3_install() {
     customize_repository_http_install "$repo_name" "https://${host}/${repo_url##s3://}" "$profile_name" "$target"
     retval="$?"
   fi
-  _clear_s3_config
+  _customize_repository_s3_clear_s3_config
   return $retval
 }
 
@@ -119,7 +119,7 @@ customize_repository_s3_push() {
   local dest retval src
   dest="$1"
   src="$2"
-  _set_s3_config
+  _customize_repository_s3_set_s3_config
 
   if [[ "$src" == *"/" ]]; then
     # strip trailing slash
@@ -137,7 +137,7 @@ customize_repository_s3_push() {
               "$src" "$dest"
   retval=$?
 
-  _clear_s3_config
+  _customize_repository_s3_clear_s3_config
   return $retval
 }
 
@@ -146,12 +146,12 @@ customize_repository_s3_set_index() {
   repo_url="$1"
   index="$2"
 
-  _set_s3_config
+  _customize_repository_s3_set_s3_config
 
   $S3CMD put --no-mime-magic --default-mime-type=text/plain "$index" "${repo_url}/index.yml"
   retval=$?
 
-  _clear_s3_config
+  _customize_repository_s3_clear_s3_config
 
   return $retval
 }
