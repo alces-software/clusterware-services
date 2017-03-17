@@ -1,0 +1,49 @@
+#!/bin/bash
+#==============================================================================
+# Copyright (C) 2017 Stephen F. Norledge and Alces Software Ltd.
+#
+# This file/package is part of Alces Clusterware.
+#
+# Alces Clusterware is free software: you can redistribute it and/or
+# modify it under the terms of the GNU Affero General Public License
+# as published by the Free Software Foundation, either version 3 of
+# the License, or (at your option) any later version.
+#
+# Alces Clusterware is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this package.  If not, see <http://www.gnu.org/licenses/>.
+#
+# For more information on the Alces Clusterware, please visit:
+# https://github.com/alces-software/clusterware
+#==============================================================================
+require action
+require handler
+require process
+require job-queue
+
+main() {
+    local queue job_file job_id
+    queue="$1"
+    job_file="$2"
+    job_id="$3"
+
+    if [ -z "${queue}" -o -z "${job_file}" ] ; then
+        action_die "usage: ${cw_BINNAME} <queue> <FILE>"
+    fi
+    if [ ! -r "${job_file}" ] ; then
+        action_die "${cw_BINNAME} cannot access ${job_file}: No such file"
+    fi
+    if [ -z "${job_id}" ] ; then
+        job_id="$(uuidgen)"
+    fi
+
+    job_queue_put "${queue}" "${job_file}" "${job_id}"
+    echo "${job_id}"
+}
+
+process_reexec_sudo "$@"
+main "$@"
