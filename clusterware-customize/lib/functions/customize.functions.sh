@@ -272,3 +272,28 @@ customize_apply() {
   require customize-repository
   customize_repository_apply "$repo_name" "$profile_name"
 }
+
+customize_fetch_preinitializers() {
+    local bucket s3cfg
+    customize_set_s3_config
+    mkdir -p "${cw_CLUSTER_CUSTOMIZER_path}"
+    if [ -z "${cw_CLUSTER_CUSTOMIZER_bucket}" ]; then
+        if network_is_ec2; then
+            bucket="alces-flight-$(network_ec2_hashed_account)"
+        else
+            echo "Unable to determine bucket name for customizations"
+            return 0
+        fi
+    else
+        bucket="${cw_CLUSTER_CUSTOMIZER_bucket#s3://}"
+    fi
+    if ! customize_is_s3_access_available "${s3cfg}" "${bucket}"; then
+        echo "S3 access to '${bucket}' is not available.  Falling back to HTTP manifests."
+        s3cfg=""
+    fi
+    echo "Retrieving customizer preinitializer from: ${bucket}/preinitializers/"
+    customize_fetch_profile "${s3cfg}" "${bucket}"/customizer/preinitializers \
+                            "${cw_CLUSTER_CUSTOMIZER_path}"/preinitializers
+    chmod -R a+x "${cw_CLUSTER_CUSTOMIZER_path}"
+    customize_clear_s3_config
+}
