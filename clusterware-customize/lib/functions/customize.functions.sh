@@ -292,8 +292,8 @@ customize_fetch_preinitializers() {
         s3cfg=""
     fi
     echo "Retrieving customizer preinitializer from: ${bucket}/preinitializers/"
-    customize_fetch_profile "${s3cfg}" "${bucket}"/customizer/preinitializers \
-                            "${cw_CLUSTER_CUSTOMIZER_path}"/preinitializers
+    customize_fetch_profile "${s3cfg}" "${bucket}"/customizer-preinitializers \
+                            "${cw_CLUSTER_CUSTOMIZER_path}"-preinitializers
     chmod -R a+x "${cw_CLUSTER_CUSTOMIZER_path}"
     customize_clear_s3_config
 }
