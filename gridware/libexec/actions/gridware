@@ -27,6 +27,11 @@ DOC
 # https://github.com/alces-software/clusterware
 #==============================================================================
 # vim: set filetype=ruby :
+#ALCES_META
+# Refer to `clusterware/scripts/development/propagate`.
+#path=/opt/clusterware/libexec/actions/gridware
+#ALCES_META_END
+
 # Execute as ruby script if we're evaluating under bash
 if [ "" ]; then 0; else eval 'cw_RUBY_EXEC "$@" || exit 1'; fi; end
 
