@@ -131,9 +131,6 @@ customize_repository_s3_push() {
   fi
 
   $S3CMD sync --delete-removed \
-              --default-mime-type=text/plain \
-              --guess-mime-type \
-              --no-mime-magic \
               "$src" "$dest"
   retval=$?
 
@@ -148,7 +145,7 @@ customize_repository_s3_set_index() {
 
   _customize_repository_s3_set_s3_config
 
-  $S3CMD put --no-mime-magic --default-mime-type=text/plain "$index" "${repo_url}/index.yml"
+  $S3CMD put "$index" "${repo_url}/index.yml"
   retval=$?
 
   _customize_repository_s3_clear_s3_config

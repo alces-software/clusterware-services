@@ -171,16 +171,16 @@ _push() {
         mkdir -p "$(xdg_cache_home)"/clusterware
         if _prepare_encrypt_set "${sync_cfg}" "${encrypted_file}"; then
             doing "Sync"
-            ${_S3CMD} --no-progress --no-mime-magic put \
+            ${_S3CMD} --no-progress put \
                       "${encrypted_file}" \
                       s3://${bucket}/sync/$(whoami)/${target}.dat >> "$(xdg_cache_home)"/clusterware/flight-sync.log 2>&1
         else
             doing "Sync"
         fi
-        ${_S3CMD} --no-progress --no-mime-magic put \
+        ${_S3CMD} --no-progress put \
                   "${sync_cfg}" \
                   s3://${bucket}/sync/$(whoami)/${target}.yml >> "$(xdg_cache_home)"/clusterware/flight-sync.log 2>&1
-        ${_S3CMD} --no-progress --no-mime-magic sync \
+        ${_S3CMD} --no-progress sync \
                   --delete-removed \
                   --exclude-from ${exclusions_file} \
                   "$(_target_for "${sync_cfg}")"/ \

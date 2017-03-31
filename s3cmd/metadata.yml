@@ -22,11 +22,11 @@
 ---
 install:
   el7: |
-    yum -e0 -y install python-dateutil
+    yum -e0 -y install python-dateutil python-magic
   el6: |
-    yum -e0 -y install python-dateutil
+    yum -e0 -y install python-dateutil python-magic
   ubuntu1604: |
-    apt-get install -y python-dateutil
+    apt-get install -y python-dateutil python-magic
   _: |
     require serviceware
     serviceware_add s3cmd
