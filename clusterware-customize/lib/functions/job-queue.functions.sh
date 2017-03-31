@@ -61,7 +61,7 @@ job_queue_get_job_queues() {
         | cut -d/ -f5 \
         | uniq
     )
-    for customizer in ${queue_customizers} ; do 
+    for customizer in ${queue_customizers} ; do
         job_queues+=("${customizer}")
     done
 }
@@ -167,7 +167,7 @@ job_queue_execute_job() {
     files_load_config instance config/cluster
 
     if [ -f "${custom_job_runner}" ] ; then
-        # If there is a custom job runner, use it to run the job file. 
+        # If there is a custom job runner, use it to run the job file.
         chmod +x "${custom_job_runner}"
         "${custom_job_runner}" \
             "${job_file}" \
