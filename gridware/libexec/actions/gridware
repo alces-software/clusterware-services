@@ -48,10 +48,10 @@ end
 
 File.umask(0002)
 
-if (ARGV[0].length >= 3 && 'init'.start_with?(ARGV[0]))
+if (!ARGV.empty? && ARGV[0].length >= 3 && 'init'.start_with?(ARGV[0]))
   ARGV.shift
   Kernel.exec "#{ENV['cw_ROOT']}/libexec/gridware/actions/init", *ARGV
-elsif (ARGV[0].length >= 2 && 'docker'.start_with?(ARGV[0]))
+elsif (!ARGV.empty? && ARGV[0].length >= 2 && 'docker'.start_with?(ARGV[0]))
   ARGV.shift
   Kernel.exec "#{ENV['cw_ROOT']}/libexec/gridware/actions/docker", *ARGV
 else
