@@ -27,11 +27,21 @@ require files
 require network
 
 job_queue_bucket_path() {
-    local queue relative_path bucket_folder
+    local queue relative_path fqdn node cluster domain_name job_queue_folder bucket_folder
     queue="$1"
     relative_path="$2"
 
-    bucket_folder="${BUCKET}/customizer/${queue}/job-queue.d/${cw_CLUSTER_name}"
+    fqdn="$(hostname --fqdn)"
+
+    # Currently the `alces customize job-queue` tool only supports adding jobs
+    # to be run on the login node of the current cluster. Note: `domain` will
+    # be `prv` for Flight Solo clusters.
+    node='login1'
+    cluster=$(echo "$fqdn" | cut -d. -f2)
+    domain=$(echo "$fqdn" | cut -d. -f3)
+    job_queue_folder="${node}.${cluster}.${domain}"
+
+    bucket_folder="${BUCKET}/customizer/${queue}/job-queue.d/${job_queue_folder}"
 
     if [ "${relative_path}" == "" ] ; then
         echo "${bucket_folder}"
