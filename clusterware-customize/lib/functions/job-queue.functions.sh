@@ -19,6 +19,10 @@
 # For more information on the Alces Clusterware, please visit:
 # https://github.com/alces-software/clusterware
 #==============================================================================
+#ALCES_META
+# Refer to `clusterware/scripts/development/propagate`.
+#path=/opt/clusterware/lib/functions/job-queue.functions.sh
+#ALCES_META_END
 require files
 require network
 
