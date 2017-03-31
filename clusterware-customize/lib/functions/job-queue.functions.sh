@@ -27,14 +27,16 @@ require files
 require network
 
 job_queue_bucket_path() {
-    local queue relative_path
+    local queue relative_path bucket_folder
     queue="$1"
     relative_path="$2"
 
+    bucket_folder="${BUCKET}/customizer/${queue}/job-queue.d/${cw_CLUSTER_name}"
+
     if [ "${relative_path}" == "" ] ; then
-        echo "${BUCKET}/customizer/${queue}/job-queue.d/${cw_CLUSTER_name}"
+        echo "${bucket_folder}"
     else
-        echo "${BUCKET}/customizer/${queue}/job-queue.d/${cw_CLUSTER_name}/${relative_path}"
+        echo "${bucket_folder}/${relative_path}"
     fi
 }
 
