@@ -98,21 +98,8 @@ job_queue_save_job_output() {
     job_id=$2
     output_dir=$3
 
-    # python-magic isn't installed on our clusters by default and without it
-    # the results files are uploaded as binary/octet-stream, which breaks
-    # viewing the logs in a browser tab.
-    #
-    # Most of the files should be text/plain, so we use that as the default
-    # and try to get s3cmd to use the file extension for guessing others.
-    #
-    # Using `--no-mime-magic` prevents the logs from filling with warnings
-    # about python-magic not being available.
-
     "${cw_ROOT}"/opt/s3cmd/s3cmd put --recursive \
         --acl-public \
-        --default-mime-type=text/plain \
-        --guess-mime-type \
-        --no-mime-magic \
         $(job_queue_work_dir_path "${queue}" "${output_dir}"/"${job_id}"/"$(hostname)") \
         $(job_queue_bucket_path "${queue}" "${output_dir}"/"${job_id}")/
 
