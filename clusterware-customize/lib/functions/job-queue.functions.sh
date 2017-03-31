@@ -32,9 +32,9 @@ job_queue_bucket_path() {
     relative_path="$2"
 
     if [ "${relative_path}" == "" ] ; then
-        echo "${BUCKET}"/customizer/"${queue}"/job-queue.d/"${cw_CLUSTER_name}"
+        echo "${BUCKET}/customizer/${queue}/job-queue.d/${cw_CLUSTER_name}"
     else
-        echo "${BUCKET}"/customizer/"${queue}"/job-queue.d/"${cw_CLUSTER_name}"/"${relative_path}"
+        echo "${BUCKET}/customizer/${queue}/job-queue.d/${cw_CLUSTER_name}/${relative_path}"
     fi
 }
 
