@@ -19,18 +19,57 @@
 # For more information on the Alces Clusterware, please visit:
 # https://github.com/alces-software/clusterware
 #==============================================================================
+#ALCES_META
+# Refer to `clusterware/scripts/development/propagate`.
+#path=/opt/clusterware/lib/functions/job-queue.functions.sh
+#ALCES_META_END
 require files
 require network
 
-job_queue_bucket_path() {
-    local queue relative_path
+job_queue_bucket_master_path() {
+    local queue relative_path node
     queue="$1"
     relative_path="$2"
 
+    # When putting/viewing jobs using `alces customize job-queue` commands, we
+    # currently always only want to interact with the queue folder for the
+    # cluster login node.
+    node="login1"
+
+    _job_queue_bucket_path "$node" "$queue" "$relative_path"
+}
+
+job_queue_bucket_node_path() {
+    local queue relative_path current_node
+    queue="$1"
+    relative_path="$2"
+
+    # When pulling down jobs to be run, we only want to get jobs intended for
+    # the current node.
+    current_node="$(hostname --fqdn | cut -d. -f1)"
+
+    _job_queue_bucket_path "$current_node" "$queue" "$relative_path"
+}
+
+_job_queue_bucket_path() {
+    local node queue relative_path fqdn cluster domain_name job_queue_folder bucket_folder
+    node="$1"
+    queue="$2"
+    relative_path="$3"
+
+    fqdn="$(hostname --fqdn)"
+
+    # Note: `domain` will be `prv` for Flight Solo clusters.
+    cluster=$(echo "$fqdn" | cut -d. -f2)
+    domain=$(echo "$fqdn" | cut -d. -f3)
+    job_queue_folder="${node}.${cluster}.${domain}"
+
+    bucket_folder="${BUCKET}/customizer/${queue}/job-queue.d/${job_queue_folder}"
+
     if [ "${relative_path}" == "" ] ; then
-        echo "${BUCKET}"/customizer/"${queue}"/job-queue.d/"${cw_CLUSTER_name}"
+        echo "${bucket_folder}"
     else
-        echo "${BUCKET}"/customizer/"${queue}"/job-queue.d/"${cw_CLUSTER_name}"/"${relative_path}"
+        echo "${bucket_folder}/${relative_path}"
     fi
 }
 
@@ -57,7 +96,7 @@ job_queue_get_job_queues() {
         | cut -d/ -f5 \
         | uniq
     )
-    for customizer in ${queue_customizers} ; do 
+    for customizer in ${queue_customizers} ; do
         job_queues+=("${customizer}")
     done
 }
@@ -85,7 +124,7 @@ job_queue_get_job_handling_customizations() {
 job_queue_get_pending_jobs() {
     local queue s3_pending_dir local_pending_dir
     queue="$1"
-    s3_pending_dir="$(job_queue_bucket_path "${queue}" pending/)"
+    s3_pending_dir="$(job_queue_bucket_node_path "${queue}" pending/)"
     local_pending_dir="$(job_queue_work_dir_path "${queue}" pending/)"
 
     mkdir -p "${local_pending_dir}"
@@ -101,7 +140,7 @@ job_queue_save_job_output() {
     "${cw_ROOT}"/opt/s3cmd/s3cmd put --recursive \
         --acl-public \
         $(job_queue_work_dir_path "${queue}" "${output_dir}"/"${job_id}"/"$(hostname)") \
-        $(job_queue_bucket_path "${queue}" "${output_dir}"/"${job_id}")/
+        $(job_queue_bucket_node_path "${queue}" "${output_dir}"/"${job_id}")/
 
     mkdir -p /var/log/clusterware/prime-continuous-delivery/
     rsync -a $(job_queue_work_dir_path "${queue}" "${output_dir}"/) \
@@ -118,7 +157,7 @@ job_queue_validate_job_id() {
     rejected_file=$3
 
     existing=$( "${cw_ROOT}"/opt/s3cmd/s3cmd ls \
-        $(job_queue_bucket_path "${queue}" completed/"${job_id}"/"$(hostname)") \
+        $(job_queue_bucket_node_path "${queue}" completed/"${job_id}"/"$(hostname)") \
         | wc -l
     )
 
@@ -163,7 +202,7 @@ job_queue_execute_job() {
     files_load_config instance config/cluster
 
     if [ -f "${custom_job_runner}" ] ; then
-        # If there is a custom job runner, use it to run the job file. 
+        # If there is a custom job runner, use it to run the job file.
         chmod +x "${custom_job_runner}"
         "${custom_job_runner}" \
             "${job_file}" \
@@ -268,7 +307,7 @@ job_queue_list_jobs_in_queue() {
     job_status="$2"
 
     job_queue_s3cmd_setup
-    s3_prefix=$(job_queue_bucket_path "${queue}" "${job_status}"/ )
+    s3_prefix=$(job_queue_bucket_master_path "${queue}" "${job_status}"/ )
 
     "${cw_ROOT}"/opt/s3cmd/s3cmd ls ${s3_prefix} \
         | rev \
@@ -283,7 +322,7 @@ job_queue_put() {
     job_id="$3"
 
     job_queue_s3cmd_setup
-    s3_key=$(job_queue_bucket_path "${queue}" pending/"${job_id}" )
+    s3_key=$(job_queue_bucket_master_path "${queue}" pending/"${job_id}" )
 
     "${cw_ROOT}"/opt/s3cmd/s3cmd put --quiet ${job_file} ${s3_key}
 }
@@ -295,7 +334,7 @@ job_queue_list_output_files() {
 
     job_queue_s3cmd_setup
     job_status=$(job_queue_get_job_status "${queue}" "${job_id}")
-    s3_key=$(job_queue_bucket_path "${queue}" "${job_status}"/"${job_id}"/ )
+    s3_key=$(job_queue_bucket_master_path "${queue}" "${job_status}"/"${job_id}"/ )
 
     "${cw_ROOT}"/opt/s3cmd/s3cmd ls --recursive ${s3_key} \
         | awk '{print $4}' \
@@ -311,7 +350,7 @@ job_queue_get_output_file() {
 
     job_queue_s3cmd_setup
     job_status=$(job_queue_get_job_status "${queue}" "${job_id}")
-    s3_key=$(job_queue_bucket_path "${queue}" "${job_status}"/"${job_id}"/"${output_file}" )
+    s3_key=$(job_queue_bucket_master_path "${queue}" "${job_status}"/"${job_id}"/"${output_file}" )
 
     "${cw_ROOT}"/opt/s3cmd/s3cmd get ${s3cmd_args[@]} ${s3_key} -
 }
@@ -323,19 +362,19 @@ job_queue_get_job_status() {
 
     job_queue_s3cmd_setup
 
-    s3_key=$(job_queue_bucket_path "${queue}" pending/"${job_id}" )
+    s3_key=$(job_queue_bucket_master_path "${queue}" pending/"${job_id}" )
     if [ $( "${cw_ROOT}"/opt/s3cmd/s3cmd ls ${s3_key} | wc -l ) -ne 0 ] ; then
         echo "pending"
         return 0
     fi
 
-    s3_key=$(job_queue_bucket_path "${queue}" completed/"${job_id}" )
+    s3_key=$(job_queue_bucket_master_path "${queue}" completed/"${job_id}" )
     if [ $( "${cw_ROOT}"/opt/s3cmd/s3cmd ls ${s3_key} | wc -l ) -ne 0 ] ; then
         echo "completed"
         return 0
     fi
 
-    s3_key=$(job_queue_bucket_path "${queue}" rejected/"${job_id}" )
+    s3_key=$(job_queue_bucket_master_path "${queue}" rejected/"${job_id}" )
     if [ $( "${cw_ROOT}"/opt/s3cmd/s3cmd ls ${s3_key} | wc -l ) -ne 0 ] ; then
         echo "rejected"
         return 0
@@ -348,6 +387,6 @@ job_queue_delete_job() {
     job_id="$2"
 
     job_queue_s3cmd_setup
-    s3_key=$(job_queue_bucket_path "${queue}" pending/"${job_id}" )
+    s3_key=$(job_queue_bucket_master_path "${queue}" pending/"${job_id}" )
     "${cw_ROOT}"/opt/s3cmd/s3cmd rm --quiet ${s3_key}
 }
