@@ -16,23 +16,24 @@ the account (e.g. `alces-flight-nmi0ztdmyzm3ztm3`), and `$customizer_name`
 refers to any customizer profile name (e.g.  `prime-continuous-delivery` or
 `domain-dev.alces.network`).
 
-For each such customizer profile, a particular cluster with name
-`$cluster_name` will process any scripts in
-`$customizer_profile/job-queue.d/${cluster_name}/pending`. One way to add
-scripts to a queue for a cluster is to manually upload them to the appropriate
+For each such customizer profile, a particular cluster node with name `$node`,
+in Cluster `$cluster` and Domain `$domain`, will process any scripts in
+`$customizer_profile/job-queue.d/$node.$cluster.$domain/pending`. One way to
+add scripts to a queue for a node is to manually upload them to the appropriate
 folder; another way is to use the `alces customize job-queue put
 $customizer_name $script`, which will upload the given `$script` to the
-`$customizer_name` customizer profile queue for that cluster.
+`$customizer_name` customizer profile queue for the login node of the current
+cluster.
 
-Note that currently jobs will only be run on the master node for a cluster.
-However, multiple clusters with the same name in different domains for an
-account will currently all pick up and process the same job, unless one cluster
-completes processing it before another picks it up.
+Note that currently the `alces customize job-queue` commands will only interact
+with the job queue for the current cluster's login node, however the job queues
+for other nodes can be interacted with by uploading and reading files from S3
+directly.
 
 The results of running the job are stored on s3 with the following prefix:
-`$customizer_profile/job-queue.d/${cluster_name}`. Specifically, output will
-be available at `${prefix}/completed/${job_id}/logs` and its exit code will be
-available at `${prefix}/completed/${job_id}/status.`
+`$customizer_profile/job-queue.d/$node.$cluster.$domain`. Specifically, output
+will be available at `${prefix}/completed/${job_id}/logs` and its exit code
+will be available at `${prefix}/completed/${job_id}/status.`
 
 ## Custom job runners
 
