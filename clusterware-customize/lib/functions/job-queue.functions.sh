@@ -26,7 +26,7 @@
 require files
 require network
 
-job_queue_bucket_put_path() {
+job_queue_bucket_master_path() {
     local queue relative_path node
     queue="$1"
     relative_path="$2"
@@ -39,7 +39,7 @@ job_queue_bucket_put_path() {
     _job_queue_bucket_path "$node" "$queue" "$relative_path"
 }
 
-job_queue_bucket_pull_path() {
+job_queue_bucket_node_path() {
     local queue relative_path current_node
     queue="$1"
     relative_path="$2"
@@ -124,7 +124,7 @@ job_queue_get_job_handling_customizations() {
 job_queue_get_pending_jobs() {
     local queue s3_pending_dir local_pending_dir
     queue="$1"
-    s3_pending_dir="$(job_queue_bucket_pull_path "${queue}" pending/)"
+    s3_pending_dir="$(job_queue_bucket_node_path "${queue}" pending/)"
     local_pending_dir="$(job_queue_work_dir_path "${queue}" pending/)"
 
     mkdir -p "${local_pending_dir}"
@@ -140,7 +140,7 @@ job_queue_save_job_output() {
     "${cw_ROOT}"/opt/s3cmd/s3cmd put --recursive \
         --acl-public \
         $(job_queue_work_dir_path "${queue}" "${output_dir}"/"${job_id}"/"$(hostname)") \
-        $(job_queue_bucket_pull_path "${queue}" "${output_dir}"/"${job_id}")/
+        $(job_queue_bucket_node_path "${queue}" "${output_dir}"/"${job_id}")/
 
     mkdir -p /var/log/clusterware/prime-continuous-delivery/
     rsync -a $(job_queue_work_dir_path "${queue}" "${output_dir}"/) \
@@ -157,7 +157,7 @@ job_queue_validate_job_id() {
     rejected_file=$3
 
     existing=$( "${cw_ROOT}"/opt/s3cmd/s3cmd ls \
-        $(job_queue_bucket_pull_path "${queue}" completed/"${job_id}"/"$(hostname)") \
+        $(job_queue_bucket_node_path "${queue}" completed/"${job_id}"/"$(hostname)") \
         | wc -l
     )
 
@@ -307,7 +307,7 @@ job_queue_list_jobs_in_queue() {
     job_status="$2"
 
     job_queue_s3cmd_setup
-    s3_prefix=$(job_queue_bucket_put_path "${queue}" "${job_status}"/ )
+    s3_prefix=$(job_queue_bucket_master_path "${queue}" "${job_status}"/ )
 
     "${cw_ROOT}"/opt/s3cmd/s3cmd ls ${s3_prefix} \
         | rev \
@@ -322,7 +322,7 @@ job_queue_put() {
     job_id="$3"
 
     job_queue_s3cmd_setup
-    s3_key=$(job_queue_bucket_put_path "${queue}" pending/"${job_id}" )
+    s3_key=$(job_queue_bucket_master_path "${queue}" pending/"${job_id}" )
 
     "${cw_ROOT}"/opt/s3cmd/s3cmd put --quiet ${job_file} ${s3_key}
 }
@@ -334,7 +334,7 @@ job_queue_list_output_files() {
 
     job_queue_s3cmd_setup
     job_status=$(job_queue_get_job_status "${queue}" "${job_id}")
-    s3_key=$(job_queue_bucket_put_path "${queue}" "${job_status}"/"${job_id}"/ )
+    s3_key=$(job_queue_bucket_master_path "${queue}" "${job_status}"/"${job_id}"/ )
 
     "${cw_ROOT}"/opt/s3cmd/s3cmd ls --recursive ${s3_key} \
         | awk '{print $4}' \
@@ -350,7 +350,7 @@ job_queue_get_output_file() {
 
     job_queue_s3cmd_setup
     job_status=$(job_queue_get_job_status "${queue}" "${job_id}")
-    s3_key=$(job_queue_bucket_put_path "${queue}" "${job_status}"/"${job_id}"/"${output_file}" )
+    s3_key=$(job_queue_bucket_master_path "${queue}" "${job_status}"/"${job_id}"/"${output_file}" )
 
     "${cw_ROOT}"/opt/s3cmd/s3cmd get ${s3cmd_args[@]} ${s3_key} -
 }
@@ -362,19 +362,19 @@ job_queue_get_job_status() {
 
     job_queue_s3cmd_setup
 
-    s3_key=$(job_queue_bucket_put_path "${queue}" pending/"${job_id}" )
+    s3_key=$(job_queue_bucket_master_path "${queue}" pending/"${job_id}" )
     if [ $( "${cw_ROOT}"/opt/s3cmd/s3cmd ls ${s3_key} | wc -l ) -ne 0 ] ; then
         echo "pending"
         return 0
     fi
 
-    s3_key=$(job_queue_bucket_put_path "${queue}" completed/"${job_id}" )
+    s3_key=$(job_queue_bucket_master_path "${queue}" completed/"${job_id}" )
     if [ $( "${cw_ROOT}"/opt/s3cmd/s3cmd ls ${s3_key} | wc -l ) -ne 0 ] ; then
         echo "completed"
         return 0
     fi
 
-    s3_key=$(job_queue_bucket_put_path "${queue}" rejected/"${job_id}" )
+    s3_key=$(job_queue_bucket_master_path "${queue}" rejected/"${job_id}" )
     if [ $( "${cw_ROOT}"/opt/s3cmd/s3cmd ls ${s3_key} | wc -l ) -ne 0 ] ; then
         echo "rejected"
         return 0
@@ -387,6 +387,6 @@ job_queue_delete_job() {
     job_id="$2"
 
     job_queue_s3cmd_setup
-    s3_key=$(job_queue_bucket_put_path "${queue}" pending/"${job_id}" )
+    s3_key=$(job_queue_bucket_master_path "${queue}" pending/"${job_id}" )
     "${cw_ROOT}"/opt/s3cmd/s3cmd rm --quiet ${s3_key}
 }
