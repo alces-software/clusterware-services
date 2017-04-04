@@ -41,6 +41,7 @@ main() {
   image_name="gridware-${1}"
 
   docker save -o "${cw_GRIDWARE_root:-/opt/gridware}/docker/exports/${image_name}.tar" "$_REGISTRY/$_REGISTRY_USER/$image_name"
+  chmod 0644 "${cw_GRIDWARE_root:-/opt/gridware}/docker/exports/${image_name}.tar"
 }
 
 cw_BINNAME="alces gridware"
