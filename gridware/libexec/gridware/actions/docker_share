@@ -40,7 +40,7 @@ main() {
   local image_name
   image_name="gridware-${1}"
 
-  docker save -o "${cw_GRIDWARE_root:-/opt/gridware}/docker/exports/${image_name}.tar" "${image_name}"
+  docker save -o "${cw_GRIDWARE_root:-/opt/gridware}/docker/exports/${image_name}.tar" "$_REGISTRY/$_REGISTRY_USER/$image_name"
 }
 
 cw_BINNAME="alces gridware"
