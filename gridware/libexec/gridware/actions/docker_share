@@ -37,19 +37,30 @@ setup() {
 }
 
 main() {
-  local image_name
+  local image_id image_name
   image_name="gridware-${1}"
 
-  docker save -o "${cw_GRIDWARE_root:-/opt/gridware}/docker/exports/${image_name}.tar" "$_REGISTRY/$_REGISTRY_USER/$image_name"
-  chmod 0644 "${cw_GRIDWARE_root:-/opt/gridware}/docker/exports/${image_name}.tar"
+  image_id=$(docker image inspect --format='{{.Id}}' "$_REGISTRY/$_REGISTRY_USER/$image_name" | sed -e "s/sha256://")
+
+  if [[ $? -eq 0 ]]; then
+
+    docker save -o "${cw_GRIDWARE_root:-/opt/gridware}/docker/exports/${image_id}" "$_REGISTRY/$_REGISTRY_USER/$image_name"
+    chmod 0644 "${cw_GRIDWARE_root:-/opt/gridware}/docker/exports/${image_id}"
+
+    handler_broadcast gridware-docker-exports
+  else
+    echo "Unable to find image for $1."
+    return 1
+  fi
 }
 
 cw_BINNAME="alces gridware"
 
 setup
 require action
-require process
 require files
+require handler
+require process
 
 r=$(type -p docker)
 if [ $? != 0 -o ! -x "$r" ]; then
