@@ -62,6 +62,9 @@ require files
 require handler
 require process
 
+# root is required to broadcast the gridware-docker-exports event
+process_reexec_sudo "$@"
+
 r=$(type -p docker)
 if [ $? != 0 -o ! -x "$r" ]; then
     action_die "unable to locate Docker installation"
