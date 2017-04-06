@@ -45,8 +45,11 @@ case $action in
     p|pu|pus|push)
         exec /bin/bash ${cw_ROOT}/libexec/gridware/actions/docker_push "$@"
         ;;
-    s|sh|sha|shar|share)
+    sh|sha|shar|share)
         exec /bin/bash ${cw_ROOT}/libexec/gridware/actions/docker_share "$@"
+        ;;
+    st|sta|star|start|start-registry)
+        exec /bin/bash ${cw_ROOT}/libexec/gridware/actions/docker_start_registry "$@"
         ;;
     *)
         cat <<EOF
