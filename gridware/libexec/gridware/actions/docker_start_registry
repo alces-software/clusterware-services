@@ -44,7 +44,7 @@ main() {
 
   docker run -d -p 5000:5000 --name registry \
     -v "$registry_volume":/var/lib/registry \
-    -v "$cw_GRIDWARE_root/docker/certificates/private":/certs
+    -v "$cw_GRIDWARE_root/docker/certificates/private":/certs \
     -e REGISTRY_HTTP_TLS_CERTIFICATE="/certs/cert.pem" \
     -e REGISTRY_HTTP_TLS_KEY="/certs/key.pem" \
     registry:2
