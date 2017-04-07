@@ -39,6 +39,8 @@ setup() {
 main() {
   local registry_volume
 
+  files_load_config config config/cluster
+
   registry_volume="${cw_GRIDWARE_root}/docker/registry"
   mkdir -p "$registry_volume"
 
@@ -48,6 +50,10 @@ main() {
     -e REGISTRY_HTTP_TLS_CERTIFICATE="/certs/cert.pem" \
     -e REGISTRY_HTTP_TLS_KEY="/certs/key.pem" \
     registry:2
+
+  if [[ $? -eq 0 ]]; then
+    echo "Started Docker repository at ${cw_CLUSTER_hostname}:5000"
+  fi
 
 }
 
