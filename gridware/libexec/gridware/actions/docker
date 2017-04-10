@@ -65,7 +65,10 @@ printf "  %-27s  %s\n" "$cw_BINNAME help" "More help about this command."
 printf "  %-27s  %s\n" "$cw_BINNAME list" "List available Gridware containers."
 printf "  %-27s  %s\n" "$cw_BINNAME run" "Run a containerized Gridware application."
 printf "  %-27s  %s\n" "$cw_BINNAME build" "Build a containerized Gridware application."
-printf "  %-27s  %s\n" "$cw_BINNAME push" "Push a built container to the Docker registry."
+printf "  %-27s  %s\n" "$cw_BINNAME pull" "Push a container image from a Docker registry."
+printf "  %-27s  %s\n" "$cw_BINNAME push" "Push a built container image to the Docker registry."
+printf "  %-27s  %s\n" "$cw_BINNAME share" "Share a container image with other nodes in this cluster."
+printf "  %-27s  %s\n" "$cw_BINNAME start-registry" "Start a local Docker registry."
 cat <<EOF
 
 Please report bugs to support@alces-software.com
