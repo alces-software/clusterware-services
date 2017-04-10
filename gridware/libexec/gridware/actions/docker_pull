@@ -41,6 +41,10 @@ main() {
 
   image="$1"
 
+  if [ -z "$image" ]; then
+    action_die "Please specify an image to pull."
+  fi
+
   if [ "${image%/*}" == "${image}" ]; then
       image="${_REGISTRY}/${_REGISTRY_USER}/gridware-${image}"
   fi
