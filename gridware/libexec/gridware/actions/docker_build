@@ -101,7 +101,7 @@ main() {
           fi
         else
           package="$arg"
-          name="$name-$arg"
+          name="${name}-$(echo "$arg" | tr '/' '-' | tr '[A-Z]' '[a-z]')"
         fi
         packages+=($package)
     esac
