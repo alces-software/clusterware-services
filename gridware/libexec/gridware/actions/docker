@@ -42,7 +42,10 @@ case $action in
     b|bu|bui|buil|build)
         exec /bin/bash ${cw_ROOT}/libexec/gridware/actions/docker_build "$@"
         ;;
-    p|pu|pus|push)
+    pul|pull)
+        exec /bin/bash ${cw_ROOT}/libexec/gridware/actions/docker_pull "$@"
+        ;;
+    pus|push)
         exec /bin/bash ${cw_ROOT}/libexec/gridware/actions/docker_push "$@"
         ;;
     sh|sha|shar|share)
