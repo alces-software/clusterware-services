@@ -44,7 +44,7 @@ _build_base() {
 }
 
 main() {
-  local arg base_image name package packages pkg_name variant
+  local arg base_image default_script name package packages pkg_name variant
   packages=()
 
   # default base image and name
@@ -68,7 +68,15 @@ main() {
         else
           action_die "from parameter requires a value"
         fi
-          ;;
+        ;;
+      --script)
+        if [ ! -z "$1" ]; then
+          default_script="$1"
+          shift
+        else
+          action_die "script parameter requires a value"
+        fi
+        ;;
       --*)
         action_die "Unknown argument: $arg"
         ;;
@@ -131,6 +139,13 @@ yum clean all && \
 echo "$pkg_name" >> /opt/gridware/etc/defaults
 EOF
   done
+
+  if [ ! -z "$default_script" ]; then
+    # User has specified a default script to run
+    cp "${default_script}" "${build_dir}/default-cmd.sh"
+    chmod a+x "${build_dir}/default-cmd.sh"
+    echo "COPY default-cmd.sh /opt/gridware/bin/default-cmd.sh" >> "${build_dir}"/Dockerfile
+  fi
 
   set -o pipefail
   if ! docker build -t "$tag:latest" "$build_dir" 2>&1 | sed 's/^/  >>> /g'; then
