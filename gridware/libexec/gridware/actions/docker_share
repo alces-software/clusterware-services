@@ -40,9 +40,10 @@ main() {
   local image_id image_name
   image_name="gridware-${1}"
 
+  set -o pipefail
   image_id=$(docker image inspect --format='{{.Id}}' "$_REGISTRY/$_REGISTRY_USER/$image_name" | sed -e "s/sha256://")
 
-  if [[ $? -eq 0 ]]; then
+  if [[ $? -eq 0 && ! -z "$image_id" ]]; then
 
     docker save -o "${cw_GRIDWARE_root:-/opt/gridware}/docker/exports/${image_id}" "$_REGISTRY/$_REGISTRY_USER/$image_name"
     chmod 0644 "${cw_GRIDWARE_root:-/opt/gridware}/docker/exports/${image_id}"
