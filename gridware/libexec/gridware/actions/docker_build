@@ -44,7 +44,7 @@ _build_base() {
 }
 
 main() {
-  local arg base_image default_script name package packages pkg_name variant
+  local arg base_image default_script name package packages pkg_name provided_name variant
   packages=()
 
   # default base image and name
@@ -64,6 +64,17 @@ main() {
       --from)
         if [ "$1" ]; then
           base_image="$_REGISTRY/$1"
+          shift
+        else
+          action_die "from parameter requires a value"
+        fi
+        ;;
+      --name)
+        if [ "$1" ]; then
+          provided_name=$(echo "$1" | tr '/' '-' )
+          if [[ "$provided_name" != "$1" ]]; then
+            echo "Using name ${provided_name} rather than specified ${1}"
+          fi
           shift
         else
           action_die "from parameter requires a value"
@@ -107,6 +118,10 @@ main() {
     esac
 
   done
+
+  if [ ! -z "$provided_name" ]; then
+    name="$provided_name"
+  fi
 
   tag="$_REGISTRY/$_REGISTRY_USER/$name"
 
