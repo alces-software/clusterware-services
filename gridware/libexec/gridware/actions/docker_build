@@ -120,7 +120,12 @@ main() {
   done
 
   if [ ! -z "$provided_name" ]; then
-    name="$provided_name"
+    if [[ "$provided_name" != "gridware-"* ]]; then
+      # Image names must be prefixed with "gridware-" to be used with Gridware.
+      name="gridware-${provided_name}"
+    else
+      name="$provided_name"
+    fi
   fi
 
   tag="$_REGISTRY/$_REGISTRY_USER/$name"
