@@ -240,7 +240,7 @@ customize_repository_apply() {
         echo "No profile found for: ${repo_name}/${profile_name}"
         return 1
       fi
-      chmod -R a+x "${cw_CLUSTER_CUSTOMIZER_path}/${repo_name}-${profile_name}"
+      chmod -R a+x "${cw_CLUSTER_CUSTOMIZER_path}/${repo_name}-${profile_name}/*.d"
       echo "Running configure for $profile_name"
       customize_run_hooks "configure:$repo_name-$profile_name"
       member_each _run_member_hooks "${members}" "member-join:$repo_name-$profile_name"
