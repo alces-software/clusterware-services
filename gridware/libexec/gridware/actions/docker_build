@@ -43,8 +43,14 @@ _build_base() {
     docker build -t "$tag:latest" "${cw_ROOT}"/var/lib/gridware/docker/gridware-base
 }
 
+join_by () {
+  local IFS="$1"
+  shift
+  echo "$*"
+}
+
 main() {
-  local arg base_image default_script name package packages pkg_name provided_name variant
+  local arg base_image default_script display_name name package packages pkg_name provided_name variant
   packages=()
 
   # default base image and name
@@ -114,6 +120,7 @@ main() {
           package="$arg"
           name="${name}-$(echo "$arg" | tr '/' '-' | tr '[A-Z]' '[a-z]')"
         fi
+        display_name="${display_name}${arg}, "
         packages+=($package)
     esac
 
@@ -136,8 +143,9 @@ main() {
   build_dir="$(mktemp -d /tmp/gridware.docker.build.XXXXXXXX)"
   cat <<EOF > "${build_dir}"/Dockerfile
 FROM ${base_image}
-MAINTAINER Alces Software Ltd. <support@alces-software.com>
-LABEL Alces Gridware - $name
+LABEL maintainer="Alces Software Ltd. <support@alces-software.com>" \
+      description="Alces Gridware - ${display_name%%, }" \
+      alces.gridware.packages="$(join_by , "${packages[@]}")"
 EOF
 
   for package in "${packages[@]}"; do
