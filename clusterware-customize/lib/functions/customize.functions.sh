@@ -176,6 +176,7 @@ customize_fetch_features() {
 
 customize_fetch_account_profiles() {
     local bucket profile s3cfg
+    s3cfg=$1
     if [ -z "${cw_CLUSTER_CUSTOMIZER_bucket}" ]; then
         if network_is_ec2; then
             bucket="alces-flight-$(network_ec2_hashed_account)"
@@ -193,7 +194,7 @@ customize_fetch_account_profiles() {
     for profile in ${cw_CLUSTER_CUSTOMIZER_account_profiles}; do
         echo "Retrieving customizations from: ${bucket}/customizer/$profile"
         customize_fetch_profile "${s3cfg}" "${bucket}"/customizer/"${profile}" \
-                                "${cw_CLUSTER_CUSTOMIZER_path}"/profile-${profile} \
+                                "${cw_CLUSTER_CUSTOMIZER_path}"/account-${profile} \
                                 "*job-queue.d/*"
     done
 }
