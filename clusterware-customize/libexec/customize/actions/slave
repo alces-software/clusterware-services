@@ -1,0 +1,79 @@
+#!/bin/bash
+#==============================================================================
+# Copyright (C) 2016 Stephen F. Norledge and Alces Software Ltd.
+#
+# This file/package is part of Alces Clusterware.
+#
+# Alces Clusterware is free software: you can redistribute it and/or
+# modify it under the terms of the GNU Affero General Public License
+# as published by the Free Software Foundation, either version 3 of
+# the License, or (at your option) any later version.
+#
+# Alces Clusterware is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this package.  If not, see <http://www.gnu.org/licenses/>.
+#
+# For more information on the Alces Clusterware, please visit:
+# https://github.com/alces-software/clusterware
+#==============================================================================
+require action
+require customize-slave
+require files
+
+_assert_run_from_root() {
+  if [[ "$EUID" -ne 0 ]]; then
+    action_die "Must be ran as root"
+  fi
+}
+
+_assert_master_node() {
+  files_load_config instance config/cluster
+  if [[ "$cw_INSTANCE_role" -ne "master" ]]; then
+    action_die "Must be ran on a master node"
+  fi
+}
+
+_run_cmd() {
+  local cmd
+  cmd=$1
+  shift
+
+  case $cmd in
+    a|add)
+      customize_slave_add "$@"
+      ;;
+    r|rm|remove)
+      customize_slave_remove "$@"
+      ;;
+    l|list)
+      customize_slave_list
+      ;;
+    *)
+cat <<EOF
+Usage: $cw_BINNAME COMMAND [profile]
+Modify profiles to be ran when slave nodes boot
+
+Commands:
+EOF
+printf "    %-40s  %s\n" "$cw_BINNAME add <profile>" "Adds the profile."
+printf "    %-40s  %s\n" "$cw_BINNAME remove <profile>" "Removes the profile."
+printf "    %-40s  %s\n" "$cw_BINNAME list" "List profiles."
+cat <<EOF
+
+Please report bugs to support@alces-software.com
+Alces Software home page: <http://alces-software.com>
+EOF
+esac
+}
+
+main() {
+  _assert_run_from_root
+  _assert_master_node
+  _run_cmd "$@"
+}
+
+main "$@"

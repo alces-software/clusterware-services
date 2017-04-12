@@ -57,6 +57,9 @@ case $action in
     mi|midx|makeidx|makeindex)
         exec /bin/bash "${cw_ROOT}"/libexec/customize/actions/makeindex "$@"
         ;;
+    sl|slave)
+        exec /bin/bash "${cw_ROOT}"/libexec/customize/actions/slave "$@"
+        ;;
     *)
         cat <<EOF
 Usage: $cw_BINNAME COMMAND [[OPTION]... [ARGS]]
@@ -72,6 +75,7 @@ printf "    %-28s  %s\n" "$cw_BINNAME list" "List installed customization profil
 printf "    %-28s  %s\n" "$cw_BINNAME pull" "Pull updated customization actions from upstream."
 printf "    %-28s  %s\n" "$cw_BINNAME push" "Push a customization profile to an upstream repository."
 printf "    %-28s  %s\n" "$cw_BINNAME trigger" "Manually trigger customization actions."
+printf "    %-28s  %s\n" "$cw_BINNAME slave" "Manage profiles to be installed on slave nodes."
 cat <<EOF
 
 Please report bugs to support@alces-software.com
