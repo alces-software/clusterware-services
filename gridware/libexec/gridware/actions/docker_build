@@ -145,7 +145,8 @@ main() {
 FROM ${base_image}
 LABEL maintainer="Alces Software Ltd. <support@alces-software.com>" \
       description="Alces Gridware - ${display_name%%, }" \
-      alces.gridware.packages="$(join_by , "${packages[@]}")"
+      alces.gridware.packages="$(join_by , "${packages[@]}")" \
+      build-date="$(date "+%Y%m%d")"
 EOF
 
   for package in "${packages[@]}"; do
