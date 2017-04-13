@@ -24,10 +24,11 @@ require action
 
 main() {
     action=$1
+    echo $action
     shift
 
     case $action in
-        apply|avail|help|job-queue|list|trigger|pull)
+        apply|avail|help|job-queue|list|trigger|pull|push|slave)
             help_for_${action}
             ;;
         ?*)
@@ -152,6 +153,42 @@ help_for_trigger() {
 EOF
 }
 
+help_for_push() {
+  cat <<EOF
+  SYNOPSIS:
+
+    alces customize push
+
+  DESCRIPTION:
+
+    Push a customization profile to an upstream repository.
+EOF
+}
+
+help_for_slave() {
+  cat <<EOF
+  SYNOPSIS:
+
+    alces customize slave [OPTIONS]
+
+  DESCRIPTION:
+
+    Modifies the list of profiles to be ran when a compute node boots.
+    Has the option to add, remove or list the profiles.
+
+  OPTIONS:
+
+    add <profile>
+      Adds the profile to the list
+
+    remove <profile>
+      Removes the profile from the list
+
+    list
+      List all the profiles
+EOF
+}
+
 general_help() {
     local binname
     binname="${cw_BINNAME% *}"
@@ -167,13 +204,15 @@ general_help() {
   COMMANDS:
 
 EOF
-printf "    %-28s  %s\n" "$cw_BINNAME apply" "Download and install a customization profile."
-printf "    %-28s  %s\n" "$cw_BINNAME avail" "List available customization profiles."
-printf "    %-28s  %s\n" "$cw_BINNAME help" "More help about this command."
-printf "    %-28s  %s\n" "$cw_BINNAME job-queue" "Manage the Alces cluster job queue"
-printf "    %-28s  %s\n" "$cw_BINNAME list" "List installed customization profiles."
-printf "    %-28s  %s\n" "$cw_BINNAME pull" "Pull updated customization actions from upstream."
-printf "    %-28s  %s\n" "$cw_BINNAME trigger" "Manually trigger customization actions."
+printf "    %-30s  %s\n" "$cw_BINNAME apply" "Download and install a customization profile."
+printf "    %-30s  %s\n" "$cw_BINNAME avail" "List available customization profiles."
+printf "    %-30s  %s\n" "$cw_BINNAME help" "More help about this command."
+printf "    %-30s  %s\n" "$cw_BINNAME job-queue" "Manage the Alces cluster job queue"
+printf "    %-30s  %s\n" "$cw_BINNAME list" "List installed customization profiles."
+printf "    %-30s  %s\n" "$cw_BINNAME pull" "Pull updated customization actions from upstream."
+printf "    %-30s  %s\n" "$cw_BINNAME push" "Push updated customization actions to upstream."
+printf "    %-30s  %s\n" "$cw_BINNAME trigger" "Manually trigger customization actions."
+printf "    %-30s  %s\n" "$cw_BINNAME slave" "Manage profiles to be installed on slave nodes."
 cat <<EOF
 
 Please report bugs to support@alces-software.com
