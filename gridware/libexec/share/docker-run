@@ -44,12 +44,18 @@ main() {
     local image work_dir input_dir output_dir job_uuid launcher entrypoint interactive workload
     image="$1"
     work_dir="$2"
-    input_dir="${3:-$work_dir}"
-    output_dir="${4:-$work_dir}"
+    input_dir="${3}"
+    output_dir="${4}"
     run_args=("${@:5}")
 
     if [ -z "$work_dir" ]; then
-        action_die "please specify work directory and, optionally, input and output directories"
+        action_die "please specify work directory."
+    fi
+    if [ -z "$input_dir" ]; then
+        action_die "please specify input directory."
+    fi
+    if [ -z "$output_dir" ]; then
+        action_die "please specify output directory."
     fi
 
     job_uuid=$(uuid)
