@@ -46,10 +46,12 @@ customize_list_hooks() {
 }
 
 customize_run_hooks() {
-    local a p hook paths feature
+    local a p hook paths feature feature_ran_bool
     hook="$1"
+    feature_ran_bool=0
     if [[ "$hook" == *":"* ]]; then
-        feature="${hook#*:}"
+        feature_ran_bool=-1
+        feature=$(echo "${hook#*:}" | sed -e 's/\//-/g')
         hook="${hook%:*}"
     fi
     shift
@@ -63,6 +65,7 @@ customize_run_hooks() {
     done
     for p in ${paths}; do
         if [[ -z "${feature}" || "${p}" == */"${feature}" ]]; then
+            feature_ran_bool=0
             if [ -d "${p}"/${hook}.d ]; then
                 for a in "${p}"/${hook}.d/*; do
                     if [ -x "$a" -a ! -d "$a" ] && [[ "$a" != *~ ]]; then
@@ -80,6 +83,10 @@ customize_run_hooks() {
             fi
         fi
     done
+    if [[ feature_ran_bool -ne 0 ]]; then
+        echo "No profile $feature found"
+        exit -1
+    fi
 }
 
 customize_set_region() {
