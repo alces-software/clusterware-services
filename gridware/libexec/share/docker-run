@@ -40,13 +40,23 @@ setup() {
     kernel_load
 }
 
+join_by() {
+  local d=$1
+  shift
+  echo -n "$1"
+  shift
+  printf "%s" "${@/#/$d}"
+}
+
 main() {
     local image work_dir input_dir output_dir job_uuid launcher entrypoint interactive
+    local m mount_src mount_dest mounts
     image="$1"
     work_dir="$2"
     input_dir="${3}"
     output_dir="${4}"
-    run_args=("${@:5}")
+
+    shift 4
 
     if [ -z "$work_dir" ]; then
         action_die "please specify work directory."
@@ -59,6 +69,33 @@ main() {
     fi
 
     job_uuid=$(uuid)
+
+    mounts=("$work_dir:$_INTERNAL_ROOT/work" "$input_dir:$_INTERNAL_ROOT/input" "$output_dir:$_INTERNAL_ROOT/output")
+
+    while [[ "$1" == "--mount" ]]; do
+      if [ -z "$2" ]; then
+        action_die "--mount option requires an argument."
+      fi
+
+      mount_src=${2%:*}
+      mount_dest=${2#*:}
+
+      if [[ "$mount_src" == "$2" ]]; then
+        action_die "Volume mounts should be specified as /path/on/host:/path/in/container."
+      fi
+
+      for m in "work" "input" "output"; do
+        if [[ "$mount_dest" == "${_INTERNAL_ROOT}/${m}" || "$mount_dest" == "${_INTERNAL_ROOT}/${m}/"* ]]; then
+          action_die "Cannot override mount point ${_INTERNAL_ROOT}/${m}."
+        fi
+      done
+
+      mounts+=("${mount_src}:${mount_dest}")
+      shift 2
+    done
+
+    run_args=("${@}")
+
     if [ "${run_args[0]}" == "--interactive" ]; then
         interactive="-it"
         if [ "${run_args[1]}" ]; then
@@ -93,9 +130,7 @@ main() {
 
     set +e
     docker run $interactive --rm=true \
-           -v "$work_dir:$_INTERNAL_ROOT/work" \
-           -v "$input_dir:$_INTERNAL_ROOT/input" \
-           -v "$output_dir:$_INTERNAL_ROOT/output" \
+           -v $(join_by " -v " "${mounts[@]}") \
            --env "WORK_DIR=$_INTERNAL_ROOT/work" \
            --env "INPUT_DIR=$_INTERNAL_ROOT/input" \
            --env "OUTPUT_DIR=$_INTERNAL_ROOT/output" \
