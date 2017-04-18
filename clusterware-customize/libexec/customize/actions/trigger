@@ -42,24 +42,27 @@ _run_member_hooks() {
 }
 
 main() {
-    local event event_spec members
+    local event event_spec profile members
     if [ "$1" == "-m" ]; then
         members="$2"
         shift 2
     fi
     event="$1"
+    profile="$2"
     if [ -z "$event" ]; then
-        action_die "usage: ${cw_BINNAME} [-m <members>] <event> [<feature>]"
+        action_die "usage: ${cw_BINNAME} [-m <members>] <event> [<profile>]"
     fi
-    if [ "$2" ]; then
-        event_spec="${event}:$2"
+    if [ "$profile" ]; then
+        event_spec="${event}:${profile}"
     else
         event_spec="${event}"
     fi
 
     case $event in
         initialize|configure|start|fail|node-started|event-periodic)
-            customize_run_hooks "$event_spec"
+            if ! customize_run_hooks "$event_spec"; then
+                action_die "profile not found: $profile"
+            fi
             ;;
         member-join)
             # XXX - select one or more members?
