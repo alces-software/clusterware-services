@@ -1,5 +1,5 @@
 #==============================================================================
-# Copyright (C) 2016 Stephen F. Norledge and Alces Software Ltd.
+# Copyright (C) 2017 Stephen F. Norledge and Alces Software Ltd.
 #
 # This file/package is part of Alces Clusterware.
 #
@@ -24,17 +24,17 @@ require ruby
 
 _CUSTOMIZE_SLAVE_CONFIG="$cw_ROOT/etc/cluster-customizer/config.yml"
 
-_assert_profile_included() {
+_customize_slave_assert_profile_included() {
   if [[ -z $1 ]]; then
     action_die "A profile is required"
   fi
 }
 
-customize_slave_add() { 
+customize_slave_add() {
   local profile
   profile=$1
   shift
-  _assert_profile_included $profile
+  _customize_slave_assert_profile_included $profile
 
   ruby_run <<RUBY
 require 'yaml'
@@ -42,7 +42,7 @@ begin
   data = YAML.load_file("$_CUSTOMIZE_SLAVE_CONFIG")
   exit 2 if data["profiles"].include? "$profile"
   data["profiles"].push("$profile")
-  File.open("$_CUSTOMIZE_SLAVE_CONFIG", "w").write(data.to_yaml)
+  File.write("$_CUSTOMIZE_SLAVE_CONFIG", data.to_yaml)
 rescue Errno::ENOENT
   exit 1
 rescue NoMethodError
@@ -66,11 +66,11 @@ RUBY
   esac
 }
 
-customize_slave_remove() { 
+customize_slave_remove() {
   local profile
   profile=$1
   shift
-  _assert_profile_included $profile
+  _customize_slave_assert_profile_included $profile
 
   ruby_run <<RUBY
 require 'yaml'
@@ -78,7 +78,7 @@ begin
   data = YAML.load_file("$_CUSTOMIZE_SLAVE_CONFIG")
   exit 2 unless data["profiles"].include? "$profile"
   data["profiles"].delete("$profile")
-  File.open("$_CUSTOMIZE_SLAVE_CONFIG", "w").write(data.to_yaml)
+  File.write("$_CUSTOMIZE_SLAVE_CONFIG", data.to_yaml)
 rescue Errno::ENOENT
   exit 1
 rescue NoMethodError
@@ -102,7 +102,7 @@ RUBY
   esac
 }
 
-customize_slave_list() { 
+customize_slave_list() {
   ruby_run <<RUBY
 require 'yaml'
 begin
@@ -117,7 +117,7 @@ rescue
   exit -1
 end
 RUBY
-  
+
   case "$?" in
     0)
       action_exit 0;;
@@ -131,3 +131,27 @@ RUBY
       action_die "An unknown error has occurred"
   esac
 }
+
+customize_slave_help() {
+  cat <<EOF
+SYNOPSIS:
+
+  alces customize slave add <profile>
+  alces customize slave remove <profile>
+  alces customize slave list
+
+DESCRIPTION:
+  Manage customization profiles to be executed by slave nodes on boot.
+
+  add:
+    Add a customization profile to the centrally managed list.
+  remove:
+    Remove a customization profile from the centrally managed list.
+  list:
+    List customization profiles to be ran
+
+Please report bugs to support@alces-software.com
+Alces Software home page: <http://alces-software.com>
+EOF
+}
+

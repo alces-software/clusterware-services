@@ -24,7 +24,6 @@ require action
 
 main() {
     action=$1
-    echo $action
     shift
 
     case $action in
@@ -157,36 +156,17 @@ help_for_push() {
   cat <<EOF
   SYNOPSIS:
 
-    alces customize push
+    alces customize push <source> [repository] [hook]
 
   DESCRIPTION:
 
-    Push a customization profile to an upstream repository.
+    Push a customization profile (<source>) to an upstream repository.
+    By default, [repository] is your AWS S3 bucket and [hook] is 'configure'.
 EOF
 }
 
 help_for_slave() {
-  cat <<EOF
-  SYNOPSIS:
-
-    alces customize slave [OPTIONS]
-
-  DESCRIPTION:
-
-    Modifies the list of profiles to be ran when a compute node boots.
-    Has the option to add, remove or list the profiles.
-
-  OPTIONS:
-
-    add <profile>
-      Adds the profile to the list
-
-    remove <profile>
-      Removes the profile from the list
-
-    list
-      List all the profiles
-EOF
+  exec "${cw_ROOT}"/bin/alces customize slave help
 }
 
 general_help() {
