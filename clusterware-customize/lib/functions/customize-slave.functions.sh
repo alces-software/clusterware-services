@@ -25,28 +25,109 @@ require ruby
 _CUSTOMIZE_SLAVE_CONFIG="$cw_ROOT/etc/cluster-customizer/config.yml"
 
 _customize_slave_assert_profile_included() {
-  if [[ -z $1 ]]; then
+  local profile
+  profile="$1"
+  shift
+
+  if [[ -z $profile ]]; then
     action_die "A profile is required"
+  elif ! [[ $profile =~ ^.+/.+$ ]]; then
+    action_die "A repository if required, <repo/profile>"
+  elif [[ $(tr -dc "/" <<< $profile | awk '{print length}' ) -ne 1 ]]; then
+    action_die "Unrecognized format: $profile"
   fi
 }
+
+_customize_slave_get_yaml_data() {
+  ruby_run <<RUBY 2>/dev/null
+require 'yaml'
+begin
+  data = YAML.load_file("$_CUSTOMIZE_SLAVE_CONFIG")
+  if data.key? "profiles"
+    data_profile = data["profiles"]
+  else
+    data_profile = []
+  end
+  puts data_profile
+  exit 0
+rescue
+  exit 1
+end
+RUBY
+  if [[ $? -ne 0 ]]; then
+    action_die "Could not open config, check $_CUSTOMIZE_SLAVE_CONFIG"
+  fi
+}
+
+_customize_slave_data_include_profile() {
+  local data profile exit_code
+  profile=$1
+  shift
+  data=$@
+
+  ruby_run <<RUBY 2>/dev/null
+begin
+  data = "$data".split(" ")
+  exit 0 if data.include? "$profile"
+  exit 1
+rescue
+  exit 2
+end
+RUBY
+
+  exit_code=$?
+  if [[ $exit_code -eq 2 ]]; then
+    action_die "Error in config format, check $_CUSTOMIZE_SLAVE_CONFIG"
+  else
+    return $exit_code
+  fi
+}
+
+_customize_slave_add_profile() {
+  local new_profile_data
+  new_profile_data=$@
+
+  ruby_run <<RUBY
+require 'yaml'
+begin
+  data = YAML.load_file("$_CUSTOMIZE_SLAVE_CONFIG")
+  data["profiles"] = "$new_profile_data".split(" ")
+  puts data
+  File.write("$_CUSTOMIZE_SLAVE_CONFIG", data.to_yaml)
+  exit 0
+rescue
+  exit 2
+end
+RUBY
+
+  if [[ $? -eq 0 ]]; then
+    action_exit 0
+  else
+    action_die "An error occured adding the profile"
+  fi
+}
+
 
 customize_slave_add() {
   local profile
   profile=$1
   shift
   _customize_slave_assert_profile_included $profile
+  data=$(_customize_slave_get_yaml_data)
+  if ( _customize_slave_data_include_profile $profile $data ); then
+    action_die "Profile already added"
+  fi
+  _customize_slave_add_profile $profile $data
+
+  echo "SHOULD NOT BE ABLE TO SEE ME"
+  exit 1
 
   ruby_run <<RUBY
 require 'yaml'
 begin
   data = YAML.load_file("$_CUSTOMIZE_SLAVE_CONFIG")
-  exit 2 if data["profiles"].include? "$profile"
-  data["profiles"].push("$profile")
-  File.write("$_CUSTOMIZE_SLAVE_CONFIG", data.to_yaml)
 rescue Errno::ENOENT
   exit 1
-rescue NoMethodError
-  exit 3
 rescue
   exit -1
 end
@@ -59,8 +140,6 @@ RUBY
       action_die "Failed to load: $_CUSTOMIZE_SLAVE_CONFIG";;
     2)
       action_die "Profile already added";;
-    3)
-      action_die "Error updating config, check format: $_CUSTOMIZE_SLAVE_CONFIG";;
     *)
       action_die "An unknown error has occurred"
   esac
@@ -81,8 +160,6 @@ begin
   File.write("$_CUSTOMIZE_SLAVE_CONFIG", data.to_yaml)
 rescue Errno::ENOENT
   exit 1
-rescue NoMethodError
-  exit 3
 rescue
   exit -1
 end
@@ -95,8 +172,6 @@ RUBY
       action_die "Failed to load: $_CUSTOMIZE_SLAVE_CONFIG";;
     2)
       action_die "$profile not found in profiles list";;
-    3)
-      action_die "Error updating config, check format: $_CUSTOMIZE_SLAVE_CONFIG";;
     *)
       action_die "An unknown error has occurred"
   esac
@@ -111,8 +186,6 @@ begin
   puts data["profiles"]
 rescue Errno::ENOENT
   exit 1
-rescue NoMethodError
-  exit 3
 rescue
   exit -1
 end
@@ -125,8 +198,6 @@ RUBY
       action_die "Failed to load: $_CUSTOMIZE_SLAVE_CONFIG";;
     2)
       action_die "No profiles listed";;
-    3)
-      action_die "Error reading config, check format: $_CUSTOMIZE_SLAVE_CONFIG";;
     *)
       action_die "An unknown error has occurred"
   esac
@@ -136,8 +207,8 @@ customize_slave_help() {
   cat <<EOF
 SYNOPSIS:
 
-  alces customize slave add <profile>
-  alces customize slave remove <profile>
+  alces customize slave add <repo>/<profile>
+  alces customize slave remove <repo>/<profile>
   alces customize slave list
 
 DESCRIPTION:
@@ -154,4 +225,3 @@ Please report bugs to support@alces-software.com
 Alces Software home page: <http://alces-software.com>
 EOF
 }
-
