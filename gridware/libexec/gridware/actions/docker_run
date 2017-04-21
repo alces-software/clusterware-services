@@ -37,20 +37,11 @@ setup() {
 }
 
 main() {
-    local run_args image appname input_dir work_dir output_dir use_mpi
+    local run_args image appname input_dir work_dir output_dir
     if [ "$1" == "--workdir" ]; then
         appname="$2"
         shift 2
     fi
-
-    if [[ "$1" == "--mpi" ]]; then
-      if ! docker network inspect gridware-mpi 2&>1 >/dev/null; then
-        action_die "Docker MPI not configured, cannot use MPI."
-      fi
-      use_mpi="--mpi"
-      shift
-    fi
-
     image="$1"
     run_args=("${@:2}")
     appname="${appname:-$image}"
@@ -83,9 +74,7 @@ main() {
              "${_REGISTRY}/$image" \
              "$work_dir" \
              "$input_dir" \
-             "$output_dir" \
-             "$use_mpi" \
-             "${run_args[@]}"
+             "$output_dir" "${run_args[@]}"
     else
         if [ "${run_args[0]}" == "--script" ]; then
             if [ -f "${run_args[1]}" ]; then
@@ -117,9 +106,7 @@ main() {
                 "${_REGISTRY}/$image" \
                 "$work_dir" \
                 "$input_dir" \
-                "$output_dir" \
-                "$use_mpi" \
-                "${run_args[@]}" 2>&1 | sed 's/^/  >>> /g'; then
+                "$output_dir" "${run_args[@]}" 2>&1 | sed 's/^/  >>> /g'; then
             echo ""
             action_emit "Job completed successfully."
             echo ""

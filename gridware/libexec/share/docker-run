@@ -70,11 +70,6 @@ main() {
 
     job_uuid=$(uuid)
 
-    if [[ "$1" == "--mpi" ]]; then
-      use_mpi="--net gridware-mpi"
-      shift
-    fi
-
     mounts=("$work_dir:$_INTERNAL_ROOT/work" "$input_dir:$_INTERNAL_ROOT/input" "$output_dir:$_INTERNAL_ROOT/output")
 
     while [[ "$1" == "--mount" ]]; do
@@ -140,7 +135,6 @@ main() {
            --env "INPUT_DIR=$_INTERNAL_ROOT/input" \
            --env "OUTPUT_DIR=$_INTERNAL_ROOT/output" \
            --user "$_UID:$_GID" \
-           "$use_mpi" \
            $job_uuid \
            "${launcher[@]}"
 
