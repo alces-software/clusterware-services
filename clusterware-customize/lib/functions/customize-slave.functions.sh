@@ -24,7 +24,7 @@ require ruby
 
 _CUSTOMIZE_SLAVE_CONFIG="$cw_ROOT/etc/cluster-customizer/config.yml"
 
-_customize_slave_assert_profile_included() {
+_customize_slave_assert_cli_include_profile() {
   local profile
   profile="$1"
   shift
@@ -83,7 +83,7 @@ RUBY
   fi
 }
 
-_customize_slave_add_profile() {
+_customize_slave_update_profile() {
   local new_profile_data
   new_profile_data=$@
 
@@ -92,7 +92,6 @@ require 'yaml'
 begin
   data = YAML.load_file("$_CUSTOMIZE_SLAVE_CONFIG")
   data["profiles"] = "$new_profile_data".split(" ")
-  puts data
   File.write("$_CUSTOMIZE_SLAVE_CONFIG", data.to_yaml)
   exit 0
 rescue
@@ -112,95 +111,34 @@ customize_slave_add() {
   local profile
   profile=$1
   shift
-  _customize_slave_assert_profile_included $profile
+  _customize_slave_assert_cli_include_profile $profile
   data=$(_customize_slave_get_yaml_data)
   if ( _customize_slave_data_include_profile $profile $data ); then
     action_die "Profile already added"
   fi
-  _customize_slave_add_profile $profile $data
-
-  echo "SHOULD NOT BE ABLE TO SEE ME"
-  exit 1
-
-  ruby_run <<RUBY
-require 'yaml'
-begin
-  data = YAML.load_file("$_CUSTOMIZE_SLAVE_CONFIG")
-rescue Errno::ENOENT
-  exit 1
-rescue
-  exit -1
-end
-RUBY
-
-  case "$?" in
-    0)
-      action_exit 0;;
-    1)
-      action_die "Failed to load: $_CUSTOMIZE_SLAVE_CONFIG";;
-    2)
-      action_die "Profile already added";;
-    *)
-      action_die "An unknown error has occurred"
-  esac
+  _customize_slave_update_profile $profile $data
 }
 
 customize_slave_remove() {
   local profile
   profile=$1
   shift
-  _customize_slave_assert_profile_included $profile
-
-  ruby_run <<RUBY
-require 'yaml'
-begin
-  data = YAML.load_file("$_CUSTOMIZE_SLAVE_CONFIG")
-  exit 2 unless data["profiles"].include? "$profile"
-  data["profiles"].delete("$profile")
-  File.write("$_CUSTOMIZE_SLAVE_CONFIG", data.to_yaml)
-rescue Errno::ENOENT
-  exit 1
-rescue
-  exit -1
-end
-RUBY
-
-  case "$?" in
-    0)
-      action_exit 0;;
-    1)
-      action_die "Failed to load: $_CUSTOMIZE_SLAVE_CONFIG";;
-    2)
-      action_die "$profile not found in profiles list";;
-    *)
-      action_die "An unknown error has occurred"
-  esac
+  _customize_slave_assert_cli_include_profile $profile
+  data=$(_customize_slave_get_yaml_data)
+  if !( _customize_slave_data_include_profile $profile $data ); then
+    action_die "$profile not found"
+  fi
+  new_profiles=""
+  for i in $data; do
+    if [[ "$i" != "$profile" ]]; then
+      new_profiles="$new_profiles $i"
+    fi
+  done
+  _customize_slave_update_profile $new_profiles
 }
 
 customize_slave_list() {
-  ruby_run <<RUBY
-require 'yaml'
-begin
-  data = YAML.load_file("$_CUSTOMIZE_SLAVE_CONFIG")
-  exit 2 if data["profiles"].empty?
-  puts data["profiles"]
-rescue Errno::ENOENT
-  exit 1
-rescue
-  exit -1
-end
-RUBY
-
-  case "$?" in
-    0)
-      action_exit 0;;
-    1)
-      action_die "Failed to load: $_CUSTOMIZE_SLAVE_CONFIG";;
-    2)
-      action_die "No profiles listed";;
-    *)
-      action_die "An unknown error has occurred"
-  esac
+  _customize_slave_get_yaml_data
 }
 
 customize_slave_help() {
