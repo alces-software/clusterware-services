@@ -32,7 +32,7 @@ _customize_slave_assert_cli_include_profile() {
   if [[ -z $profile ]]; then
     action_die "A profile is required"
   elif ! [[ $profile =~ ^.+/.+$ ]]; then
-    action_die "A repository if required, <repo/profile>"
+    action_die "A repository is required, <repo/profile>"
   elif [[ $(tr -dc "/" <<< $profile | awk '{print length}' ) -ne 1 ]]; then
     action_die "Unrecognized format: $profile"
   fi
@@ -106,7 +106,6 @@ RUBY
   fi
 }
 
-
 customize_slave_add() {
   local profile
   profile=$1
@@ -157,7 +156,7 @@ DESCRIPTION:
   remove:
     Remove a customization profile from the centrally managed list.
   list:
-    List customization profiles to be ran
+    List customization profiles to be run
 
 Please report bugs to support@alces-software.com
 Alces Software home page: <http://alces-software.com>
