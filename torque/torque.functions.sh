@@ -46,13 +46,14 @@ running_job_count = jobs.count {|l| l.split(/\s+/)[9] == 'R'}
 cores_per_node = ${cores_per_node:-2}
 cores_req = pending_jobs.reduce(0) {|memo,l| memo + l.split(/\s+/)[6].to_i}
 nodes_req = pending_jobs.reduce(0) {|memo,l| memo + l.split(/\s+/)[5].to_i}
+default_queue="${default_queue}".gsub(/[-\.]/, "_")
 results = {
   "torque_job_queue" => pending_jobs.length,
   "torque_job_run" => running_job_count,
   "torque_job_total" => running_job_count + pending_jobs.length,
   "torque_cores_req" => cores_req,
   "torque_nodes_req" => nodes_req,
-  "torque_queue_${default_queue}_nodes_req" => nodes_req
+  "torque_queue_#{default_queue}_nodes_req" => nodes_req
 }
 results.each { |k,v| puts "#{k}=#{v}" }
 RUBY
