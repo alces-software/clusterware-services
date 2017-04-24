@@ -244,6 +244,8 @@ customize_repository_apply() {
       if [[ "$is_preinit" != "preinit" ]]; then
         echo "Running configure for $profile_name"
         customize_run_hooks "configure:$repo_name-$profile_name"
+        customize_run_hooks "start:$repo_name-$profile_name"
+        customize_run_hooks "node-start:$repo_name-$profile_name"
         member_each _run_member_hooks "${members}" "member-join:$repo_name-$profile_name"
       fi
       return 0
