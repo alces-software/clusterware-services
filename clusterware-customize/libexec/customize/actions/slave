@@ -23,12 +23,7 @@
 require action
 require customize-slave
 require files
-
-_assert_run_from_root() {
-  if [[ "$EUID" -ne 0 ]]; then
-    action_die "Must be run as root"
-  fi
-}
+require process
 
 _assert_master_node() {
   files_load_config instance config/cluster
@@ -74,7 +69,7 @@ esac
 }
 
 main() {
-  _assert_run_from_root
+  process_reexec_sudo "$@"
   _assert_master_node
   _run_cmd "$@"
 }
