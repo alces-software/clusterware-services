@@ -135,6 +135,7 @@ main() {
            --env "INPUT_DIR=$_INTERNAL_ROOT/input" \
            --env "OUTPUT_DIR=$_INTERNAL_ROOT/output" \
            --user "$_UID:$_GID" \
+           $use_mpi \
            $job_uuid \
            "${launcher[@]}"
 
