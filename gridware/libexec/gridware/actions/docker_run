@@ -83,7 +83,9 @@ main() {
              "${_REGISTRY}/$image" \
              "$work_dir" \
              "$input_dir" \
-             "$output_dir" "${run_args[@]}"
+             "$output_dir" \
+             $use_mpi \
+             "${run_args[@]}"
     else
         if [ "${run_args[0]}" == "--script" ]; then
             if [ -f "${run_args[1]}" ]; then
@@ -115,7 +117,9 @@ main() {
                 "${_REGISTRY}/$image" \
                 "$work_dir" \
                 "$input_dir" \
-                "$output_dir" "${run_args[@]}" 2>&1 | sed 's/^/  >>> /g'; then
+                "$output_dir" \
+                $use_mpi \
+                "${run_args[@]}" 2>&1 | sed 's/^/  >>> /g'; then
             echo ""
             action_emit "Job completed successfully."
             echo ""
