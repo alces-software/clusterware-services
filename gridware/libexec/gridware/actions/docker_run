@@ -44,7 +44,7 @@ main() {
     fi
 
     if [[ "$1" == "--mpi" ]]; then
-      if ! docker network inspect gridware-mpi >/dev/null 2>&1; then
+      if [ ! -d "${cw_ROOT}/var/lib/customizer/feature-configure-docker-mpi" ]; then
         action_die "Docker MPI not configured, cannot use MPI."
       fi
       use_mpi="--mpi"
