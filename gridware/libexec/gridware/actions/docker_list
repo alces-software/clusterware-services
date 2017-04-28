@@ -37,7 +37,7 @@ setup() {
 }
 
 main() {
-    local suffix
+    local img tag id shared suffix
     suffix="$1"
     if [ "$suffix" ]; then
         suffix='*'"${suffix}"'*'
@@ -47,8 +47,17 @@ main() {
     docker search "${_REGISTRY}"/${_REGISTRY_USER}/gridware-${suffix} --limit 100 --no-trunc | \
         tail -n+2 | cut -f1 -d" " | cut -c16- | sort | sed 's/^/  /g'
     echo ""
-    echo "Local:"
-    docker images | grep "/gridware-${resuffix}" | cut -f1 -d" " | cut -f2- -d'-' | sort | sed 's/^/  /g'
+    echo "Local (* indicates shared):"
+    for img in `docker images --no-trunc --format "{{.Repository}}:{{.ID}}" | grep "/gridware-${resuffix}" | cut -f1 -d" " | cut -f2- -d'-' | sort`; do
+      tag=${img%%:*}
+      id=${img##*:}
+      if [ -f "/opt/gridware/docker/exports/${id}" ]; then
+        shared="* "
+      else
+        shared="  "
+      fi
+      echo "${shared}${tag#*-}"
+    done
 }
 
 cw_BINNAME="alces gridware"
