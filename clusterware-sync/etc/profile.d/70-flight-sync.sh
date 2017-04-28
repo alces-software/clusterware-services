@@ -1,7 +1,7 @@
 ################################################################################
 ##
 ## Alces Clusterware - Shell configuration
-## Copyright (c) 2016 Alces Software Ltd
+## Copyright (c) 2016-2017 Alces Software Ltd
 ##
 ################################################################################
 if [ "$UID" != "0" -a ! -f "${XDG_CONFIG_HOME:-$HOME/.config}/clusterware/sync.rc" ]; then
@@ -20,14 +20,22 @@ EOF
         cat <<EOF > "${XDG_CONFIG_HOME:-$HOME/.config}/clusterware/sync.default.yml"
 ---
 :source: :home
+:exclude:
+- ".*"
+:include:
+- ".bash*"
+- ".config/clusterware/*.rc"
+- ".config/clusterware/sync.*.yml"
+- ".emacs"
+- ".viminfo"
 :encrypt:
 - ".ssh/*"
-- ".config/clusterware/storage*"
+- ".config/clusterware/storage*+"
 EOF
     fi
     eval $(cat "${cw_ROOT}"/etc/sync.rc | grep ^cw_SYNC_default=)
     if [ "$cw_SYNC_default" == "true" ]; then
-        "${cw_ROOT}"/bin/alces sync pull --ignore-missing default
+        "${cw_ROOT}"/bin/alces sync pull --ignore-missing --ignore-failing-attrs default
     fi
     unset cw_SYNC_default
 fi

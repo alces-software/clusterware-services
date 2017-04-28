@@ -99,6 +99,9 @@ help_for_pull() {
     --ignore-missing
       Don't emit an error if nothing is held in remote storage.
 
+    --ignore-failing-attrs
+      Don't emit an error if POSIX attributes can't be updated.
+
 EOF
 }
 
