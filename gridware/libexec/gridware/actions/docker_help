@@ -72,7 +72,7 @@ help_for_build() {
     cat <<EOF
   SYNOPSIS:
 
-    alces gridware docker build [OPTIONS] <package> [--variant <variant>] [<package> [--variant <variant] ...]
+    alces gridware docker build [OPTIONS] <package> [--variant <variant>] [<package> [--variant <variant>] ...]
 
   DESCRIPTION:
 
@@ -89,6 +89,13 @@ help_for_build() {
     --from <container>
       Specify a different Gridware base container image to use when building
       the container for <package>.
+
+    --name <name>
+      Specify a name for the image. If not specified, a name based on the
+      selected packages will be generated.
+
+    --script <scriptfile>
+      Specify a job script to run by default in the container image.
 
 EOF
 }
@@ -162,6 +169,11 @@ help_for_run() {
       at '/job/work' and '/job/output'.  The <directory>/input will be
       mapped into the container at '/job/input'.  Defaults to the name
       of the <package>.
+
+    --mount /path/on/host:/path/in/container
+      Specify additional volumes to mount in the container. It is not possible
+      to override the '/job/input', '/job/output' and '/job/work' directories
+      described above.
 
 EOF
 }
