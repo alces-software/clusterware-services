@@ -1,11 +1,10 @@
 #!/bin/bash -l
-#@          cw_TEMPLATE[name]="Simple serial (Slurm)"
-#@          cw_TEMPLATE[desc]="Submit a single job."
-#@ cw_TEMPLATE[extended_desc]="Your job will be allocated a single core on the first available node."
-#@     cw_TEMPLATE[copyright]="Copyright (C) 2016 Alces Software Ltd."
-#@       cw_TEMPLATE[license]="Creative Commons Attribution-ShareAlike 4.0 International"
+#@      cw_TEMPLATE[name]="MPI multiple node (Slurm)"
+#@      cw_TEMPLATE[desc]="Submit a single job that spans multiple nodes where you want exclusive use of each node allocated."
+#@ cw_TEMPLATE[copyright]="Copyright (C) 2017 Alces Software Ltd."
+#@   cw_TEMPLATE[license]="Creative Commons Attribution-ShareAlike 4.0 International"
 #==============================================================================
-# Copyright (C) 2016 Alces Software Ltd.
+# Copyright (C) 2017 Alces Software Ltd.
 #
 # This work is licensed under a Creative Commons Attribution-ShareAlike
 # 4.0 International License.
@@ -14,7 +13,7 @@
 #==============================================================================
 # ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 #                        SLURM SUBMISSION SCRIPT
-#                       AVERAGE QUEUE TIME: Short
+#                        AVERAGE QUEUE TIME: Long
 # ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
 # ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
@@ -120,10 +119,31 @@
 # likely to schedule your job sooner, but note that your job **may
 # be terminated if it exceeds the specified allocation**.
 #
-# Note that this setting is specified in megabytes.
-# e.g. specify `1024` for 1 gigabyte.
+# Note that:
 #
-#SBATCH --mem=1024
+#  1. For this type of job you would usually request all available
+#     memory of a node in order to prevent the job being terminated.
+#
+#  2. This setting is specified in megabytes. e.g. specify `2048` for
+#     2 gigabytes.
+#
+#SBATCH --mem=2048
+
+#==========================
+#  Processing requirements
+#--------------------------
+# Specify the number of processing slots required for your job.
+#
+# You should request a processing slot for each simultaneous thread
+# (or process) that your script and/or application executes.  Note
+# that requesting a larger number of slots will mean that your job
+# could take longer to launch.
+#
+# You should request the number of nodes required using the `--nodes`
+# parameter.  You will receive access to all the available cores on
+# each allocated node.
+#
+#SBATCH --nodes=2
 
 # ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 #  >>>> SET TASK ENVIRONMENT VARIABLES
@@ -144,6 +164,9 @@
 # e.g.:
 # module load apps/imb
 
+# Load the OpenMPI module for access to `mpirun` command
+module load mpi/openmpi
+
 #===========================
 #  Create output directory
 #---------------------------
@@ -161,5 +184,5 @@ echo "Executing job commands, current working directory is $(pwd)"
 
 # REPLACE THE FOLLOWING WITH YOUR APPLICATION COMMANDS
 
-echo "This is an example job, I ran on `hostname -s` as `whoami`" > $OUTPUT_PATH/test.output
+mpirun -np 2 -npernode 1 echo "This is an example job, I ran on $SLURM_JOB_NUM_NODES hosts and had exclusive access to the hosts on which I ran. My master thread ran on `hostname -s` as `whoami`" > $OUTPUT_PATH/test.output
 echo "Output file has been generated, please check $OUTPUT_PATH/test.output"
