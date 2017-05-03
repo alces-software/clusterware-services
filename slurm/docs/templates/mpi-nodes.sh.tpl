@@ -29,7 +29,7 @@
 # Alternatively, if you need to specify an explicit working
 # directory for your job set a location here.
 #
-##SBATCH -D $HOME/sharedscratch/
+##SBATCH -D /home/%u/sharedscratch/
 
 #=========================
 #  Environment variables
