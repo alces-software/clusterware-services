@@ -15,6 +15,13 @@ EOF
     fi
 }
 
+_configure_sshd() {
+  # Generate an SSH key for the server
+  ssh-keygen -t rsa -f /etc/ssh/ssh_host_rsa_key -N ''
+  # Remove references to keys we've not generated
+  sed -i -e "/ssh_host_e/d" /etc/ssh/sshd_config
+}
+
 if shopt -q login_shell; then
     if [ -f /opt/gridware/etc/defaults ]; then
         for a in $(cat /opt/gridware/etc/defaults); do
@@ -39,7 +46,10 @@ if [ -z "$1" ]; then
         echo ""
     fi
 else
-    if [ -x "$1" -o -x "$(type -P "$1")" ]; then
+    if [[ "$1" == "--mpi" ]]; then
+      _configure_sshd
+      /usr/sbin/sshd -D
+    elif [ -x "$1" -o -x "$(type -P "$1")" ]; then
         exec "$@"
     else
         echo "$1 not found. Did you mean '--script $@'?"
