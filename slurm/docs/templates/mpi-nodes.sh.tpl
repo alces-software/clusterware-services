@@ -184,5 +184,10 @@ echo "Executing job commands, current working directory is $(pwd)"
 
 # REPLACE THE FOLLOWING WITH YOUR APPLICATION COMMANDS
 
-mpirun -np 2 -npernode 1 echo "This is an example job, I ran on $SLURM_JOB_NUM_NODES hosts and had exclusive access to the hosts on which I ran. My master thread ran on `hostname -s` as `whoami`" > $OUTPUT_PATH/test.output
+echo "This is an example job. It was allocated $SLURM_NTASKS slot(s) across $SLURM_JOB_NUM_NODES node(s). The master process ran on `hostname -s` (as `whoami`)." > $OUTPUT_PATH/test.output
+mpirun -np $SLURM_JOB_NUM_NODES -npernode 1 \
+    /bin/bash -c \
+    'echo "This process was executed on `hostname -s` with rank $OMPI_COMM_WORLD_RANK."' \
+    >> $OUTPUT_PATH/test.output
+
 echo "Output file has been generated, please check $OUTPUT_PATH/test.output"

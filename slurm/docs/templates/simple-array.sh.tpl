@@ -173,5 +173,5 @@ echo "Executing job commands, current working directory is $(pwd)"
 
 # REPLACE THE FOLLOWING WITH YOUR APPLICATION COMMANDS
 
-echo "This is an example array job, I was task number $SLURM_ARRAY_TASK_ID and I ran on `hostname -s` as `whoami`" > $OUTPUT_PATH/test.output.$SLURM_ARRAY_TASK_ID
+echo "This is an example array job. This process was task number $SLURM_ARRAY_TASK_ID and it ran on `hostname -s` (as `whoami`)." > $OUTPUT_PATH/test.output.$SLURM_ARRAY_TASK_ID
 echo "Output file has been generated, please check $OUTPUT_PATH/test.output"

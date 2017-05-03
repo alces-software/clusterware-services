@@ -185,5 +185,5 @@ echo "Executing job commands, current working directory is $(pwd)"
 
 # REPLACE THE FOLLOWING WITH YOUR APPLICATION COMMANDS
 
-echo "This is an example job, I was allocated $SLURM_NTASKS on host `hostname -s` as `whoami`" > $OUTPUT_PATH/test.output
+echo "This is an example job. It was allocated $SLURM_NTASKS slot(s) on host `hostname -s` (as `whoami`)." > $OUTPUT_PATH/test.output
 echo "Output file has been generated, please check $OUTPUT_PATH/test.output"

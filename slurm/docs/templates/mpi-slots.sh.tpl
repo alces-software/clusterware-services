@@ -128,7 +128,7 @@
 #  2. This setting is specified in megabytes. e.g. specify `2048` for
 #     2 gigabytes.
 #
-#SBATCH --mem-per-cpu=2048
+#SBATCH --mem-per-cpu=512
 
 #==========================
 #  Processing requirements
@@ -146,7 +146,7 @@
 # 16 cores across 2 compute nodes.
 #
 #SBATCH --nodes=2
-#SBATCH --ntasks=16
+#SBATCH --ntasks=4
 
 # ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 #  >>>> SET TASK ENVIRONMENT VARIABLES
@@ -187,5 +187,10 @@ echo "Executing job commands, current working directory is $(pwd)"
 
 # REPLACE THE FOLLOWING WITH YOUR APPLICATION COMMANDS
 
-mpirun echo "This is an example job, I was allocated $SLURM_NTASKS across $SLURM_JOB_NUM_NODES hosts. My master thread ran on `hostname -s` as `whoami`" > $OUTPUT_PATH/test.output
+echo "This is an example job. It was allocated $SLURM_NTASKS slot(s) across $SLURM_JOB_NUM_NODES node(s). The master process ran on `hostname -s` (as `whoami`)." > $OUTPUT_PATH/test.output
+mpirun \
+    /bin/bash -c \
+    'echo "This process was executed on `hostname -s` with rank $OMPI_COMM_WORLD_RANK."' \
+    >> $OUTPUT_PATH/test.output
+
 echo "Output file has been generated, please check $OUTPUT_PATH/test.output"
