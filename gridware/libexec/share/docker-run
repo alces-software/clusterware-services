@@ -121,6 +121,15 @@ main() {
            useradd -m -u $SUDO_UID $SUDO_USER \
            >> $work_dir/docker.log
 
+   if [[ ! -z "$use_mpi" ]]; then
+     # set up SSH key for sshd in container so that all copies of the temp image
+     # can log into each other
+     mkdir -p $work_dir/ssh
+     ssh-keygen -t rsa -f $work_dir/ssh/id_rsa -N ''
+     cp $work_dir/ssh/id_rsa.pub $work_dir/ssh/authorized_keys
+     docker cp $work_dir/ssh $job_uuid:~$SUDO_USER/.ssh
+   fi
+
     docker commit \
            $(docker ps -aq --filter name=${job_uuid}$) \
            $job_uuid \
