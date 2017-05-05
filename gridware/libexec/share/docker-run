@@ -127,6 +127,11 @@ EOF
      mkdir -p $work_dir/ssh
      ssh-keygen -t rsa -f $work_dir/ssh/id_rsa -N ''
      cp $work_dir/ssh/id_rsa.pub $work_dir/ssh/authorized_keys
+     cat <<EOF > $work_dir/ssh/config
+ Host *
+   IdentityFile %d/.ssh/id_rsa
+   StrictHostKeyChecking  no
+EOF
      chmod 600 $work_dir/ssh/
      cat <<EOF >>$work_dir/Dockerfile
      COPY ssh /home/$SUDO_USER/.ssh
