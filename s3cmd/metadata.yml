@@ -1,5 +1,5 @@
 #==============================================================================
-# Copyright (C) 2015-2016 Stephen F. Norledge and Alces Software Ltd.
+# Copyright (C) 2015-2017 Stephen F. Norledge and Alces Software Ltd.
 #
 # This file/package is part of Alces Clusterware.
 #
@@ -22,11 +22,23 @@
 ---
 install:
   el7: |
-    yum -e0 -y install python-dateutil python-magic
+    if ! yum -C list python-dateutil &>/dev/null || ! yum -C list python-magic &>/dev/null; then
+      if ! yum -e0 -y install python-dateutil python-magic; then
+        exit 1
+      fi
+    fi
   el6: |
-    yum -e0 -y install python-dateutil python-magic
+    if ! yum -C list python-dateutil &>/dev/null || ! yum -C list python-magic &>/dev/null; then
+      if ! yum -e0 -y install python-dateutil python-magic; then
+        exit 1
+      fi
+    fi
   ubuntu1604: |
-    apt-get install -y python-dateutil python-magic
+    if ! dpkg -l python-dateutil python-magic &>/dev/null; then
+      if ! apt-get install -y python-dateutil python-magic; then
+        exit 1
+      fi
+    fi
   _: |
     require serviceware
     serviceware_add s3cmd
