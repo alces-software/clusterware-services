@@ -114,12 +114,12 @@ main() {
         fi
     fi
 
-    docker run \
-           --entrypoint "" \
-           --name $job_uuid \
-           "${image}" \
-           useradd -m -u $SUDO_UID $SUDO_USER \
-           >> $work_dir/docker.log
+    cat <<EOF >$work_dir/Dockerfile
+FROM ${image}
+
+RUN useradd -m -u $SUDO_UID $SUDO_USER
+
+EOF
 
    if [[ ! -z "$use_mpi" ]]; then
      # set up SSH key for sshd in container so that all copies of the temp image
@@ -127,15 +127,14 @@ main() {
      mkdir -p $work_dir/ssh
      ssh-keygen -t rsa -f $work_dir/ssh/id_rsa -N ''
      cp $work_dir/ssh/id_rsa.pub $work_dir/ssh/authorized_keys
-     docker cp $work_dir/ssh $job_uuid:~$SUDO_USER/.ssh
+     chmod 600 $work_dir/ssh/
+     cat <<EOF >>$work_dir/Dockerfile
+     COPY ssh /home/$SUDO_USER/.ssh
+     RUN chown -R $_UID:$_GID /home/$SUDO_USER/.ssh
+EOF
    fi
 
-    docker commit \
-           $(docker ps -aq --filter name=${job_uuid}$) \
-           $job_uuid \
-           >> $work_dir/docker.log
-
-    docker rm $job_uuid >> $work_dir/docker.log
+    docker build -t $job_uuid $work_dir >> $work_dir/docker.log
 
     set +e
     docker run $interactive --rm=true \
