@@ -112,7 +112,12 @@ component-base:
           "${cw_ROOT}"/etc/ssl/alces-flight-www
       elif [ "${cw_ALCES_FLIGHT_WWW_ssl_strategy}" == "allocate" ]; then
         files_load_config --optional config config/cluster
-        "${cw_ROOT}"/libexec/share/allocate-ssl-certificate ${cw_ALCES_FLIGHT_WWW_ssl_name:-${cw_CLUSTER_name:-flight}}
+        if files_load_config --optional cluster-vpn; then
+          if [ -n "${cw_CLUSTER_VPN_naming_suffix}" -a -n "${cw_CLUSTER_VPN_naming_ip}" ]; then
+            alt_names=("${cw_CLUSTER_VPN_naming_suffix}:${cw_CLUSTER_VPN_naming_ip}")
+          fi
+        fi
+        "${cw_ROOT}"/libexec/share/allocate-ssl-certificate ${cw_ALCES_FLIGHT_WWW_ssl_name:-${cw_CLUSTER_name:-flight}} "${alt_names[@]}"
         mkdir -p "${cw_ROOT}"/etc/ssl/alces-flight-www
         cp -p "${cw_ROOT}"/etc/ssl/cluster/* "${cw_ROOT}"/etc/ssl/alces-flight-www
       fi
