@@ -141,6 +141,27 @@ EOF
 
     docker build -t $job_uuid $work_dir >> $work_dir/docker.log
 
+    if [[ ! -z "$use_mpi" ]]; then
+      # This step currently gives some scary-looking errors that aren't actually errors
+      docker service create --network gridware-mpi --replicas 2 --name ${job_uuid}-service ${job_uuid} --mpi >> $work_dir/docker.log
+      # Now wait until all replicas have been created
+      while true; do
+        replicas=$(docker service ls --filter name=${job_uuid}-service | tail -n -1 | cut -d' ' -f7)
+        ready=${replicas%/*}
+        total=${replicas#*/}
+        if [[ "$ready" == "$total" ]]; then break; fi
+        sleep 5
+      done
+
+      # Assemble a hosts file
+       containers=$(docker service ps --no-trunc -f "desired-state=running" ${job_uuid}-service | tail -n +2 | awk '{print $2"."$1}')
+       for container in $containers; do
+         ip=$(docker inspect -f "{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}""{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}" $container)
+         echo "$container $ip" >> $work_dir/hosts
+       done
+
+    fi
+
     set +e
     docker run $interactive --rm=true \
            -v $(join_by " -v " "${mounts[@]}") \
@@ -152,6 +173,9 @@ EOF
            $job_uuid \
            "${launcher[@]}"
 
+    if [[ ! -z "$use_mpi" ]]; then
+      docker service rm ${job_uuid}-service >> $work_dir/docker.log
+    fi
     docker rmi $job_uuid >> $work_dir/docker.log
 }
 
