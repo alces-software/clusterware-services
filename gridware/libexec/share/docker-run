@@ -156,7 +156,7 @@ EOF
       # Assemble a hosts file
        containers=$(docker service ps --no-trunc -f "desired-state=running" ${job_uuid}-service | tail -n +2 | awk '{print $2"."$1}')
        for container in $containers; do
-         ip=$(docker inspect -f "{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}""{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}" $container)
+         ip=$(docker inspect -f "{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}" $container)
          echo "$container $ip" >> $work_dir/hosts
        done
 
