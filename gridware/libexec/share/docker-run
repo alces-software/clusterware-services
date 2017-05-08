@@ -96,6 +96,11 @@ main() {
 
     run_args=("${@}")
 
+    if [ "${run_args[0]}" == "--mpi" ]; then
+      use_mpi="--network gridware-mpi"
+      run_args=(${run_args[@]:1})
+    fi
+
     if [ "${run_args[0]}" == "--interactive" ]; then
         interactive="-it"
         if [ "${run_args[1]}" ]; then
@@ -153,11 +158,13 @@ EOF
         sleep 5
       done
 
+      sleep 5  # wait for containers to get their IP addresses from Docker
       # Assemble a hosts file
        containers=$(docker service ps --no-trunc -f "desired-state=running" ${job_uuid}-service | tail -n +2 | awk '{print $2"."$1}')
        for container in $containers; do
          ip=$(docker inspect -f "{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}" $container)
          echo "$container $ip" >> $work_dir/hosts
+         echo "$ip" >> $work_dir/hostlist
        done
 
     fi
@@ -176,7 +183,7 @@ EOF
     if [[ ! -z "$use_mpi" ]]; then
       docker service rm ${job_uuid}-service >> $work_dir/docker.log
     fi
-    docker rmi $job_uuid >> $work_dir/docker.log
+    docker rmi --force $job_uuid >> $work_dir/docker.log
 }
 
 setup
