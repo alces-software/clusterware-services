@@ -141,6 +141,8 @@ EOF
      cat <<EOF >>$work_dir/Dockerfile
      COPY ssh /home/$SUDO_USER/.ssh
      RUN chown -R $_UID:$_GID /home/$SUDO_USER/.ssh
+     RUN for m in \`cat /opt/gridware/etc/defaults\`; do echo "module load \$m" >> /home/$SUDO_USER/.modules; done && \
+         chown $_UID:$_GID /home/$SUDO_USER/.modules
 EOF
    fi
 
