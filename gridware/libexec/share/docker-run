@@ -137,7 +137,6 @@ EOF
    IdentityFile %d/.ssh/id_rsa
    StrictHostKeyChecking  no
 EOF
-     chmod 600 $work_dir/ssh/
      cat <<EOF >>$work_dir/Dockerfile
      COPY ssh /home/$SUDO_USER/.ssh
      RUN chown -R $_UID:$_GID /home/$SUDO_USER/.ssh
