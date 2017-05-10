@@ -96,8 +96,12 @@ main() {
 
     run_args=("${@}")
 
-    if [ "${run_args[0]}" == "--mpi" ]; then
+    if [[ "${run_args[0]}" == "--mpi"* ]]; then
       use_mpi="--network gridware-mpi"
+      if [[ ${run_args[0]#*=} != ${run_args[0]} ]]; then
+        # a number of slaves has been specified
+        mpi_slaves=${run_args[0]#*=}
+      fi
       run_args=(${run_args[@]:1})
     fi
 
@@ -149,7 +153,7 @@ EOF
 
     if [[ ! -z "$use_mpi" ]]; then
       # This step currently gives some scary-looking errors that aren't actually errors
-      docker service create --network gridware-mpi --replicas 2 --name ${job_uuid}-service ${job_uuid} --mpi >> $work_dir/docker.log
+      docker service create --network gridware-mpi --replicas ${mpi_slaves:-2} --name ${job_uuid}-service ${job_uuid} --mpi >> $work_dir/docker.log
       # Now wait until all replicas have been created
       while true; do
         replicas=$(docker service ls --filter name=${job_uuid}-service | tail -n -1 | cut -d' ' -f7)
