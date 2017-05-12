@@ -152,6 +152,13 @@ EOF
     docker build -t $job_uuid $work_dir >> $work_dir/docker.log
 
     if [[ ! -z "$use_mpi" ]]; then
+      # Share temporary image with slave nodes
+      docker save -o "${cw_GRIDWARE_root:-/opt/gridware}/docker/exports/${job_uuid}" "${job_uuid}"
+      chmod 0644 "${cw_GRIDWARE_root:-/opt/gridware}/docker/exports/${job_uuid}"
+
+      handler_broadcast gridware-docker-exports
+      sleep 30  # Wait for slaves to import image
+
       # This step currently gives some scary-looking errors that aren't actually errors
       docker service create --network gridware-mpi --replicas ${mpi_slaves:-2} --name ${job_uuid}-service ${job_uuid} --mpi >> $work_dir/docker.log
       # Now wait until all replicas have been created
@@ -187,6 +194,7 @@ EOF
 
     if [[ ! -z "$use_mpi" ]]; then
       docker service rm ${job_uuid}-service >> $work_dir/docker.log
+      rm "${cw_GRIDWARE_root:-/opt/gridware}/docker/exports/${job_uuid}"
     fi
     docker rmi --force $job_uuid >> $work_dir/docker.log
 }
