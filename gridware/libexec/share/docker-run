@@ -156,28 +156,47 @@ EOF
       docker save -o "${cw_GRIDWARE_root:-/opt/gridware}/docker/exports/${job_uuid}" "${job_uuid}"
       chmod 0644 "${cw_GRIDWARE_root:-/opt/gridware}/docker/exports/${job_uuid}"
 
-      handler_broadcast gridware-docker-exports
-      sleep 30  # Wait for slaves to import image
+      for node in $(docker node ls -f "role=worker" | tail -n -1 | cut -d ' ' -f6); do
+        # Force each node to import the image!
+        ssh $node -c docker load -i "${cw_GRIDWARE_root:-/opt/gridware}/docker/exports/${job_uuid}"
+      done
 
       # This step currently gives some scary-looking errors that aren't actually errors
       docker service create --network gridware-mpi --replicas ${mpi_slaves:-2} --name ${job_uuid}-service ${job_uuid} --mpi >> $work_dir/docker.log
       # Now wait until all replicas have been created
       while true; do
-        replicas=$(docker service ls --filter name=${job_uuid}-service | tail -n -1 | cut -d' ' -f7)
+        replicas=$(docker service ls --filter name=${job_uuid}-service | tail -n -1 | sed -e "s/ \+/ /g" | cut -d' ' -f4)
         ready=${replicas%/*}
         total=${replicas#*/}
+        echo "${ready} of ${total} slaves ready"
         if [[ "$ready" == "$total" ]]; then break; fi
         sleep 5
       done
 
       sleep 5  # wait for containers to get their IP addresses from Docker
       # Assemble a hosts file
-       containers=$(docker service ps --no-trunc -f "desired-state=running" ${job_uuid}-service | tail -n +2 | awk '{print $2"."$1}')
-       for container in $containers; do
-         ip=$(docker inspect -f "{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}" $container)
-         echo "$container $ip" >> $work_dir/hosts
-         echo "$ip" >> $work_dir/hostlist
-       done
+      ruby_run <<RUBY
+
+require 'json'
+
+network = JSON.parse(IO.popen("docker network inspect --verbose gridware-mpi").read)[0]
+
+containers = network["Services"]["${job_uuid}-service"]["Tasks"]
+
+File.open("$work_dir/hosts", "w") { |hosts|
+
+  File.open("$work_dir/hostlist", "w") { |hostlist|
+
+    containers.each { |container|
+      hostlist.write("#{container["EndpointIP"]}\n")
+      hosts.write("#{container["Name"]} #{container["EndpointIP"]}\n")
+    }
+
+  }
+
+}
+
+RUBY
 
     fi
 
@@ -202,6 +221,7 @@ EOF
 setup
 require action
 require process
+require ruby
 
 if ! process_reexec_sg docker --plain "$@"; then
    action_die "unable to find group: docker"
