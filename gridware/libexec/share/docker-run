@@ -158,7 +158,7 @@ EOF
 
       for node in $(docker node ls -f "role=worker" | tail -n -1 | cut -d ' ' -f6); do
         # Force each node to import the image!
-        ssh $node -c docker load -i "${cw_GRIDWARE_root:-/opt/gridware}/docker/exports/${job_uuid}"
+        ssh $node docker load -i "${cw_GRIDWARE_root:-/opt/gridware}/docker/exports/${job_uuid}"
       done
 
       # This step currently gives some scary-looking errors that aren't actually errors
