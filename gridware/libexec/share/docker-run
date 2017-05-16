@@ -206,6 +206,7 @@ RUBY
            --env "WORK_DIR=$_INTERNAL_ROOT/work" \
            --env "INPUT_DIR=$_INTERNAL_ROOT/input" \
            --env "OUTPUT_DIR=$_INTERNAL_ROOT/output" \
+           --env "OMPI_MCA_btl_tcp_if_include=eth0" \
            --user "$_UID:$_GID" \
            $use_mpi \
            $job_uuid \
