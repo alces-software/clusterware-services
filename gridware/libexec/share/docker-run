@@ -134,7 +134,7 @@ EOF
      # set up SSH key for sshd in container so that all copies of the temp image
      # can log into each other
      mkdir -p $work_dir/ssh
-     ssh-keygen -t rsa -f $work_dir/ssh/id_rsa -N ''
+     ssh-keygen -t rsa -f $work_dir/ssh/id_rsa -N '' >> $work_dir/docker.log
      cp $work_dir/ssh/id_rsa.pub $work_dir/ssh/authorized_keys
      cat <<EOF > $work_dir/ssh/config
  Host *
