@@ -231,7 +231,9 @@ require distro
 require ui
 require files
 require ruby
+require process
 
+process_reexec_sudo
 files_load_config gridware
 files_load_config --optional gridware config/gridware
 
