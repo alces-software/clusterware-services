@@ -93,7 +93,7 @@ groups.each { |group|
 }
 
 all_partition = group_results.delete("all")
-default_queue = "default"
+default_queue = "${default_queue}"
 default_queue = "_default" if default_queue == "default"
 if all_partition and !default_queue.empty?
   # Jobs outside a specific scaling group (e.g. in 'all') we add to the default
