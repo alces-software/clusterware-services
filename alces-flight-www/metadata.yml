@@ -97,7 +97,7 @@ component-base:
       echo "cw_CLUSTER_FIREWALL_rule_http=\"INPUT -p tcp --dport ${cw_ALCES_FLIGHT_WWW_http_port:-80} -j ACCEPT\"" >> "${cw_ROOT}"/etc/cluster-firewall/static.d/alces-flight-www.rc
 
       files_load_config config config/cluster
-      prv_net=$(network_get_iface_network "$cw_CLUSTER_iface")
+      prv_net=$(network_get_iface_network "${cw_CLUSTER_iface:-$(network_get_first_iface)}")
 
       _install_nginx_conf geo http
       sed -i -e "s,_PRV_NETWORK_,$prv_net,g" \
