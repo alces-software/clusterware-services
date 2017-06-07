@@ -104,11 +104,12 @@ EOF
 }
 
 _update_modulespath() {
-    local name
+    local name modulespath_file
     name="$1"
-    if ! grep -q "${cw_GRIDWARE_root}/${name}/\$cw_DIST/etc/modules" "${cw_ROOT}"/etc/modulerc/modulespath; then
+    modulespath_file=${cw_GRIDWARE_modulespath_file:-"${cw_ROOT}"/etc/modulerc/modulespath}
+    if ! grep -q "${cw_GRIDWARE_root}/${name}/\$cw_DIST/etc/modules" "${modulespath_file}"; then
         sed -e "/^#=Alces Gridware Depots/a ${cw_GRIDWARE_root}/${name}/\$cw_DIST/etc/modules" \
-            -i "${cw_ROOT}"/etc/modulerc/modulespath
+            -i "${modulespath_file}"
     fi
 }
 
@@ -146,11 +147,20 @@ RUBY
 
     chmod -R g+rw "${depot}"
     find "${depot}" -type d -exec chmod 2775 {} \;
-    chgrp -R gridware "${depot}"
+}
+
+configure_userspace() {
+  if [ $UID -ne 0 ]; then
+    cw_GRIDWARE_default_depot="personal"
+    cw_GRIDWARE_root="$HOME/gridware"
+    cw_GRIDWARE_modulespath_file="$HOME/.modulespath"
+  fi
 }
 
 main() {
     local depot name update_config
+
+    configure_userspace
 
     if [ "$1" == "--update-config" ]; then
         update_config=true
@@ -196,6 +206,8 @@ main() {
         say_done $?
     done
 
+  if [ $UID -eq 0 ]; then
+
     title "Setting up local package repository"
     if [ -d "${cw_GRIDWARE_root}/etc/repos" ]; then
         doing 'Detect'
@@ -205,8 +217,6 @@ main() {
         cp -R "${cw_ROOT}/etc/gridware/reposkel" "${cw_GRIDWARE_root}/etc/repos/local"
         chmod -R g+rw "${cw_GRIDWARE_root}"/etc
         find "${cw_GRIDWARE_root}"/etc -type d -exec chmod 2775 {} \;
-        chgrp -R gridware "${cw_GRIDWARE_root}"/etc
-        chgrp gridware "${cw_GRIDWARE_root}" "${cw_GRIDWARE_root}"/depots
         chmod g+rws "${cw_GRIDWARE_root}" "${cw_GRIDWARE_root}"/depots
     fi
     say_done $?
@@ -220,9 +230,9 @@ main() {
         cp -R "${cw_ROOT}/etc/gridware/reposkel.depots" "${cw_GRIDWARE_root}/etc/depots/local"
         chmod -R g+rw "${cw_GRIDWARE_root}"/etc/depots
         find "${cw_GRIDWARE_root}"/etc/depots -type d -exec chmod 2775 {} \;
-        chgrp -R gridware "${cw_GRIDWARE_root}"/etc/depots
     fi
     say_done $?
+  fi
 }
 
 setup
