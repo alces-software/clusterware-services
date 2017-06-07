@@ -36,7 +36,7 @@ DOC
 if [ "" ]; then 0; else eval 'cw_RUBY_EXEC "$@" || exit 1'; fi; end
 
 if Process.euid != 0
-  ENV['cw_GRIDWARE_userspace'] = "true"
+  ENV['cw_GRIDWARE_userspace'] = 'true'
   ENV['cw_GRIDWARE_default_depot'] = 'personal'
 end
 
