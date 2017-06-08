@@ -114,7 +114,7 @@ _update_modulespath() {
 }
 
 _initialize_depot() {
-    local depot name
+    local depot name uuid
     depot="$1"
     name="$2"
 
@@ -146,13 +146,25 @@ end
 RUBY
 
     find "${depot}" -type d -exec chmod 2775 {} \;
+
+  if [ "$cw_GRIDWARE_userspace" ]; then
+    # symlink this repo under /opt/gridware/u so binary patching works
+    uuid=$(uuid -v4 | head -c6)
+    while [ -d "${cw_GRIDWARE_rooty_root}/u/${uuid}" ]; do
+      uuid=$(uuid -v4 | head -c6)
+    done
+    ln -s "${depot}" "${cw_GRIDWARE_rooty_root}/u/${uuid}"
+    echo "u/${uuid}" > "${depot}"/.gridware-userspace
+  fi
 }
 
 configure_userspace() {
   if [ $UID -ne 0 ]; then
     cw_GRIDWARE_default_depot="personal"
+    cw_GRIDWARE_rooty_root="$cw_GRIDWARE_root"
     cw_GRIDWARE_root="$HOME/gridware"
     cw_GRIDWARE_modulespath_file="$HOME/.modulespath"
+    cw_GRIDWARE_userspace=true
   fi
 }
 
