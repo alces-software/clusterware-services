@@ -145,7 +145,6 @@ DataMapper.repository(:'${name}') do
 end
 RUBY
 
-    chmod -R g+rw "${depot}"
     find "${depot}" -type d -exec chmod 2775 {} \;
 }
 
