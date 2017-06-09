@@ -154,7 +154,7 @@ RUBY
       uuid=$(uuid -v4 | head -c6)
     done
     ln -s "${depot}" "${cw_GRIDWARE_rooty_root}/u/${uuid}"
-    echo "u/${uuid}" > "${depot}"/.gridware-userspace
+    ln -s "${cw_GRIDWARE_rooty_root}/u/${uuid}" "${depot}"/.gridware-userspace
   fi
 }
 
