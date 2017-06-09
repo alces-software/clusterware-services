@@ -217,7 +217,7 @@ main() {
         say_done $?
     done
 
-  if [ $UID -eq 0 ]; then
+  if [ ! "$cw_GRIDWARE_userspace" ]; then
 
     title "Setting up local package repository"
     if [ -d "${cw_GRIDWARE_root}/etc/repos" ]; then
