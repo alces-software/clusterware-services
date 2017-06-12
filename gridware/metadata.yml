@@ -1,5 +1,5 @@
 #==============================================================================
-# Copyright (C) 2016 Stephen F. Norledge and Alces Software Ltd.
+# Copyright (C) 2017 Stephen F. Norledge and Alces Software Ltd.
 #
 # This file/package is part of Alces Clusterware.
 #
@@ -22,9 +22,9 @@
 ---
 install:
   el7: |
-    yum install -y -e0 wget sqlite3 patch bzip2 xz-utils file which sudo
+    yum install -y -e0 wget sqlite patch bzip2 xz file which sudo
   el6: |
-    yum install -y -e0 wget sqlite3 patch bzip2 xz-utils file which sudo
+    yum install -y -e0 wget sqlite patch bzip2 xz file which sudo
   ubuntu1604: |
     apt-get install -y gawk wget sqlite3 patch xz-utils debianutils sudo libcurl3
   _: |
@@ -103,6 +103,11 @@ install:
         find "${cw_ROOT}"/var/lib/gridware/depots/official/data -type d -exec chmod 2775 {} \;
         chgrp -R gridware "${cw_ROOT}"/var/lib/gridware/depots/official/data
     fi
+
+    echo "Installing container data files"
+    if [ ! -d "${cw_ROOT}/var/lib/gridware/docker" ]; then
+        cp -R docker "${cw_ROOT}"/var/lib/gridware
+    fi
 build:
   el6: |
     yum install -y gcc-c++ gmp-devel sqlite-devel
@@ -123,7 +128,7 @@ build:
     PATH="${cw_ROOT}"/opt/git/bin:"${cw_ROOT}"/opt/ruby/bin:$PATH
     bundle install --local --without="development test" --path=vendor
 
-    rm -rf Rakefile vendor/cache
+    rm -rf Rakefile vendor/cache bin .gitignore README.md
     popd
 
     cp -pR libexec/* "${cw_ROOT}"/libexec

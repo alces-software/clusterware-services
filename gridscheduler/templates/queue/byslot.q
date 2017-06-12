@@ -12,7 +12,7 @@ qtype                 BATCH INTERACTIVE
 ckpt_list             NONE
 pe_list               make smp smp-verbose mpislots mpislots-verbose
 rerun                 FALSE
-slots                 1,[@2slot=2],[@4slot=4],[@8slot=8],[@16slot=16],[@32slot=32],[@36slot=36],[@40slot=40]
+slots                 1,[@2slot=2],[@4slot=4],[@8slot=8],[@16slot=16],[@32slot=32],[@36slot=36],[@40slot=40],[@64slot=64],[@128slot=128]
 tmpdir                /tmp
 shell                 /bin/bash
 prolog                geadmin@/opt/clusterware/libexec/gridscheduler/omp-prolog

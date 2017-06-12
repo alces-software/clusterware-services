@@ -46,12 +46,14 @@ pending_jobs = jobs.count {|l| l.split(/\s+/)[2] == 'PEND'}
 running_jobs = jobs.count {|l| l.split(/\s+/)[2] == 'RUN'}
 cores_per_node = ${cores_per_node:-2}
 cores_req = queues.reduce(0) {|memo,l| memo + l.split(/\s+/)[8].to_i}
+default_queue="${default_queue}".gsub(/[-\.]/, "_")
 results = {
   "openlava_job_queue" => pending_jobs,
   "openlava_job_run" => running_jobs,
   "openlava_job_total" => jobs.length,
   "openlava_cores_req" => cores_req,
-  "openlava_nodes_req" => ((cores_req * 1.0) / cores_per_node).ceil
+  "openlava_nodes_req" => ((cores_req * 1.0) / cores_per_node).ceil,
+  "openlava_queue_#{default_queue}_nodes_req" => ((cores_req * 1.0) / cores_per_node).ceil,
 }
 results.each { |k,v| puts "#{k}=#{v}" }
 RUBY

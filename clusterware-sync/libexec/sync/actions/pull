@@ -49,17 +49,23 @@ Dir.chdir("$(_target_for "${sync_cfg}")")
   begin
     File.chown(Etc.getpwnam(owner).uid, Etc.getgrnam(group).gid, f)
   rescue
-    STDERR.puts "Unable to update ownership to #{owner}/#{group} for #{f}"
+    if "${_IGNORE_FAILING_ATTRS}" != "true"
+      STDERR.puts "Unable to update ownership to #{owner}/#{group} for #{f}"
+    end
   end
   begin
     File.chmod(mode.to_i(8), f)
   rescue
-    STDERR.puts "Unable to update mode to #{mode} for #{f}"
+    if "${_IGNORE_FAILING_ATTRS}" != "true"
+      STDERR.puts "Unable to update mode to #{mode} for #{f}"
+    end
   end
   begin
     File.utime(atime.to_i, mtime.to_i, f)
   rescue
-    STDERR.puts "Unable to update atime/ctime for #{f}"
+    if "${_IGNORE_FAILING_ATTRS}" != "true"
+      STDERR.puts "Unable to update atime/ctime for #{f}"
+    end
   end
 end
 RUBY
@@ -160,6 +166,10 @@ main() {
     local sync_cfg bucket target
     if [ "$1" == "--ignore-missing" ]; then
         _IGNORE_MISSING=true
+        shift
+    fi
+    if [ "$1" == "--ignore-failing-attrs" ]; then
+        _IGNORE_FAILING_ATTRS=true
         shift
     fi
     target="${1:-default}"

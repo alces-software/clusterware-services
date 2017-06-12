@@ -8,7 +8,7 @@ suspend_interval      00:05:00
 priority              0
 min_cpu_interval      00:05:00
 processors            UNDEFINED
-qtype                 INTERACTIVE
+qtype                 BATCH INTERACTIVE
 ckpt_list             NONE
 pe_list               mpinodes mpinodes-verbose
 rerun                 FALSE

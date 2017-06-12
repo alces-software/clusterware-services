@@ -15,17 +15,16 @@ gridscheduler_setup_environment() {
 }
 
 gridscheduler_empty_nodes() {
-    require ruby
-    gridscheduler_setup_environment
-    ruby_run <<RUBY
+  require ruby
+  gridscheduler_setup_environment
+  ruby_run <<RUBY
 require 'rexml/document'
-doc = REXML::Document.new(IO.popen('qstat -f -xml -q bynode.q@*'))
-doc.each_element('//Queue-List') do |el|
-  used = el.text('slots_used')
-  name = el.text('name')
-  state = el.text('state')
-  if state != 'S' && used == "0"
-    puts name.split('@').last.split('.').first
+doc = REXML::Document.new(IO.popen('qhost -j -xml'))
+doc.each_element('//host') do |el|
+  name = el.attribute('name').value
+  jobs = el.get_elements('job')
+  if jobs.empty? and name != "global"
+    puts name
   end
 end
 RUBY
@@ -51,23 +50,73 @@ gridscheduler_parse_job_states() {
     cores_per_node="$2"
     require ruby
     gridscheduler_setup_environment
+
     ruby_run <<RUBY > "${tgtfile}"
 require 'rexml/document'
 pending_job_ids = IO.popen("qstat -u '*' -s p | tail -n+3 | awk '{print \$1;}'").read.split("\n")
 running_job_ids = IO.popen("qstat -u '*' -s r | tail -n+3 | awk '{print \$1;}'").read.split("\n")
+
+autoscaling_groups = Dir.entries("${cw_ROOT}/etc/config/autoscaling/by-label").select { |e| !File.directory?(e) }
+
 nodes = 0.0
 cores = 0
 cores_per_node = ${cores_per_node:-2}
-pending_job_ids.each do |jid|
+
+specified_queue_nodes = {}
+autoscaling_groups.each do |q|
+  specified_queue_nodes[q] = { :nodes => 0.0, :cores => 0 }
+end
+
+# In order to get a value for "total required size of autoscaling group" we need
+# to consider _both_ pending and running jobs.
+
+(running_job_ids + pending_job_ids).each do |jid|
   doc = REXML::Document.new(IO.popen("qstat -xml -j #{jid}"))
   slots = (doc.text('//JB_pe_range/ranges/RN_max') || 1).to_i
   pe = doc.text('//JB_pe')
-  if pe == "mpinodes" || pe == "mpinodes-verbose"
-    nodes += slots
-    cores += (cores_per_node * slots)
-  else
-    cores += (slots || 1)
-    nodes += ((slots || 1) * 1.0 / cores_per_node)
+
+  specific_queue = doc.text('//JB_hard_queue_list/destin_ident_list/QR_name')
+  counted = false
+
+  if pe
+    m = /(?<groupname>.*)-(?<petype>mpinodes|mpislots|smp)(-verbose)?/.match(pe)
+    if m
+      # Job has been submitted to a PE backed by an autoscaling group
+      groupname = m['groupname']
+      if m['petype'] == "mpinodes"
+        specified_queue_nodes[groupname][:nodes] += slots
+        specified_queue_nodes[groupname][:cores] += (cores_per_node * slots)
+      else
+        specified_queue_nodes[groupname][:cores] += (slots || 1)
+        specified_queue_nodes[groupname][:nodes] += ((slots || 1) * 1.0 / cores_per_node)
+      end
+      counted = true
+    end
+  elsif specific_queue
+    autoscaling_groups.each do |groupname|
+      if File.fnmatch(specific_queue, "#{groupname}.byslot.q") || File.fnmatch(specific_queue, "#{groupname}.bynode.q")
+        # Job has been directly submitted to a hard queue backed by autoscaling group
+        if pe == "mpinodes" || pe == "mpinodes-verbose"
+          specified_queue_nodes[groupname][:nodes] += slots
+          specified_queue_nodes[groupname][:cores] += (cores_per_node * slots)
+        else
+          specified_queue_nodes[groupname][:cores] += (slots || 1)
+          specified_queue_nodes[groupname][:nodes] += ((slots || 1) * 1.0 / cores_per_node)
+        end
+        counted = true
+        break
+      end
+    end
+  end
+  if !counted
+    # Job has just been submitted without specificity
+    if pe == "mpinodes" || pe == "mpinodes-verbose"
+      nodes += slots
+      cores += (cores_per_node * slots)
+    else
+      cores += (slots || 1)
+      nodes += ((slots || 1) * 1.0 / cores_per_node)
+    end
   end
 end
 results = {
@@ -79,6 +128,18 @@ results = {
 }
 results.each do |k,v|
   puts "#{k}=#{v}"
+end
+
+# Add any non-queue-specific demand arbitrarily to the first queue if we have one
+# Much easier to do it in here than in Bash!
+if !specified_queue_nodes.empty? and !"$default_queue".empty?
+  specified_queue_nodes["$default_queue"][:nodes] += nodes.ceil
+  specified_queue_nodes["$default_queue"][:cores] += cores
+end
+
+specified_queue_nodes.each do |k,v|
+  puts "gridscheduler_queue_#{k.gsub(/[-\.]/, "_")}_cores_req=#{v[:cores]}"
+  puts "gridscheduler_queue_#{k.gsub(/[-\.]/, "_")}_nodes_req=#{v[:nodes].ceil}"
 end
 RUBY
 }

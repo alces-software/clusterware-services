@@ -20,6 +20,11 @@
 # For more information on the Alces Clusterware, please visit:
 # https://github.com/alces-software/clusterware
 #==============================================================================
+#ALCES_META
+# Refer to `clusterware/scripts/development/propagate`.
+#path=/opt/clusterware/libexec/session/actions/start
+#ALCES_META_END
+
 require action
 require files
 require network
@@ -200,6 +205,8 @@ EOF
 
     host_address=$(network_get_public_address)
     access_address=$(network_get_mapped_address "${host_address}" table access)
+    vpn_address="$(network_get_iface_address tun0 2> /dev/null)"
+
     vnc[WEBSOCKET]=$(network_get_free_port 41361)
     _start_websocket "$host_address" "${vnc[WEBSOCKET]}" "$((5900+${_VNC_DISPLAY}))"
 
@@ -207,7 +214,16 @@ EOF
         action_die "VNC server did not start successfully, unable to locate process file."
     fi
 
-    sessionvars=("${_SESSIONID}" "${host_address}" "${access_address}" "${vnc[DISPLAY]}" "${password}" "${vnc[WEBSOCKET]}" "${sessiontype}")
+    sessionvars=("${_SESSIONID}" \
+        "${host_address}" \
+        "${access_address}" \
+    "${vnc[DISPLAY]}" \
+    "${password}" \
+    "${vnc[WEBSOCKET]}" \
+    "${sessiontype}" \
+    "${vpn_address}" \
+    )
+
     vnc_write_detail_file "${sessionvars[@]}"
     vnc_write_vars_file "${sessionvars[@]}"
     if [ "$terse" ]; then

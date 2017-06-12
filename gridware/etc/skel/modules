@@ -5,7 +5,7 @@
 ##
 ################################################################################
 # Silence enhanced modules output
-alces_silence_modules >& /dev/null
+cw_silence_modules >& /dev/null
 
 # You may add modules to load at login time to following line.  The
 # recommended way of managing this line is to use the modules init
@@ -14,6 +14,6 @@ alces_silence_modules >& /dev/null
 module load null
 
 # Re-enable enhanced modules output
-alces_desilence_modules >& /dev/null
+cw_desilence_modules >& /dev/null
 
 

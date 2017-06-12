@@ -20,6 +20,11 @@
 # For more information on the Alces Clusterware, please visit:
 # https://github.com/alces-software/clusterware
 #==============================================================================
+#ALCES_META
+# Refer to `clusterware/scripts/development/propagate`.
+#path=/opt/clusterware/libexec/session/actions/info
+#ALCES_META_END
+
 require action
 require vnc
 
@@ -40,10 +45,17 @@ main() {
             else
                 . "${sessiondir}"/metadata.vars.sh
                 host="Host address: ${vnc[ACCESS_HOST]}"
+
                 if [ "${vnc[ACCESS_HOST]}" != "${vnc[HOST]}" ]; then
                     host="$host
 Service host: ${vnc[HOST]}"
                 fi
+
+                if [ -n "${vnc[VPN_ADDRESS]}" ]; then
+                    host="$host
+VPN address:  ${vnc[VPN_ADDRESS]}"
+                fi
+
                 cat <<EOF
 Identity:     ${sessionid}
 Type:         ${vnc[TYPE]}

@@ -1,0 +1,203 @@
+#!/bin/bash
+#==============================================================================
+# Copyright (C) 2016 Stephen F. Norledge and Alces Software Ltd.
+#
+# This file/package is part of Alces Clusterware.
+#
+# Alces Clusterware is free software: you can redistribute it and/or
+# modify it under the terms of the GNU Affero General Public License
+# as published by the Free Software Foundation, either version 3 of
+# the License, or (at your option) any later version.
+#
+# Alces Clusterware is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this package.  If not, see <http://www.gnu.org/licenses/>.
+#
+# For more information on the Alces Clusterware, please visit:
+# https://github.com/alces-software/clusterware
+#==============================================================================
+require action
+
+main() {
+    action=$1
+    shift
+
+    case $action in
+        apply|avail|help|job-queue|list|trigger|pull|push|slave)
+            help_for_${action}
+            ;;
+        ?*)
+            echo "${cw_BINNAME}: no such topic: ${action}"
+            echo ""
+            general_help
+            ;;
+        *)
+            general_help
+            ;;
+    esac
+}
+
+help_for_apply() {
+    cat <<EOF
+  SYNOPSIS:
+
+    alces customize apply [OPTIONS] <profile>
+
+  DESCRIPTION:
+
+    Download and install a customization <profile> to the current
+    node or, optionally, a list of other nodes in the cluster.
+
+    A list of available customization profiles can be shown by
+    running "alces customize avail".
+
+    Once downloaded, the customization will have its configure event
+    triggered, along with a member-join event for each current member
+    of the cluster.
+
+  OPTIONS:
+
+    -n <node list>
+      You may specify a comma-separated list of nodes on which the
+      customization profile should be installed. When this option is
+      specified the customization will not be applied to the current
+      node, unless it appears in the <node list>.
+
+EOF
+}
+
+help_for_avail() {
+  cat <<EOF
+SYNOPSIS:
+
+  alces customize avail
+
+DESCRIPTION:
+
+  List customization profiles that are available but not installed.
+
+EOF
+}
+
+help_for_help() {
+    cat <<EOF
+  SYNOPSIS:
+
+    alces customize help [<command>]
+
+  DESCRIPTION:
+
+    Get help with customize commands.  If no <command> is specified,
+    show some general help.
+
+EOF
+}
+
+help_for_job-queue() {
+    exec "${cw_ROOT}"/bin/alces customize job-queue help
+}
+
+help_for_list() {
+    cat <<EOF
+  SYNOPSIS:
+
+    alces handler list [OPTIONS]
+
+  DESCRIPTION:
+
+    Display currently installed customization profiles.
+
+  OPTIONS:
+
+    --with-events
+      Also show which events each profile supports.
+
+EOF
+}
+
+help_for_pull() {
+    cat <<EOF
+  SYNOPSIS:
+
+    alces customize pull
+
+  DESCRIPTION:
+
+    Pull customization profiles from upstream bucket(s).
+
+EOF
+}
+
+help_for_trigger() {
+    cat <<EOF
+  SYNOPSIS:
+
+    alces customize trigger [OPTIONS] <event> [<profile>]
+
+  DESCRIPTION:
+
+    Trigger the specified customization <event>.  Optionally specify a
+    specific <profile> for which you want to trigger the <event>.
+
+  OPTIONS:
+
+    -m <member list>
+      For the 'member-join' <event> you may specify a comma-separated
+      list of member names for which the event should be triggered.
+
+EOF
+}
+
+help_for_push() {
+  cat <<EOF
+  SYNOPSIS:
+
+    alces customize push <source> [repository] [hook]
+
+  DESCRIPTION:
+
+    Push a customization profile (<source>) to an upstream repository.
+    By default, [repository] is your AWS S3 bucket and [hook] is 'configure'.
+EOF
+}
+
+help_for_slave() {
+  exec "${cw_ROOT}"/bin/alces customize slave help
+}
+
+general_help() {
+    local binname
+    binname="${cw_BINNAME% *}"
+    cat <<EOF
+  NAME:
+
+    ${binname}
+
+  DESCRIPTION:
+
+    Customize your compute environment
+
+  COMMANDS:
+
+EOF
+printf "    %-30s  %s\n" "$cw_BINNAME apply" "Download and install a customization profile."
+printf "    %-30s  %s\n" "$cw_BINNAME avail" "List available customization profiles."
+printf "    %-30s  %s\n" "$cw_BINNAME help" "More help about this command."
+printf "    %-30s  %s\n" "$cw_BINNAME job-queue" "Manage the Alces cluster job queue"
+printf "    %-30s  %s\n" "$cw_BINNAME list" "List installed customization profiles."
+printf "    %-30s  %s\n" "$cw_BINNAME pull" "Pull updated customization actions from upstream."
+printf "    %-30s  %s\n" "$cw_BINNAME push" "Push updated customization actions to upstream."
+printf "    %-30s  %s\n" "$cw_BINNAME trigger" "Manually trigger customization actions."
+printf "    %-30s  %s\n" "$cw_BINNAME slave" "Manage profiles to be installed on slave nodes."
+cat <<EOF
+
+Please report bugs to support@alces-software.com
+Alces Software home page: <http://alces-software.com>
+EOF
+}
+
+main "$@"

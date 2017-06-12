@@ -1,0 +1,183 @@
+#!/bin/bash
+#==============================================================================
+# Copyright (C) 2017 Stephen F. Norledge and Alces Software Ltd.
+#
+# This file/package is part of Alces Clusterware.
+#
+# Alces Clusterware is free software: you can redistribute it and/or
+# modify it under the terms of the GNU Affero General Public License
+# as published by the Free Software Foundation, either version 3 of
+# the License, or (at your option) any later version.
+#
+# Alces Clusterware is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this package.  If not, see <http://www.gnu.org/licenses/>.
+#
+# For more information on the Alces Clusterware, please visit:
+# https://github.com/alces-software/clusterware
+#==============================================================================
+require action
+
+main() {
+    action=$1
+    shift
+
+    case $action in
+        help|build|list|push|run)
+            help_for_${action}
+            ;;
+        ?*)
+            echo "${cw_BINNAME}: no such topic: ${action}"
+            echo ""
+            general_help
+            ;;
+        *)
+            general_help
+            ;;
+    esac
+}
+
+help_for_help() {
+    cat <<EOF
+  SYNOPSIS:
+
+    alces gridware docker help [<command>]
+
+  DESCRIPTION:
+
+    Get help with Gridware container commands.  If no <command> is
+    specified, show some general help.
+
+EOF
+}
+
+help_for_list() {
+    cat <<EOF
+  SYNOPSIS:
+
+    alces gridware docker list
+
+  DESCRIPTION:
+
+    List available Gridware containers.
+
+EOF
+}
+
+help_for_build() {
+    cat <<EOF
+  SYNOPSIS:
+
+    alces gridware docker build [OPTIONS] <package> [--variant <variant>]
+
+  DESCRIPTION:
+
+    Build a new Gridware container for Gridware package <package>,
+    supplying an optional <variant>.
+
+    The parameters are ignored when building the base container.
+
+  OPTIONS:
+
+    --base
+      Build the Gridware base container.
+
+    --from <container>
+      Specify a different Gridware base container to use when building
+      the container for <package>.
+
+EOF
+}
+
+help_for_push() {
+    cat <<EOF
+  SYNOPSIS:
+
+    alces gridware docker push [OPTIONS] <package>
+
+  DESCRIPTION:
+
+    Push the built Gridware container for <package> to the configured
+    Docker container registry.
+
+  OPTIONS:
+
+    --base
+      Push the Gridware base container.
+
+EOF
+}
+
+help_for_run() {
+    cat <<EOF
+  SYNOPSIS:
+
+    alces gridware docker run [OPTIONS] <package> [<runmode>] [PARAMS...]
+
+  DESCRIPTION:
+
+    Execute a Gridware container for <package>.
+
+    Specifying the '--script' <runmode> will copy the specified script
+    into the container and pass that (along with any supplied
+    parameters) to the standard entrypoint of the image.
+
+    Specifying the '--command' <runmode> will skip usual Gridware
+    environment setup and execute the command and parameters provided
+    directly.
+
+    Specifying the '--interactive' <runmode> will skip usual Gridware
+    environment setup and start an interactive session within the
+    container.  If no program is specified as a parameter, the default
+    of '/bin/bash' is used.
+
+    Specifying no <runmode> will execute the standard entrypoint of
+    the image directly, passing in any supplied parameters.
+
+  OPTIONS:
+
+    --workdir <directory>
+      Specify a top-level working <directory> which will be created
+      relative to your home directory if it doesn't exist.
+      Job-specific directories will be created within the directory
+      for working and output directories and mapped into the container
+      at '/job/work' and '/job/output'.  The <directory>/input will be
+      mapped into the container at '/job/input'.  Defaults to the name
+      of the <package>.
+
+EOF
+}
+
+general_help() {
+    local binname
+    binname="${cw_BINNAME% *}"
+    binname="${binname% *}"
+    cat <<EOF
+  NAME:
+
+    ${binname}
+
+  DESCRIPTION:
+
+    Perform containerized Gridware operations.
+
+  COMMANDS:
+
+EOF
+printf "    %-27s  %s\n" "$binname help" "More help about this command."
+printf "    %-27s  %s\n" "$binname list" "List available Gridware containers."
+printf "    %-27s  %s\n" "$binname run" "Run a containerized Gridware application."
+printf "    %-27s  %s\n" "$binname build" "Build a containerized Gridware application."
+printf "    %-27s  %s\n" "$binname push" "Push a built container to the Docker registry."
+cat <<EOF
+
+Please report bugs to support@alces-software.com
+Alces Software home page: <http://alces-software.com>
+EOF
+}
+
+main "$@"

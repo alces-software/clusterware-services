@@ -1,0 +1,148 @@
+#!/bin/bash
+#==============================================================================
+# Copyright (C) 2017 Stephen F. Norledge and Alces Software Ltd.
+#
+# This file/package is part of Alces Clusterware.
+#
+# Alces Clusterware is free software: you can redistribute it and/or
+# modify it under the terms of the GNU Affero General Public License
+# as published by the Free Software Foundation, either version 3 of
+# the License, or (at your option) any later version.
+#
+# Alces Clusterware is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this package.  If not, see <http://www.gnu.org/licenses/>.
+#
+# For more information on the Alces Clusterware, please visit:
+# https://github.com/alces-software/clusterware
+#==============================================================================
+setup() {
+    local a xdg_config
+    IFS=: read -a xdg_config <<< "${XDG_CONFIG_HOME:-$HOME/.config}:${XDG_CONFIG_DIRS:-/etc/xdg}"
+    for a in "${xdg_config[@]}"; do
+        if [ -e "${a}"/clusterware/config.vars.sh ]; then
+            source "${a}"/clusterware/config.vars.sh
+            break
+        fi
+    done
+    if [ -z "${cw_ROOT}" ]; then
+        echo "$0: unable to locate clusterware configuration"
+        exit 1
+    fi
+    kernel_load
+}
+
+main() {
+    local run_args image appname input_dir work_dir output_dir
+    if [ "$1" == "--workdir" ]; then
+        appname="$2"
+        shift 2
+    fi
+    image="$1"
+    run_args=("${@:2}")
+    appname="${appname:-$image}"
+
+    input_dir="$HOME/$appname/input"
+    work_dir="$HOME/$appname/work.${JOB_ID:-$(uuid)}"
+    output_dir="$work_dir/output"
+
+    if [ "${image%/*}" == "${image}" ]; then
+        image="${_REGISTRY_USER}/gridware-${image}"
+    fi
+
+    # Create the work dir and output dir if they don't yet exist
+    mkdir -p "$work_dir" "$output_dir"
+    chmod 0700 "$work_dir" "$output_dir"
+    # Also make the input dir otherwise docker can create it under root:root
+    if [ ! -d "$input_dir" ]; then
+        mkdir -p "$input_dir"
+       chmod 0700 "$input_dir"
+    fi
+
+    if [ "${run_args[0]}" == "--interactive" ]; then
+        if [ "${run_args[1]}" ]; then
+            action_emit "Starting interactive process '${run_args[@]:1}' in '$image'..."
+        else
+            action_emit "Starting interactive shell in '$image'..."
+        fi
+        sudo -g docker \
+             "${cw_ROOT}"/libexec/share/docker-run \
+             "${_REGISTRY}/$image" \
+             "$work_dir" \
+             "$input_dir" \
+             "$output_dir" "${run_args[@]}"
+    else
+        if [ "${run_args[0]}" == "--script" ]; then
+            if [ -f "${run_args[1]}" ]; then
+                cp "${run_args[1]}" "$work_dir/workload.sh"
+                chmod 0700 "$work_dir/workload.sh"
+            fi
+            if [ "${run_args[2]}" ]; then
+                action_emit "Executing script '${run_args[1]}' with arguments '${run_args[@]:2}' in '$image'..."
+            else
+                action_emit "Executing script '${run_args[1]}' in '$image'..."
+            fi
+            run_args=(--script "${run_args[@]:2}")
+        elif [ "${run_args[0]}" == "--command" ]; then
+            action_emit "Executing command '${run_args[@]:1}' in '$image'..."
+        else
+            if [ "${run_args[0]}" ]; then
+                action_emit "Executing '$image' with arguments '${run_args[@]}'..."
+            else
+                action_emit "Executing '$image'..."
+            fi
+        fi
+
+        echo ""
+
+        # Fire up the container
+        set -o pipefail
+        if sudo -g docker \
+                ${cw_ROOT}/libexec/share/docker-run \
+                "${_REGISTRY}/$image" \
+                "$work_dir" \
+                "$input_dir" \
+                "$output_dir" "${run_args[@]}" 2>&1 | sed 's/^/  >>> /g'; then
+            echo ""
+            action_emit "Job completed successfully."
+            echo ""
+            action_emit "Output summary:"
+            echo ""
+            echo "${output_dir}"
+            ls -al "${output_dir}" | sed 's/^/  /g'
+        else
+            err=$?
+            echo ""
+            case $err in
+                12*)
+                    action_die "Docker container execution failed" $err
+                    ;;
+                *)
+                    action_die "Job failed (exit status $err)" $err
+                    ;;
+            esac
+        fi
+    fi
+}
+
+cw_BINNAME="alces gridware"
+
+setup
+require action
+require files
+
+r=$(type -p docker)
+if [ $? != 0 -o ! -x "$r" ]; then
+    action_die "unable to locate Docker installation"
+fi
+
+files_load_config gridware
+
+_REGISTRY=${cw_GRIDWARE_docker_registry:-docker.io}
+_REGISTRY_USER=${cw_GRIDWARE_docker_registry_user:-alces}
+
+main "$@"

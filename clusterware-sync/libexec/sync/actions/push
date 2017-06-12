@@ -45,16 +45,19 @@ require 'find'
 require 'etc'
 Dir.chdir("$(_target_for "${sync_cfg}")")
 config = (YAML.load_file("$1") rescue nil) || {}
-exclusions = config[:exclude] || []
-exclusions << "$(xdg_cache_home)/clusterware/flight-sync.log".gsub(ENV['HOME'] + '/','')
+exclusions = [].concat(config[:exclude]) || []
+sync_logfile = "$(xdg_cache_home)/clusterware/flight-sync.log".gsub(ENV['HOME'] + '/','')
+exclusions << sync_logfile unless exclusions.include?(sync_logfile)
+inclusions = (config[:include] || []) + (config[:encrypt] || []).map {|i| i[0..-2] if i[-1] == "+"}.compact
 files = {}
-excluded = lambda do |f|
-  exclusions.any? do |p|
+matcher = lambda do |f, set|
+  set.any? do |p|
     File.fnmatch?(p, f) ||
       (p[-1] == "/" &&
-       f == p[0..-2] || File.fnmatch?("#{p}*", f))
+       (f == p[0..-2] || File.fnmatch?("#{p}*", f)))
   end
 end
+
 record = lambda do |f|
   stat = File.stat(f)
   files[f[2..-1]] = [].tap do |a|
@@ -66,7 +69,7 @@ record = lambda do |f|
   end.join(':')
 end
 Find.find('.').each do |f|
-  next if f == '.' || excluded.call(f[2..-1])
+  next if f == '.' || (matcher.call(f[2..-1], exclusions) && !matcher.call(f[2..-1], inclusions))
   record.call(f)
   if File.directory?(f) && Dir.entries(f).size <= 2
     empty = File.join(f,'.empty')
@@ -91,16 +94,22 @@ end
 RUBY
 }
 
-_populate_exclusions_file() {
-    local config_file exclusions_file
-    config_file="$1"
-    exclusions_file="$2"
+_populate_selection_file() {
+    local config_file set selection_file
+    set="$1"
+    config_file="$2"
+    selection_file="$3"
     ruby_run <<RUBY
 require 'yaml'
 config = (YAML.load_file("${config_file}") rescue nil) || {}
-exclusions = (config[:exclude] || []) + (config[:encrypt] || [])
-exclusions << "$(xdg_cache_home)/clusterware/flight-sync.log".gsub(ENV['HOME'] + '/','')
-File.write("${exclusions_file}",exclusions.join("\n"))
+selection = (config[:${set}] || [])
+if '${set}' == 'exclude'
+  selection += (config[:encrypt] || [])
+  selection << "$(xdg_cache_home)/clusterware/flight-sync.log".gsub(ENV['HOME'] + '/','')
+else
+  selection << '.empty'
+end
+File.write("${selection_file}",selection.join("\n"))
 RUBY
 }
 
@@ -112,8 +121,31 @@ _prepare_encrypt_set() {
     set -f
     encrypted_set=($(ruby_run <<RUBY
 require 'yaml'
+require 'find'
 config = (YAML.load_file("${sync_cfg}") rescue nil) || {}
-puts((config[:encrypt] || []).join(" "))
+exclusions = config[:exclude] || []
+sync_logfile = "$(xdg_cache_home)/clusterware/flight-sync.log".gsub(ENV['HOME'] + '/','')
+exclusions << sync_logfile unless exclusions.include?(sync_logfile)
+encryptions = (config[:encrypt] || []).reject {|i| i[-1] == "+"}
+always_encryptions = (config[:encrypt] || []).map {|i| i[0..-2] if i[-1] == "+"}.compact
+matcher = lambda do |f, set|
+  set.any? do |p|
+    File.fnmatch?(p, f) ||
+      (p[-1] == "/" &&
+       (f == p[0..-2] || File.fnmatch?("#{p}*", f)))
+  end
+end
+if config[:encrypt].any?
+  encrypt_targets = []
+  Dir.chdir("$(_target_for "${sync_cfg}")")
+  Find.find('.').each do |f|
+    next if f == '.'
+    if matcher.call(f[2..-1], always_encryptions) || (matcher.call(f[2..-1], encryptions) && !matcher.call(f[2..-1], exclusions))
+      encrypt_targets << f
+    end
+  end
+  puts(encrypt_targets.join(" "))
+end
 RUBY
                       ))
     set +f
@@ -123,7 +155,7 @@ RUBY
         password=$(_get_password "Encryption passphrase (CTRL+C to skip)")
         trap - INT
         if [ "$_INTERRUPTED" ]; then
-            return 1
+            return 2
         fi
         export password
         cd "$(_target_for "${sync_cfg}")"
@@ -157,37 +189,45 @@ _push() {
     ${_S3CMD} mb s3://${bucket} &>/dev/null
     if ${_S3CMD} ls s3://${bucket}/sync/$(whoami) &>/dev/null; then
         exclusions_file="$(mktemp /tmp/sync.exclusions.XXXXXXXX)"
+        inclusions_file="$(mktemp /tmp/sync.inclusions.XXXXXXXX)"
         encrypted_file="$(mktemp /tmp/sync.encrypted.XXXXXXXX)"
-        chmod 0600 "${exclusions_file}" "${encrypted_file}"
+        chmod 0600 "${exclusions_file}" "${inclusions_file}" "${encrypted_file}"
         target_dir="$(_target_for "${sync_cfg}")"
         if [ ! -d "${target_dir}" ]; then
             action_die "not found: ${target_dir}"
         fi
         title "Synchronizing directory '${target_dir}' to s3://${bucket}"
-        _populate_exclusions_file "${sync_cfg}" "${exclusions_file}"
+        _populate_selection_file exclude "${sync_cfg}" "${exclusions_file}"
+        _populate_selection_file include "${sync_cfg}" "${inclusions_file}"
         doing "Permissions"
         _record_posix_data "${sync_cfg}"
         say_done $?
         mkdir -p "$(xdg_cache_home)"/clusterware
         if _prepare_encrypt_set "${sync_cfg}" "${encrypted_file}"; then
             doing "Sync"
-            ${_S3CMD} --no-progress --no-mime-magic put \
+            ${_S3CMD} --no-progress put \
                       "${encrypted_file}" \
                       s3://${bucket}/sync/$(whoami)/${target}.dat >> "$(xdg_cache_home)"/clusterware/flight-sync.log 2>&1
         else
+            retval=$?
             doing "Sync"
+            if [ $retval == 1 ]; then
+                ${_S3CMD} --no-progress rm \
+                          s3://${bucket}/sync/$(whoami)/${target}.dat >> "$(xdg_cache_home)"/clusterware/flight-sync.log 2>&1
+            fi
         fi
-        ${_S3CMD} --no-progress --no-mime-magic put \
+        ${_S3CMD} --no-progress put \
                   "${sync_cfg}" \
                   s3://${bucket}/sync/$(whoami)/${target}.yml >> "$(xdg_cache_home)"/clusterware/flight-sync.log 2>&1
-        ${_S3CMD} --no-progress --no-mime-magic sync \
+        ${_S3CMD} --no-progress sync \
                   --delete-removed \
                   --exclude-from ${exclusions_file} \
+                  --include-from ${inclusions_file} \
                   "$(_target_for "${sync_cfg}")"/ \
                   s3://${bucket}/sync/$(whoami)/${target}/ >> "$(xdg_cache_home)"/clusterware/flight-sync.log 2>&1
         say_done $?
         _remove_empty_flags
-        rm -f "${exclusions_file}" "${encrypted_file}"
+        rm -f "${exclusions_file}" "${encrypted_file}" "${inclusions_file}"
     else
         action_die "unable to access synchronization bucket '${bucket}' ($?)" $?
     fi

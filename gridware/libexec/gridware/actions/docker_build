@@ -1,0 +1,128 @@
+#!/bin/bash
+#==============================================================================
+# Copyright (C) 2017 Stephen F. Norledge and Alces Software Ltd.
+#
+# This file/package is part of Alces Clusterware.
+#
+# Alces Clusterware is free software: you can redistribute it and/or
+# modify it under the terms of the GNU Affero General Public License
+# as published by the Free Software Foundation, either version 3 of
+# the License, or (at your option) any later version.
+#
+# Alces Clusterware is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this package.  If not, see <http://www.gnu.org/licenses/>.
+#
+# For more information on the Alces Clusterware, please visit:
+# https://github.com/alces-software/clusterware
+#==============================================================================
+setup() {
+    local a xdg_config
+    IFS=: read -a xdg_config <<< "${XDG_CONFIG_HOME:-$HOME/.config}:${XDG_CONFIG_DIRS:-/etc/xdg}"
+    for a in "${xdg_config[@]}"; do
+        if [ -e "${a}"/clusterware/config.vars.sh ]; then
+            source "${a}"/clusterware/config.vars.sh
+            break
+        fi
+    done
+    if [ -z "${cw_ROOT}" ]; then
+        echo "$0: unable to locate clusterware configuration"
+        exit 1
+    fi
+    kernel_load
+}
+
+_build_base() {
+    local tag
+    tag="$_REGISTRY/$_REGISTRY_USER/gridware-base"
+    echo "Building Gridware base image: $tag"
+    docker build -t "$tag:latest" "${cw_ROOT}"/var/lib/gridware/docker/gridware-base
+}
+
+main() {
+    local app name tag
+    if [ "$1" == "--base" ]; then
+        _build_base
+    else
+        if [ "$1" == "--from" ]; then
+            base_image="$_REGISTRY/$2"
+            shift 2
+        else
+            base_image="$_REGISTRY/$_REGISTRY_USER/gridware-base"
+        fi
+        app="$1"
+        if [ -z "$app" ]; then
+            action_die "please specify a package"
+        elif ! echo "$app" | grep -q '.*/.*/.*'; then
+            action_die "please specify the package using the format <type>/<name>/<version>"
+        elif [ "$($_ALCES gridware list "${_GRIDWARE_REPO}/$app" | wc -l)" != "1" ]; then
+            action_die "package not found: $app"
+        fi
+
+        if [ "$2" == "--variant" ]; then
+            if [ "$3" ]; then
+                variant="--variant $3"
+                name=gridware-$(echo "$app" | sed "s,\(.*\)/\(.*\)/,\1/\2_$3/,g" | tr '/' '-' | tr '[A-Z]' '[a-z]')
+            else
+                action_die "variant parameter requires a value"
+            fi
+        else
+            name=gridware-$(echo "$app" | tr '/' '-' | tr '[A-Z]' '[a-z]')
+        fi
+
+        tag="$_REGISTRY/$_REGISTRY_USER/$name"
+
+        action_emit "Building Gridware container '$name'..."
+        echo ""
+
+        build_dir="$(mktemp -d /tmp/gridware.docker.build.XXXXXXXX)"
+        cat <<EOF > "${build_dir}"/Dockerfile
+FROM ${base_image}
+MAINTAINER Alces Software Ltd. <support@alces-software.com>
+LABEL Alces Gridware - $app
+
+RUN /opt/clusterware/bin/alces gridware install \
+--binary --binary-only --binary-depends \
+--non-interactive --yes $variant \
+${_GRIDWARE_REPO}/$app && \
+yum clean all
+
+RUN echo "$app" >> /opt/gridware/etc/defaults
+EOF
+        set -o pipefail
+        if ! docker build -t "$tag:latest" "$build_dir" 2>&1 | sed 's/^/  >>> /g'; then
+            rm -rf "$build_dir"
+            echo ""
+            action_die "unable to build Gridware container '$name'"
+        else
+            rm -rf "$build_dir"
+        fi
+    fi
+}
+
+cw_BINNAME="alces gridware"
+
+setup
+require action
+require process
+require files
+
+r=$(type -p docker)
+if [ $? != 0 -o ! -x "$r" ]; then
+    action_die "unable to locate Docker installation"
+elif ! process_reexec_sg docker --plain "$@"; then
+   action_die "unable to find Docker group"
+fi
+
+files_load_config gridware
+
+_REGISTRY=${cw_GRIDWARE_docker_registry:-docker.io}
+_REGISTRY_USER=${cw_GRIDWARE_docker_registry_user:-alces}
+_GRIDWARE_REPO=${cw_GRIDWARE_docker_gridware_repo:-main}
+_ALCES="${cw_ROOT}"/bin/alces
+
+main "$@"

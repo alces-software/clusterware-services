@@ -30,7 +30,7 @@
 # Alternatively, if you need to specify an explicit working
 # directory for your job set a location here.
 #
-##SBATCH -D $HOME/sharedscratch/
+##SBATCH -D /home/%u/sharedscratch/
 
 #=========================
 #  Environment variables
@@ -68,7 +68,7 @@
 # Set the name of your job - this will be shown in the process
 # queue.
 #
-#SBATCH -J myjob
+##SBATCH -J myjob
 
 #=======================
 #  Email notifications
@@ -121,9 +121,9 @@
 # be terminated if it exceeds the specified allocation**.
 #
 # Note that this setting is specified in megabytes.
-# e.g. specify `4096` for 4 gigabytes.
+# e.g. specify `1024` for 1 gigabyte.
 #
-#SBATCH --mem=4096
+#SBATCH --mem=1024
 
 # ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 #  >>>> SET TASK ENVIRONMENT VARIABLES
@@ -161,5 +161,5 @@ echo "Executing job commands, current working directory is $(pwd)"
 
 # REPLACE THE FOLLOWING WITH YOUR APPLICATION COMMANDS
 
-echo "This is an example job, I ran on `hostname -s` as `whoami`" > $OUTPUT_PATH/test.output
+echo "This is an example job. It ran on `hostname -s` (as `whoami`)." > $OUTPUT_PATH/test.output
 echo "Output file has been generated, please check $OUTPUT_PATH/test.output"
