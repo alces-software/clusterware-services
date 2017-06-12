@@ -59,6 +59,10 @@ component-slurmctld:
         sed -e "s,_cw_ROOT_,${cw_ROOT},g" \
             init/systemd/clusterware-slurm-slurmctld.service \
             > /etc/systemd/system/clusterware-slurm-slurmctld.service
+        cat <<EOF > /etc/tmpfiles.d/clusterware-slurm.conf
+    # Clusterware Slurm runtime directory
+    d /run/slurm 0755 slurm root -
+    EOF
     }
   ubuntu1604: |
     enable_munged() {
@@ -70,6 +74,10 @@ component-slurmctld:
         sed -e "s,_cw_ROOT_,${cw_ROOT},g" \
             init/systemd/clusterware-slurm-slurmctld.service \
             > /etc/systemd/system/clusterware-slurm-slurmctld.service
+        cat <<EOF > /etc/tmpfiles.d/clusterware-slurm.conf
+    # Clusterware Slurm runtime directory
+    d /run/slurm 0755 slurm root -
+    EOF
     }
   _: |
     enable_munged
@@ -85,6 +93,10 @@ component-slurmd:
         sed -e "s,_cw_ROOT_,${cw_ROOT},g" \
             init/systemd/clusterware-slurm-slurmd.service \
             > /etc/systemd/system/clusterware-slurm-slurmd.service
+        cat <<EOF > /etc/tmpfiles.d/clusterware-slurm.conf
+    # Clusterware Slurm runtime directory
+    d /run/slurm 0755 slurm root -
+    EOF
     }
   ubuntu1604: |
     enable_munged() {
@@ -96,6 +108,10 @@ component-slurmd:
         sed -e "s,_cw_ROOT_,${cw_ROOT},g" \
             init/systemd/clusterware-slurm-slurmd.service \
             > /etc/systemd/system/clusterware-slurm-slurmd.service
+        cat <<EOF > /etc/tmpfiles.d/clusterware-slurm.conf
+    # Clusterware Slurm runtime directory
+    d /run/slurm 0755 slurm root -
+    EOF
     }
   _: |
     enable_munged

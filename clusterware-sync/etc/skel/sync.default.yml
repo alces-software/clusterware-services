@@ -1,5 +1,13 @@
 ---
 :source: :home
+:exclude:
+- ".*"
+:include:
+- ".bash*"
+- ".config/clusterware/*.rc"
+- ".config/clusterware/sync.*.yml"
+- ".emacs"
+- ".viminfo"
 :encrypt:
 - ".ssh/*"
-- ".config/clusterware/storage*"
+- ".config/clusterware/storage*+"

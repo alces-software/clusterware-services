@@ -93,14 +93,17 @@ groups.each { |group|
 }
 
 all_partition = group_results.delete("all")
-if all_partition and !"$default_queue".empty?
+default_queue = "${default_queue}"
+default_queue = "_default" if default_queue == "default"
+if all_partition and !default_queue.empty?
   # Jobs outside a specific scaling group (e.g. in 'all') we add to the default
   # autoscaling group
-  group_results["$default_queue"][:cores_req] += all_partition[:cores_req]
-  group_results["$default_queue"][:nodes_req] += all_partition[:nodes_req]
+  group_results[default_queue][:cores_req] += all_partition[:cores_req]
+  group_results[default_queue][:nodes_req] += all_partition[:nodes_req]
 end
 
 group_results.each do |k,v|
+  k = "default" if k == "_default"
   puts "slurm_queue_#{k.gsub(/[-\.]/, "_")}_cores_req=#{v[:cores_req]}"
   puts "slurm_queue_#{k.gsub(/[-\.]/, "_")}_nodes_req=#{v[:nodes_req]}"
 end

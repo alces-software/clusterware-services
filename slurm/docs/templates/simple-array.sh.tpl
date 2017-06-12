@@ -1,11 +1,10 @@
 #!/bin/bash -l
-#@          cw_TEMPLATE[name]="Simple serial (Slurm)"
-#@          cw_TEMPLATE[desc]="Submit a single job."
-#@ cw_TEMPLATE[extended_desc]="Your job will be allocated a single core on the first available node."
-#@     cw_TEMPLATE[copyright]="Copyright (C) 2016 Alces Software Ltd."
+#@          cw_TEMPLATE[name]="Simple serial array (Slurm)"
+#@          cw_TEMPLATE[desc]="Submit multiple, similar jobs. Each job will be allocated a single core on the first available node."
+#@     cw_TEMPLATE[copyright]="Copyright (C) 2017 Alces Software Ltd."
 #@       cw_TEMPLATE[license]="Creative Commons Attribution-ShareAlike 4.0 International"
 #==============================================================================
-# Copyright (C) 2016 Alces Software Ltd.
+# Copyright (C) 2017 Alces Software Ltd.
 #
 # This work is licensed under a Creative Commons Attribution-ShareAlike
 # 4.0 International License.
@@ -50,7 +49,7 @@
 # output stream of your job script. If you omit `-e` below,
 # standard error will also be written to this file.
 #
-#SBATCH -o job-%j.output
+#SBATCH -o job-%A.%a.output
 
 # Set an output file for STDERR
 #
@@ -60,7 +59,7 @@
 # This is not required if you want to merge both output streams into
 # the file specified above.
 #
-##SBATCH -e job-%j.error
+##SBATCH -e job-%A.%a.error
 
 #============
 #  Job name
@@ -125,14 +124,27 @@
 #
 #SBATCH --mem=1024
 
+#=======================
+#  Array configuration
+#-----------------------
+# Enter the number of tasks and how many to schedule at once.
+#
+# For example 1-10%4 will run 10 jobs, numbered from 1 to 10 and limit
+# the number of simultaneous jobs to 4.
+#
+#SBATCH --array=1-10%4
+
 # ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 #  >>>> SET TASK ENVIRONMENT VARIABLES
 # ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 # If necessary, set up further environment variables that are not
 # specific to your workload here.
 #
-# Several standard variables, such as SLURM_JOB_ID, SLURM_JOB_NAME and
-# SLURM_NTASKS, are made available by the scheduler.
+# Several array variables, such as SLURM_ARRAY_JOB_ID,
+# SLURM_ARRAY_TASK_ID, SLURM_ARRAY_TASK_COUNT, SLURM_ARRAY_TASK_MAX
+# and SLURM_ARRAY_TASK_MIN as well as the usual standard variables,
+# SLURM_JOB_ID, SLURM_JOB_NAME and SLURM_NTASKS, are made available by
+# the scheduler.
 
 # ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 #  >>>> YOUR WORKLOAD
@@ -149,7 +161,7 @@
 #---------------------------
 # Specify and create an output file directory.
 
-OUTPUT_PATH="$(pwd)/${SLURM_JOB_NAME}-outputs/$SLURM_JOB_ID"
+OUTPUT_PATH="$(pwd)/${SLURM_JOB_NAME}-outputs/$SLURM_ARRAY_JOB_ID"
 mkdir -p "$OUTPUT_PATH"
 
 #===============================
@@ -161,5 +173,5 @@ echo "Executing job commands, current working directory is $(pwd)"
 
 # REPLACE THE FOLLOWING WITH YOUR APPLICATION COMMANDS
 
-echo "This is an example job. It ran on `hostname -s` (as `whoami`)." > $OUTPUT_PATH/test.output
+echo "This is an example array job. This process was task number $SLURM_ARRAY_TASK_ID and it ran on `hostname -s` (as `whoami`)." > $OUTPUT_PATH/test.output.$SLURM_ARRAY_TASK_ID
 echo "Output file has been generated, please check $OUTPUT_PATH/test.output"

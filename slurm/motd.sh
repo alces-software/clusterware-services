@@ -6,7 +6,7 @@
 ################################################################################
 if [[ :"$LOADEDMODULES": == *":services/slurm:"* ]]; then
     echo ""
-    printf "%-25s - %s\n" "'srun'" "obtain a job allocation (as needed) and execute an application"
+    printf "%-25s - %s\n" "'sbatch'" "submit a batch job"
     printf "%-25s - %s\n" "'squeue'" "view information about jobs"
     printf "%-25s - %s\n" "'sinfo'" "view information about nodes and partitions"
 fi
