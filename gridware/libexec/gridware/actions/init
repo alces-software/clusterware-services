@@ -153,7 +153,7 @@ RUBY
     while [ -d "${cw_GRIDWARE_rooty_root}/u/${uuid}" ]; do
       uuid=$(uuid -v4 | head -c6)
     done
-    ln -s "${depot}" "${cw_GRIDWARE_rooty_root}/u/${uuid}"
+    ln -s `readlink -f "${depot}"` "${cw_GRIDWARE_rooty_root}/u/${uuid}"
     ln -s "${cw_GRIDWARE_rooty_root}/u/${uuid}" "${depot}"/.gridware-userspace
   fi
 }
