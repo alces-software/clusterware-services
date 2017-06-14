@@ -175,6 +175,19 @@ help_for_run() {
       to override the '/job/input', '/job/output' and '/job/work' directories
       described above.
 
+    --mpi[=N]
+      Run the job in an MPI environment, starting N copies of the image in a
+      "slave" configuration, before running a container for the MPI "master"
+      process. If not specified, N defaults to 2.
+
+      Two files will be made available within the container at '/job/work/':
+        - '/job/work/hosts' is a hosts file containing entries for each slave
+          container being run as part of the job
+        - '/job/work/hostlist' is a file listing the IP addresses of each
+          slave container, one per line.
+      These files may be used to specify a list of hosts for 'mpirun' or
+      similar.
+
 EOF
 }
 
