@@ -37,35 +37,36 @@ setup() {
 }
 
 main() {
-    local img tag id shared suffix
-    suffix="$1"
-    if [ "$suffix" ]; then
-        suffix='*'"${suffix}"'*'
-        resuffix='.*'"${suffix}"'.*'
-    fi
-    echo "Remote (${_REGISTRY}/${_REGISTRY_USER}):"
-    docker search "${_REGISTRY}"/${_REGISTRY_USER}/gridware-${suffix} --limit 100 --no-trunc | \
-        tail -n+2 | cut -f1 -d" " | cut -c16- | sort | sed 's/^/  /g'
-    echo ""
-    echo "Local (* indicates shared):"
-    for img in `docker images --no-trunc --format "{{.Repository}}:{{.ID}}" | grep "/gridware-${resuffix}" | cut -f1 -d" " | cut -f2- -d'-' | sort`; do
-      tag=${img%%:*}
-      id=${img##*:}
-      if [ -f "/opt/gridware/docker/exports/${id}" ]; then
-        shared="* "
-      else
-        shared="  "
-      fi
-      echo "${shared}${tag#*-}"
-    done
+  local registry_volume
+
+  files_load_config config config/cluster
+
+  registry_volume="${cw_GRIDWARE_root}/docker/registry"
+  mkdir -p "$registry_volume"
+
+  docker run -d -p 5000:5000 --name registry \
+    -v "$registry_volume":/var/lib/registry \
+    -v "$cw_GRIDWARE_root/docker/certificates/private":/certs \
+    -e REGISTRY_HTTP_TLS_CERTIFICATE="/certs/cert.pem" \
+    -e REGISTRY_HTTP_TLS_KEY="/certs/key.pem" \
+    registry:2
+
+  if [[ $? -eq 0 ]]; then
+    echo "Started Docker repository at ${cw_CLUSTER_hostname}:5000"
+  fi
+
 }
 
 cw_BINNAME="alces gridware"
 
 setup
 require action
-require process
 require files
+require handler
+require process
+
+# root is required to read the SSL certificates
+process_reexec_sudo "$@"
 
 r=$(type -p docker)
 if [ $? != 0 -o ! -x "$r" ]; then
@@ -75,8 +76,5 @@ elif ! process_reexec_sg docker --plain "$@"; then
 fi
 
 files_load_config gridware
-
-_REGISTRY=${cw_GRIDWARE_docker_registry:-docker.io}
-_REGISTRY_USER=${cw_GRIDWARE_docker_registry_user:-alces}
 
 main "$@"

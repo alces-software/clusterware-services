@@ -152,7 +152,7 @@ fi;;
         "$(_cw_root)"/bin/alces gridware depot list -1 2>&1 | sed '
                 s#^\(.*\)/\(.\+\)(default)#\1\n\1\/\2#;
                 s#/*$##g; s#^base/##g;'
- 
+
     }
 
     _alces_list_cache_expired() {
@@ -164,10 +164,10 @@ fi;;
             return 1
         fi
     }
-    
+
     _alces_gridware() {
         local cur="$1" prev="$2" cmds opts
-        cmds="clean default help info install list purge update import export depot search requires"
+        cmds="clean default docker help info install list purge update import export depot search requires"
         if ((COMP_CWORD > 2)); then
             case "$prev" in
                 in*|r*)
@@ -191,6 +191,9 @@ fi;;
                     ;;
                 dep*)
                     COMPREPLY=( $(compgen -W "list enable disable update info install purge init" -- "$cur") )
+                    ;;
+                do*)
+                   COMPREPLY=( $(compgen -W "build help list pull push run share start-registry" -- "$cur") )
                     ;;
                 *)
                     # for purge, clean and default, we provide a module list

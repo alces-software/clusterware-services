@@ -42,8 +42,17 @@ case $action in
     b|bu|bui|buil|build)
         exec /bin/bash ${cw_ROOT}/libexec/gridware/actions/docker_build "$@"
         ;;
-    p|pu|pus|push)
+    pul|pull)
+        exec /bin/bash ${cw_ROOT}/libexec/gridware/actions/docker_pull "$@"
+        ;;
+    pus|push)
         exec /bin/bash ${cw_ROOT}/libexec/gridware/actions/docker_push "$@"
+        ;;
+    sh|sha|shar|share)
+        exec /bin/bash ${cw_ROOT}/libexec/gridware/actions/docker_share "$@"
+        ;;
+    st|sta|star|start|start-registry)
+        exec /bin/bash ${cw_ROOT}/libexec/gridware/actions/docker_start_registry "$@"
         ;;
     *)
         cat <<EOF
@@ -56,7 +65,10 @@ printf "  %-27s  %s\n" "$cw_BINNAME help" "More help about this command."
 printf "  %-27s  %s\n" "$cw_BINNAME list" "List available Gridware containers."
 printf "  %-27s  %s\n" "$cw_BINNAME run" "Run a containerized Gridware application."
 printf "  %-27s  %s\n" "$cw_BINNAME build" "Build a containerized Gridware application."
-printf "  %-27s  %s\n" "$cw_BINNAME push" "Push a built container to the Docker registry."
+printf "  %-27s  %s\n" "$cw_BINNAME pull" "Push a container image from a Docker registry."
+printf "  %-27s  %s\n" "$cw_BINNAME push" "Push a built container image to the Docker registry."
+printf "  %-27s  %s\n" "$cw_BINNAME share" "Share a container image with other nodes in this cluster."
+printf "  %-27s  %s\n" "$cw_BINNAME start-registry" "Start a local Docker registry."
 cat <<EOF
 
 Please report bugs to support@alces-software.com

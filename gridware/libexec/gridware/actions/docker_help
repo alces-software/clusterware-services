@@ -27,7 +27,7 @@ main() {
     shift
 
     case $action in
-        help|build|list|push|run)
+        help|build|list|pull|push|run|share|start-registry)
             help_for_${action}
             ;;
         ?*)
@@ -63,7 +63,7 @@ help_for_list() {
 
   DESCRIPTION:
 
-    List available Gridware containers.
+    List available Gridware container images.
 
 EOF
 }
@@ -72,23 +72,30 @@ help_for_build() {
     cat <<EOF
   SYNOPSIS:
 
-    alces gridware docker build [OPTIONS] <package> [--variant <variant>]
+    alces gridware docker build [OPTIONS] <package> [--variant <variant>] [<package> [--variant <variant>] ...]
 
   DESCRIPTION:
 
-    Build a new Gridware container for Gridware package <package>,
-    supplying an optional <variant>.
+    Build a new Gridware container image for Gridware package <package>,
+    supplying an optional <variant>. Multiple packages can be specified.
 
-    The parameters are ignored when building the base container.
+    The parameters are ignored when building the base container image.
 
   OPTIONS:
 
     --base
-      Build the Gridware base container.
+      Build the Gridware base container image.
 
     --from <container>
-      Specify a different Gridware base container to use when building
+      Specify a different Gridware base container image to use when building
       the container for <package>.
+
+    --name <name>
+      Specify a name for the image. If not specified, a name based on the
+      selected packages will be generated.
+
+    --script <scriptfile>
+      Specify a job script to run by default in the container image.
 
 EOF
 }
@@ -101,13 +108,27 @@ help_for_push() {
 
   DESCRIPTION:
 
-    Push the built Gridware container for <package> to the configured
+    Push the built Gridware container image for <package> to the configured
     Docker container registry.
 
   OPTIONS:
 
     --base
-      Push the Gridware base container.
+      Push the Gridware base container image.
+
+EOF
+}
+
+help_for_pull() {
+    cat <<EOF
+  SYNOPSIS:
+
+    alces gridware docker pull <package>
+
+  DESCRIPTION:
+
+    Pull a prebuilt Gridware container image for <package> from the configured
+    Docker container registry.
 
 EOF
 }
@@ -149,6 +170,48 @@ help_for_run() {
       mapped into the container at '/job/input'.  Defaults to the name
       of the <package>.
 
+    --mount /path/on/host:/path/in/container
+      Specify additional volumes to mount in the container. It is not possible
+      to override the '/job/input', '/job/output' and '/job/work' directories
+      described above.
+
+EOF
+}
+
+
+help_for_share() {
+    cat <<EOF
+  SYNOPSIS:
+
+    alces gridware docker share <package>
+
+  DESCRIPTION:
+
+    Share the Gridware container image for <package> with other nodes in the
+    cluster.
+
+    The image must already be available on the node from which this command is
+    run (e.g. have been used with 'alces gridware docker pull' or 'alces
+    gridware docker run'). Other nodes in the cluster will automatically import
+    the image, making it available to run on each node.
+
+EOF
+}
+
+help_for_start-registry() {
+    cat <<EOF
+  SYNOPSIS:
+
+    alces gridware docker start-registry
+
+  DESCRIPTION:
+
+    Run a local Docker image repository.
+
+    This command will start a Docker container running a Docker image repository
+    configured on port 5000. Images can then be pushed and pulled to the
+    repository as per the Docker documentation, from any node in the cluster.
+
 EOF
 }
 
@@ -168,11 +231,14 @@ general_help() {
   COMMANDS:
 
 EOF
-printf "    %-27s  %s\n" "$binname help" "More help about this command."
-printf "    %-27s  %s\n" "$binname list" "List available Gridware containers."
-printf "    %-27s  %s\n" "$binname run" "Run a containerized Gridware application."
-printf "    %-27s  %s\n" "$binname build" "Build a containerized Gridware application."
-printf "    %-27s  %s\n" "$binname push" "Push a built container to the Docker registry."
+printf "  %-27s  %s\n" "$cw_BINNAME help" "More help about this command."
+printf "  %-27s  %s\n" "$cw_BINNAME list" "List available Gridware containers."
+printf "  %-27s  %s\n" "$cw_BINNAME run" "Run a containerized Gridware application."
+printf "  %-27s  %s\n" "$cw_BINNAME build" "Build a containerized Gridware application."
+printf "  %-27s  %s\n" "$cw_BINNAME pull" "Push a container image from a Docker registry."
+printf "  %-27s  %s\n" "$cw_BINNAME push" "Push a built container image to the Docker registry."
+printf "  %-27s  %s\n" "$cw_BINNAME share" "Share a container image with other nodes in this cluster."
+printf "  %-27s  %s\n" "$cw_BINNAME start-registry" "Start a local Docker registry."
 cat <<EOF
 
 Please report bugs to support@alces-software.com

@@ -37,35 +37,34 @@ setup() {
 }
 
 main() {
-    local img tag id shared suffix
-    suffix="$1"
-    if [ "$suffix" ]; then
-        suffix='*'"${suffix}"'*'
-        resuffix='.*'"${suffix}"'.*'
-    fi
-    echo "Remote (${_REGISTRY}/${_REGISTRY_USER}):"
-    docker search "${_REGISTRY}"/${_REGISTRY_USER}/gridware-${suffix} --limit 100 --no-trunc | \
-        tail -n+2 | cut -f1 -d" " | cut -c16- | sort | sed 's/^/  /g'
-    echo ""
-    echo "Local (* indicates shared):"
-    for img in `docker images --no-trunc --format "{{.Repository}}:{{.ID}}" | grep "/gridware-${resuffix}" | cut -f1 -d" " | cut -f2- -d'-' | sort`; do
-      tag=${img%%:*}
-      id=${img##*:}
-      if [ -f "/opt/gridware/docker/exports/${id}" ]; then
-        shared="* "
-      else
-        shared="  "
-      fi
-      echo "${shared}${tag#*-}"
-    done
+  local image_id image_name
+  image_name="gridware-${1}"
+
+  set -o pipefail
+  image_id=$(docker image inspect --format='{{.Id}}' "$_REGISTRY/$_REGISTRY_USER/$image_name" | sed -e "s/sha256://")
+
+  if [[ $? -eq 0 && ! -z "$image_id" ]]; then
+
+    docker save -o "${cw_GRIDWARE_root:-/opt/gridware}/docker/exports/${image_id}" "$_REGISTRY/$_REGISTRY_USER/$image_name"
+    chmod 0644 "${cw_GRIDWARE_root:-/opt/gridware}/docker/exports/${image_id}"
+
+    handler_broadcast gridware-docker-exports
+  else
+    echo "Unable to find image for $1."
+    return 1
+  fi
 }
 
 cw_BINNAME="alces gridware"
 
 setup
 require action
-require process
 require files
+require handler
+require process
+
+# root is required to broadcast the gridware-docker-exports event
+process_reexec_sudo "$@"
 
 r=$(type -p docker)
 if [ $? != 0 -o ! -x "$r" ]; then
