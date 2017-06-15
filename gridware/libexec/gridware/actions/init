@@ -164,7 +164,7 @@ configure_userspace() {
     cw_GRIDWARE_rooty_root="$cw_GRIDWARE_root"
     cw_GRIDWARE_root="$HOME/gridware"
     cw_GRIDWARE_modulespath_file="$HOME/.modulespath"
-    cw_GRIDWARE_userspace=true
+    cw_GRIDWARE_userspace=$USER
 
     if [ ! -f "$cw_GRIDWARE_modulespath_file" ]; then
       cat <<EOF > "$cw_GRIDWARE_modulespath_file"
