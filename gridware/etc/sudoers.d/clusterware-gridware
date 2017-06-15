@@ -10,3 +10,4 @@ Defaults!/usr/bin/yum !requiretty
 %gridware ALL=(root) NOPASSWD:_ROOT_/libexec/share/trigger-depot-event *
 root,%gridware ALL=(:docker) NOPASSWD:_ROOT_/libexec/gridware/actions/docker_*
 ALL ALL=(:docker) NOPASSWD:_ROOT_/libexec/share/docker-run *
+ALL ALL= NOPASSWD:SETENV:_ROOT_/bin/alces gridware distro_deps *
