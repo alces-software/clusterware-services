@@ -211,3 +211,9 @@ fi;;
 
     complete -o default -F _module module mod
 fi
+
+if [ ! -d '~/gridware/personal' ]; then
+  pushd ~ >/dev/null 2>&1
+  "$(_cw_root)/bin/alces" gridware init
+  popd >/dev/null 2>&1
+fi

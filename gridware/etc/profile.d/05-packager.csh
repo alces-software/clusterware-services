@@ -69,6 +69,12 @@ if ( -r ~/.modules ) then
   source ~/.modules
 endif
 
+if ( ! -d '~/gridware/personal' ) then
+  pushd ~ >/dev/null 2>&1
+  _ROOT_/bin/alces gridware init
+  popd >/dev/null 2>&1
+endif
+
 unset exec_prefix
 unset prefix
 unset postfix
