@@ -69,7 +69,7 @@ if ( -r ~/.modules ) then
   source ~/.modules
 endif
 
-if ( ! -d ~/gridware/personal ) then
+if ( ! -d ~/gridware/personal && $USER != "root" ) then
   pushd ~ >/dev/null 2>&1
   _ROOT_/bin/alces gridware init
   popd >/dev/null 2>&1
