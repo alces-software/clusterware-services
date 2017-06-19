@@ -22,11 +22,11 @@
 ---
 install:
   el7: |
-    yum install -y -e0 wget sqlite patch bzip2 xz file which sudo
+    yum install -y -e0 wget sqlite patch bzip2 xz file which sudo uuid
   el6: |
-    yum install -y -e0 wget sqlite patch bzip2 xz file which sudo
+    yum install -y -e0 wget sqlite patch bzip2 xz file which sudo uuid
   ubuntu1604: |
-    apt-get install -y gawk wget sqlite3 patch xz-utils debianutils sudo libcurl3
+    apt-get install -y gawk wget sqlite3 patch xz-utils debianutils sudo libcurl3 uuid
   _: |
     alces service install modules
     require serviceware
