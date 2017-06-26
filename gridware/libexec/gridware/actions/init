@@ -148,13 +148,13 @@ RUBY
     find "${depot}" -type d -exec chmod 2775 {} \;
 
   if [ "$cw_GRIDWARE_userspace" ]; then
-    # symlink this repo under /opt/gridware/u so binary patching works
+    # symlink this repo under /opt/gridware/depots/u so binary patching works
     uuid=$(uuid -v4 | head -c6)
-    while [ -d "${cw_GRIDWARE_rooty_root}/u/${uuid}" ]; do
+    while [ -d "${cw_GRIDWARE_rooty_root}/depots/u/${uuid}" ]; do
       uuid=$(uuid -v4 | head -c6)
     done
-    ln -s `readlink -f "${depot}"` "${cw_GRIDWARE_rooty_root}/u/${uuid}"
-    ln -s "${cw_GRIDWARE_rooty_root}/u/${uuid}" "${depot}"/.gridware-userspace
+    ln -s `readlink -f "${depot}"` "${cw_GRIDWARE_rooty_root}/depots/u/${uuid}"
+    ln -s "${cw_GRIDWARE_rooty_root}/depots/u/${uuid}" "${depot}"/.gridware-userspace
   fi
 }
 
