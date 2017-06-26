@@ -190,7 +190,7 @@ configure_userspace() {
 #
 #=Alces Gridware Depots
 EOF
-
+      export MODULEPATH="$cw_GRIDWARE_modulespath_file":"$MODULEPATH"
     fi
   fi
 }
