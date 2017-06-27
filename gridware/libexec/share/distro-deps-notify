@@ -58,6 +58,17 @@ main() {
   mkdir -p "${cw_GRIDWARE_root:-/opt/gridware}/etc/package-requests"
 
   echo "\"$user\" \"$gridware_package\" \"$distro_package\" \"$repo_path\"" > "${cw_GRIDWARE_root:-/opt/gridware}/etc/package-requests/${request_file}"
+
+  if [ -x mail ] && [ ! -z "$cw_GRIDWARE_admin_email" ]; then
+    files_load_config network
+    mail -s "Gridware dependency installation request" "$cw_GRIDWARE_admin_email" <<EOF
+The user ${user} has requested installation of distribution package ${distro_package} on ${cw_NETWORK_hostname}.
+
+This package is required for the Gridware package ${gridware_package} from repo ${repo_path}.
+
+You can handle this request by running 'alces gridware package_requests install' as root.
+EOF
+  fi
 }
 
 setup

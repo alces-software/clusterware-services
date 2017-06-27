@@ -15,3 +15,4 @@ cw_GRIDWARE_var=/var
 #cw_GRIDWARE_docker_registry=docker.io
 #cw_GRIDWARE_docker_registry_user=alces
 #cw_GRIDWARE_docker_gridware_repo=main
+#cw_GRIDWARE_admin_email=somebody@example.com
