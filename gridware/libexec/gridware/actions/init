@@ -67,6 +67,23 @@ _create_default_depot() {
 }
 
 _create_gridware_configuration() {
+  if [ "$cw_GRIDWARE_userspace" ]; then
+    cat <<EOF > "${cw_GRIDWARE_root}"/etc/gridware.yml
+################################################################################
+##
+## Alces Clusterware - Gridware packager configuration
+## Copyright (c) 2017 Alces Software Ltd
+##
+################################################################################
+---
+:repo_paths:
+# - ${HOME}/gridware/repos/example
+EOF
+    if [ ! -d ${HOME}/gridware/repos/example ]; then
+      mkdir -p ${HOME}/gridware/repos
+      cp -r ${cw_ROOT}/etc/gridware/reposkel ${HOME}/gridware/repos/example
+    fi
+  else
     cat <<EOF > "${cw_GRIDWARE_root}"/etc/gridware.yml
 ################################################################################
 ##
@@ -95,6 +112,7 @@ _create_gridware_configuration() {
 :update_period: 3
 :last_update_filename: .last_update
 EOF
+  fi
     cat <<EOF > "${cw_GRIDWARE_root}"/etc/params.yml
 'apps/example':
   :optimize: true
