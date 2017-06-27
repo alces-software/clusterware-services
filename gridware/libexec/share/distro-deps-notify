@@ -28,7 +28,9 @@
 # By default, the script creates entries in /opt/gridware/etc/package-requests
 # containing details of the request. Administrators (members of the `gridware`
 # group) are notified of pending requests on login and can approve or reject
-# them as desired.
+# them as desired. If sendmail is installed and an admin email address has been
+# configured in $cw_ROOT/etc/gridware.rc then an email is sent to that address
+# with details of the request.
 
 setup() {
     local a xdg_config
@@ -59,14 +61,18 @@ main() {
 
   echo "\"$user\" \"$gridware_package\" \"$distro_package\" \"$repo_path\"" > "${cw_GRIDWARE_root:-/opt/gridware}/etc/package-requests/${request_file}"
 
-  if [ -x mail ] && [ ! -z "$cw_GRIDWARE_admin_email" ]; then
+  if [ -x sendmail ] && [ ! -z "$cw_GRIDWARE_admin_email" ]; then
     files_load_config network
-    mail -s "Gridware dependency installation request" "$cw_GRIDWARE_admin_email" <<EOF
+    cat <<EOF | sendmail "$cw_GRIDWARE_admin_email"
+Subject: Gridware dependency installation request
+
 The user ${user} has requested installation of distribution package ${distro_package} on ${cw_NETWORK_hostname}.
 
 This package is required for the Gridware package ${gridware_package} from repo ${repo_path}.
 
 You can handle this request by running 'alces gridware package_requests install' as root.
+
+Please do not reply to this automated email.
 EOF
   fi
 }
