@@ -1,0 +1,78 @@
+#!/bin/bash
+#==============================================================================
+# Copyright (C) 2017 Stephen F. Norledge and Alces Software Ltd.
+#
+# This file/package is part of Alces Clusterware.
+#
+# Alces Clusterware is free software: you can redistribute it and/or
+# modify it under the terms of the GNU Affero General Public License
+# as published by the Free Software Foundation, either version 3 of
+# the License, or (at your option) any later version.
+#
+# Alces Clusterware is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this package.  If not, see <http://www.gnu.org/licenses/>.
+#
+# For more information on the Alces Clusterware, please visit:
+# https://github.com/alces-software/clusterware
+#==============================================================================
+
+# This script is invoked by Gridware's `package_requests` command when a user
+# package install request is fulfilled by an administrator.
+
+# By default, if sendmail is installed and a user email address has been
+# configured in ~user/gridware/etc/gridware.yml, then an email is sent to that
+# address with details of the request fulfillment.
+# If no email address is supplied (or sendmail is not installed) then this
+# script has no effect.
+
+setup() {
+    local a xdg_config
+    IFS=: read -a xdg_config <<< "${XDG_CONFIG_HOME:-$HOME/.config}:${XDG_CONFIG_DIRS:-/etc/xdg}"
+    for a in "${xdg_config[@]}"; do
+        if [ -e "${a}"/clusterware/config.vars.sh ]; then
+            source "${a}"/clusterware/config.vars.sh
+            break
+        fi
+    done
+    if [ -z "${cw_ROOT}" ]; then
+        echo "$0: unable to locate clusterware configuration"
+        exit 1
+    fi
+    kernel_load
+}
+
+main() {
+  local distro_package email gridware_package repo_path user
+
+  user="$1"
+  gridware_package="$2"
+  distro_package="$3"
+  repo_path="$4"
+  email="$5"
+
+  if [ -x sendmail ] && [ ! -z "$email" ]; then
+    files_load_config network
+    cat <<EOF | sendmail "$email"
+Subject: Gridware dependency installation request fulfilled
+
+Dear ${user},
+
+Your system administrator has approved installation of distribution package
+${distro_package} on ${cw_NETWORK_hostname}.
+
+You required this package to install the Gridware package ${gridware_package}
+from repo ${repo_path}.
+
+Please do not reply to this automated email.
+EOF
+  fi
+}
+
+setup
+require files
+main "$@"

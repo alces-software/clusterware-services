@@ -78,6 +78,7 @@ _create_gridware_configuration() {
 ---
 :repo_paths:
 # - ${HOME}/gridware/repos/example
+#:user_email: someone@example.com
 EOF
     if [ ! -d ${HOME}/gridware/repos/example ]; then
       mkdir -p ${HOME}/gridware/repos
