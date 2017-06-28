@@ -61,7 +61,7 @@ main() {
 
   echo "\"$user\" \"$gridware_package\" \"$distro_package\" \"$repo_path\"" > "${cw_GRIDWARE_root:-/opt/gridware}/etc/package-requests/${request_file}"
 
-  if [ -x sendmail ] && [ ! -z "$cw_GRIDWARE_admin_email" ]; then
+  if [ -x "$(command -v sendmail)" ] && [ ! -z "$cw_GRIDWARE_admin_email" ]; then
     files_load_config network
     cat <<EOF | sendmail "$cw_GRIDWARE_admin_email"
 Subject: Gridware dependency installation request

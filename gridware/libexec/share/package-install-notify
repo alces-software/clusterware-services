@@ -55,7 +55,7 @@ main() {
   repo_path="$4"
   email="$5"
 
-  if [ -x sendmail ] && [ ! -z "$email" ]; then
+  if [ -x "$(command -v sendmail)" ] && [ ! -z "$email" ]; then
     files_load_config network
     cat <<EOF | sendmail "$email"
 Subject: Gridware dependency installation request fulfilled
