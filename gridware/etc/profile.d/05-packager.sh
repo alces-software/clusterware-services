@@ -10,6 +10,12 @@ for a in modules modulerc; do
     fi
 done
 
+if [ ! -d ~/gridware/personal ] && [ $UID -ne 0 ]; then
+  pushd ~ >/dev/null 2>&1
+  "$(_cw_root)/bin/alces" gridware init
+  popd >/dev/null 2>&1
+fi
+
 if [ -d "$(_cw_root)"/opt/modules ]; then
     module() { alces module "$@" ; }
     if [ "$ZSH_VERSION" ]; then
@@ -210,10 +216,4 @@ fi;;
     }
 
     complete -o default -F _module module mod
-fi
-
-if [ ! -d ~/gridware/personal -a $UID -ne 0 ]; then
-  pushd ~ >/dev/null 2>&1
-  "$(_cw_root)/bin/alces" gridware init
-  popd >/dev/null 2>&1
 fi

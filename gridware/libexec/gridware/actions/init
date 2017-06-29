@@ -209,7 +209,6 @@ configure_userspace() {
 #
 #=Alces Gridware Depots
 EOF
-      echo "Please log out and in again to use Alces Gridware."
     fi
   fi
 }
