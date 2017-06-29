@@ -173,9 +173,12 @@ fi;;
 
     _alces_gridware() {
         local cur="$1" prev="$2" cmds opts
-        cmds="clean default docker help info install list purge update import export depot search requires"
+        cmds="clean default dependencies docker help info install list purge update import export depot search requires requests"
         if ((COMP_CWORD > 2)); then
             case "$prev" in
+                reque*)
+                    COMPREPLY=( $(compgen -W "list install" -- "$cur") )
+                    ;;
                 in*|r*)
                     if ((COMP_CWORD > 3)); then
                       if [ -z "$cw_DEPOT_LIST" ] || _alces_list_cache_expired $cw_DEPOT_LIST_MTIME; then
@@ -195,7 +198,7 @@ fi;;
                     # for purge, clean and default, we provide a module list
                     COMPREPLY=( $(compgen -W "$(_module_avail_specific)" -- "$cur") )
                     ;;
-                dep*)
+                depo*)
                     COMPREPLY=( $(compgen -W "list enable disable update info install purge init" -- "$cur") )
                     ;;
                 do*)
