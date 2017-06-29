@@ -70,7 +70,7 @@ The user ${user} has requested installation of distribution package ${distro_pac
 
 This package is required for the Gridware package ${gridware_package} from repo ${repo_path}.
 
-You can handle this request by running 'alces gridware package_requests install' as root.
+You can handle this request by running 'alces gridware requests install' as root.
 
 Please do not reply to this automated email.
 EOF
