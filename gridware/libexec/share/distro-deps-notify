@@ -1,0 +1,83 @@
+#!/bin/bash
+#==============================================================================
+# Copyright (C) 2017 Stephen F. Norledge and Alces Software Ltd.
+#
+# This file/package is part of Alces Clusterware.
+#
+# Alces Clusterware is free software: you can redistribute it and/or
+# modify it under the terms of the GNU Affero General Public License
+# as published by the Free Software Foundation, either version 3 of
+# the License, or (at your option) any later version.
+#
+# Alces Clusterware is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this package.  If not, see <http://www.gnu.org/licenses/>.
+#
+# For more information on the Alces Clusterware, please visit:
+# https://github.com/alces-software/clusterware
+#==============================================================================
+
+# This script is invoked by Gridware's `install` command when a userspace
+# installation requires distribution packages to be installed, and those
+# packages have not been whitelisted in /opt/gridware/etc/whitelist.yml.
+
+# By default, the script creates entries in /opt/gridware/etc/package-requests
+# containing details of the request. Administrators (members of the `gridware`
+# group) are notified of pending requests on login and can approve or reject
+# them as desired. If sendmail is installed and an admin email address has been
+# configured in $cw_ROOT/etc/gridware.rc then an email is sent to that address
+# with details of the request.
+
+setup() {
+    local a xdg_config
+    IFS=: read -a xdg_config <<< "${XDG_CONFIG_HOME:-$HOME/.config}:${XDG_CONFIG_DIRS:-/etc/xdg}"
+    for a in "${xdg_config[@]}"; do
+        if [ -e "${a}"/clusterware/config.vars.sh ]; then
+            source "${a}"/clusterware/config.vars.sh
+            break
+        fi
+    done
+    if [ -z "${cw_ROOT}" ]; then
+        echo "$0: unable to locate clusterware configuration"
+        exit 1
+    fi
+    kernel_load
+}
+
+main() {
+  local distro_package gridware_package repo_path request_file user
+
+  request_file=$(uuid -v4)
+  user="$1"
+  gridware_package="$2"
+  distro_package="$3"
+  repo_path="$4"
+
+  mkdir -p "${cw_GRIDWARE_root:-/opt/gridware}/etc/package-requests"
+
+  echo "\"$user\" \"$gridware_package\" \"$distro_package\" \"$repo_path\"" > "${cw_GRIDWARE_root:-/opt/gridware}/etc/package-requests/${request_file}"
+
+  if [ -x "$(command -v sendmail)" ] && [ ! -z "$cw_GRIDWARE_admin_email" ]; then
+    files_load_config network
+    cat <<EOF | sendmail "$cw_GRIDWARE_admin_email"
+Subject: Gridware dependency installation request
+
+The user ${user} has requested installation of distribution package ${distro_package} on ${cw_NETWORK_hostname}.
+
+This package is required for the Gridware package ${gridware_package} from repo ${repo_path}.
+
+You can handle this request by running 'alces gridware requests install' as root.
+
+Please do not reply to this automated email.
+EOF
+  fi
+}
+
+setup
+require files
+files_load_config gridware
+main "$@"

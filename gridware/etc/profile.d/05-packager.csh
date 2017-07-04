@@ -10,6 +10,12 @@ foreach a ( modules modulerc )
     endif
 end
 
+if ( ! -d ~/gridware/personal && $USER != "root" ) then
+  pushd ~ >/dev/null 2>&1
+  _ROOT_/bin/alces gridware init
+  popd >/dev/null 2>&1
+endif
+
 set exec_prefix='_ROOT_/opt/modules/bin'
 
 set prefix=""
