@@ -23,7 +23,7 @@ PID_FILE=/var/run/alces-flight-tutorials.pid
 ADMIN_USER=$(id -un 1000)
 LOG_FILE=/var/log/flight-tutorials/server.log
 DAEMON_HOME=/opt/tutorial
-DAEMON_CMD="su ${ADMIN_USER} -c 'yarn run start' ${LOG_FILE} 2>&1 &"
+DAEMON_CMD="su ${ADMIN_USER} -c 'npm run start' ${LOG_FILE} 2>&1 &"
 
 start()
 {

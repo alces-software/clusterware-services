@@ -12,7 +12,7 @@ After=network.target
 [Service]
 User=1000
 WorkingDirectory=/opt/tutorial
-ExecStart=yarn run start
+ExecStart=npm run start
 PIDFile=/var/run/alces-flight-tutorials.pid
 
 [Install]
