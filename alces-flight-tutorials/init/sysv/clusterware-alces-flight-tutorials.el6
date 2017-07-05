@@ -20,18 +20,17 @@
 . /etc/rc.d/init.d/functions
 
 PID_FILE=/var/run/alces-flight-tutorials.pid
-# DAEMON_CMD="_cw_ROOT_/opt/alces-flight-www/bin/nginx"
-
-admin_user=$(id -un 1000)
+ADMIN_USER=$(id -un 1000)
 LOG_FILE=/var/log/flight-tutorials/server.log
 DAEMON_HOME=/opt/tutorial
-DAEMON_CMD="su ${admin_user} -c 'yarn run start' ${LOG_FILE} 2>&1 &"
+DAEMON_CMD="su ${ADMIN_USER} -c 'yarn run start' ${LOG_FILE} 2>&1 &"
 
 start()
 {
   echo -n Starting Alces Flight Tutorials Server:
   cd $DAEMON_HOME
   $DAEMON_CMD
+  echo "$!" > "${PID_FILE}"
   sleep 2
   PID=`pidofproc -p $PID_FILE`
   if [ -n $PID ]; then
