@@ -13,12 +13,13 @@ install:
   ubuntu1604: |
     apt-get install -y -e0 nodejs npm
   _: |
+    local service_root
+    service_root=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
     require serviceware
     if serviceware_is_installed alces-flight-www; then
         cp etc/alces-flight-www/tutorial.conf.tpl \
           "${cw_ROOT}"/etc/alces-flight-www/server-https.d/tutorial.conf
-        # XXX Does this work with relative paths?
-        "${cw_ROOT}"/libexec/share/www-add-resource resource/alces-flight-www/tutorial
+        "${cw_ROOT}"/libexec/share/www-add-resource "${service_root}"/resource/alces-flight-www/tutorial
     fi
 
 component-base:
