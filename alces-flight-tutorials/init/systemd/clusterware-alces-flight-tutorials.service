@@ -1,0 +1,19 @@
+################################################################################
+##
+## Alces Clusterware - Systemd service unit file
+## Copyright (c) 2015 Alces Software Ltd
+##
+################################################################################
+# Alces Flight Tutorials Server (systemd service unit)
+[Unit]
+Description=Alces Flight Tutorials Server
+After=network.target
+
+[Service]
+User=1000
+WorkingDirectory=/opt/tutorial
+ExecStart=yarn run start
+PIDFile=/var/run/alces-flight-tutorials.pid
+
+[Install]
+WantedBy=multi-user.target

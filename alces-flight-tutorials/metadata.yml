@@ -1,0 +1,75 @@
+---
+install:
+  el6: |
+    yum install -y -e0 nodejs npm yarn
+  el7: |
+    yum install -y -e0 nodejs npm yarn
+  ubuntu1604: |
+    apt-get install -y -e0 nodejs npm yarn
+  _: |
+    require serviceware
+    if serviceware_is_installed alces-flight-www; then
+        cp etc/alces-flight-www/tutorial.conf.tpl \
+          "${cw_ROOT}"/etc/alces-flight-www/server-https.d/tutorial.conf
+        # XXX Does this work with relative paths?
+        "${cw_ROOT}"/libexec/share/www-add-resource resource/alces-flight-www/tutorial
+    fi
+
+component-base:
+  el6: |
+    enable_alces_flight_tutorials() {
+        sed -e "s,_cw_ROOT_,${cw_ROOT},g" \
+            init/sysv/clusterware-alces-flight-tutorials.el6 \
+            > /etc/init.d/clusterware-alces-flight-tutorials
+        chmod 755 /etc/init.d/clusterware-alces-flight-tutorials
+        chkconfig clusterware-alces-flight-tutorials on
+    }
+  el7: |
+    enable_alces_flight_tutorials() {
+        sed -e "s,_cw_ROOT_,${cw_ROOT},g" \
+            init/systemd/clusterware-alces-flight-tutorials.service \
+            > /etc/systemd/system/clusterware-alces-flight-tutorials.service
+        systemctl enable clusterware-alces-flight-tutorials.service
+    }
+  ubuntu1604: |
+    enable_alces_flight_tutorials() {
+        sed -e "s,_cw_ROOT_,${cw_ROOT},g" \
+            init/systemd/clusterware-alces-flight-tutorials.service \
+            > /etc/systemd/system/clusterware-alces-flight-tutorials.service
+        systemctl enable clusterware-alces-flight-tutorials.service
+    }
+  _: |
+    enable_alces_flight_tutorials
+
+build:
+  el6: |
+    yum install -y -e0 nodejs yarn
+  el7: |
+    yum install -y -e0 nodejs yarn
+  ubuntu1604: |
+    apt-get install -y -e0 nodejs yarn
+  _: |
+    curl -L \
+      "https://github.com/alces-software/flight-tutorials-server/tarball/master" \
+      -o /tmp/flight-tutorials-server.tar.gz
+    mkdir -p /opt/tutorials
+    tar -C /opt/tutorials --strip-components=1 -xzf /tmp/flight-tutorials-server.tar.gz
+
+    curl -L \
+      "https://github.com/alces-software/flight-tutorials-client/tarball/master" \
+      -o /tmp/flight-tutorials-client.tar.gz
+    mkdir -p /tmp/flight-tutorials-client
+    tar -C /tmp/flight-tutorials-client --strip-components=1 -xzf /tmp/flight-tutorials-client.tar.gz
+
+    pushd /tmp/flight-tutorials-client
+    yarn run build
+    cp -a \
+      demo/dist/ \
+      /opt/tutorials/public/static/
+    popd
+
+
+    pushd /opt/tutorials
+    rm -rf node_modules
+    yarn install
+    popd
