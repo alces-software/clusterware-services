@@ -68,6 +68,7 @@ build:
     curl -L \
       "https://github.com/alces-software/flight-tutorials-server/tarball/master" \
       -o /tmp/flight-tutorials-server.tar.gz
+    rm -rf "${dest}"
     mkdir -p "${dest}"
     tar -C "${dest}" --strip-components=1 -xzf /tmp/flight-tutorials-server.tar.gz
 
