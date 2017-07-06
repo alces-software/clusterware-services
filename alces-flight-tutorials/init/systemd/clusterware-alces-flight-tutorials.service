@@ -10,9 +10,10 @@ Description=Alces Flight Tutorials Server
 After=network.target
 
 [Service]
-User=1000
+User=alces
 WorkingDirectory=_cw_ROOT_/opt/tutorial
-ExecStart=npm run start
+ExecStart=/bin/env npm run start
+ExecStop=/bin/kill $MAINPID
 PIDFile=/var/run/alces-flight-tutorials.pid
 
 [Install]
