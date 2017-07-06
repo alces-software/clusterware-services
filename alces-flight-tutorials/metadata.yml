@@ -50,17 +50,17 @@ component-base:
 
 build:
   el6: |
-    yum install -y -e0 nodejs npm gcc-c++
+    yum install -y -e0 nodejs npm gcc-c++ git
   el7: |
     require distro
     if distro_enable_repository epel; then
-      yum install -y -e0 nodejs npm gcc-c++
+      yum install -y -e0 nodejs npm gcc-c++ git
     else
       echo "Sorry, the EPEL repository is not available."
       exit 1
     fi
   ubuntu1604: |
-    apt-get install -y -e0 nodejs npm g++
+    apt-get install -y -e0 nodejs npm g++ git
   _: |
     dest="${cw_ROOT}"/opt/alces-flight-tutorials
 
