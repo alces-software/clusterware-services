@@ -13,7 +13,6 @@ install:
   ubuntu1604: |
     apt-get install -y -e0 nodejs npm
   _: |
-    local service_root
     service_root=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
     require serviceware
     if serviceware_is_installed alces-flight-www; then
@@ -62,7 +61,6 @@ build:
   ubuntu1604: |
     apt-get install -y -e0 nodejs npm g++
   _: |
-    local dest
     dest="${cw_ROOT}"/opt/alces-flight-tutorials
 
     curl -L \
