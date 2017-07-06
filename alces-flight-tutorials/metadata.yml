@@ -15,6 +15,7 @@ install:
   _: |
     service_root=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
     require serviceware
+    serviceware_add alces-flight-tutorials
     if serviceware_is_installed alces-flight-www; then
         cp etc/alces-flight-www/tutorial.conf.tpl \
           "${cw_ROOT}"/etc/alces-flight-www/server-https.d/tutorial.conf
