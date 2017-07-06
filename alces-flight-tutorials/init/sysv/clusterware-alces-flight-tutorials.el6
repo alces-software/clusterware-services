@@ -21,7 +21,7 @@
 
 PID_FILE=/var/run/alces-flight-tutorials.pid
 ADMIN_USER=$(id -un 1000)
-LOG_FILE=/var/log/flight-tutorials/server.log
+LOG_FILE=/var/log/alces-flight-tutorials/server.log
 DAEMON_HOME="_cw_ROOT_/opt/alces-flight-tutorials"
 DAEMON_CMD="su ${ADMIN_USER} -c 'npm run start' ${LOG_FILE} 2>&1 &"
 
