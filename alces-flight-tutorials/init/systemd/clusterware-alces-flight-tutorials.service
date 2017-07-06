@@ -11,7 +11,7 @@ After=network.target
 
 [Service]
 User=1000
-WorkingDirectory=/opt/tutorial
+WorkingDirectory=_cw_ROOT_/opt/tutorial
 ExecStart=npm run start
 PIDFile=/var/run/alces-flight-tutorials.pid
 

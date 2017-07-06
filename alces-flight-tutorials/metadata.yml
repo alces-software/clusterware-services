@@ -62,11 +62,14 @@ build:
   ubuntu1604: |
     apt-get install -y -e0 nodejs npm g++
   _: |
+    local dest
+    dest="${cw_ROOT}"/opt/alces-flight-tutorials
+
     curl -L \
       "https://github.com/alces-software/flight-tutorials-server/tarball/master" \
       -o /tmp/flight-tutorials-server.tar.gz
-    mkdir -p /opt/tutorials
-    tar -C /opt/tutorials --strip-components=1 -xzf /tmp/flight-tutorials-server.tar.gz
+    mkdir -p "${dest}"
+    tar -C "${dest}" --strip-components=1 -xzf /tmp/flight-tutorials-server.tar.gz
 
     curl -L \
       "https://github.com/alces-software/flight-tutorials-client/tarball/master" \
@@ -79,10 +82,10 @@ build:
     npm run build
     cp -a \
       demo/dist/ \
-      /opt/tutorials/public/static/
+      "${dest}"/public/static/
     popd
 
-    pushd /opt/tutorials
+    pushd "${dest}"
     rm -rf node_modules
     npm install
     popd
