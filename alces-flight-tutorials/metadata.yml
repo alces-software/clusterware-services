@@ -48,6 +48,7 @@ component-base:
   _: |
     require distro
     enable_alces_flight_tutorials
+    distro_start_service clusterware-alces-flight-tutorials
     distro_restart_service clusterware-alces-flight-www
 
 build:
