@@ -46,7 +46,9 @@ component-base:
         systemctl enable clusterware-alces-flight-tutorials.service
     }
   _: |
+    require distro
     enable_alces_flight_tutorials
+    distro_restart_service clusterware-alces-flight-www
 
 build:
   el6: |
