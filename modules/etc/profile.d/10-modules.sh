@@ -5,6 +5,12 @@
 ##
 ################################################################################
 if ! type module &>/dev/null; then
+    for a in modules; do
+        if [ ! -f "$HOME/.$a" ]; then
+            cp "$(_cw_root)"/etc/skel/$a "$HOME/.$a"
+        fi
+    done
+
     module() { eval `$(_cw_root)/opt/modules/bin/modulecmd bash $*`; }
     export -f module
 
@@ -20,5 +26,10 @@ if ! type module &>/dev/null; then
 
     if [ ${BASH_VERSINFO:-0} -ge 3 ] && [ -r "$(_cw_root)"/opt/modules/init/bash_completion ]; then
         . "$(_cw_root)"/opt/modules/init/bash_completion
+    fi
+
+    # Source modules from home directory
+    if [ -f ~/.modules ]; then
+      source ~/.modules
     fi
 fi
