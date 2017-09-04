@@ -1,0 +1,77 @@
+: '
+: NAME: compute
+: SYNOPSIS: Create, delete and manage compute queues
+: VERSION: 1.0.0
+: '
+#==============================================================================
+# Copyright (C) 2017 Stephen F. Norledge and Alces Software Ltd.
+#
+# This file/package is part of Alces Clusterware.
+#
+# Alces Clusterware is free software: you can redistribute it and/or
+# modify it under the terms of the GNU Affero General Public License
+# as published by the Free Software Foundation, either version 3 of
+# the License, or (at your option) any later version.
+#
+# Alces Clusterware is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this package.  If not, see <http://www.gnu.org/licenses/>.
+#
+# For more information on the Alces Clusterware, please visit:
+# https://github.com/alces-software/clusterware
+#==============================================================================
+# vim: set filetype=sh :
+action=$1
+shift
+cw_BINNAME="${cw_BINNAME} $(basename "$0")"
+
+case $action in
+    h|he|hel|help)
+        exec /bin/bash ${cw_ROOT}/libexec/compute/actions/help "$@"
+        ;;
+    ls|l|li|lis|list)
+        exec /bin/bash ${cw_ROOT}/libexec/compute/actions/list "$@"
+        ;;
+    a|ad|add|addq)
+        exec /bin/bash ${cw_ROOT}/libexec/compute/actions/addq "$@"
+        ;;
+    d|de|del|delq)
+        exec /bin/bash ${cw_ROOT}/libexec/compute/actions/delq "$@"
+        ;;
+    m|mo|mod|modq)
+        exec /bin/bash ${cw_ROOT}/libexec/compute/actions/modq "$@"
+        ;;
+    e|ex|exp|expa|expan|expand)
+        exec /bin/bash ${cw_ROOT}/libexec/compute/actions/expand "$@"
+        ;;
+    r|re|red|redu|reduc|reduce)
+        exec /bin/bash ${cw_ROOT}/libexec/compute/actions/reduce "$@"
+        ;;
+    sh|sho|shoo|shoot)
+        exec /bin/bash ${cw_ROOT}/libexec/compute/actions/shoot "$@"
+        ;;
+    *)
+        cat <<EOF
+Usage: $cw_BINNAME COMMAND [[OPTION]... [ARGS]]
+Create, delete and manage compute queues
+
+Commands:
+EOF
+printf "  %-22s  %s\n" "$cw_BINNAME help" "More help about this command."
+printf "  %-22s  %s\n" "$cw_BINNAME list" "List configured queues."
+printf "  %-22s  %s\n" "$cw_BINNAME addq" "Create a new queue."
+printf "  %-22s  %s\n" "$cw_BINNAME delq" "Delete an existing queue."
+printf "  %-22s  %s\n" "$cw_BINNAME modq" "Modify queue parameters."
+printf "  %-22s  %s\n" "$cw_BINNAME expand" "Expand queue size to satisfy demand."
+printf "  %-22s  %s\n" "$cw_BINNAME reduce" "Reduce a queue size immediately."
+printf "  %-22s  %s\n" "$cw_BINNAME shoot" "Terminate a specific node within a queue."
+cat <<EOF
+
+Please report bugs to support@alces-software.com
+Alces Software home page: <http://alces-software.com/>
+EOF
+esac
