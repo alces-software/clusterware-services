@@ -40,7 +40,17 @@ main() {
   local queue
   queue="$1"
 
-  compute_call DELETE "${queue}"
+  if [ -z "$queue" ]; then
+      action_die "no queue specified"
+  elif ! compute_valid_queue "$queue"; then
+      action_die "invalid queue: ${queue}"
+  fi
+
+  if ! compute_call DELETE "${queue}"; then
+      action_die "queue deletion failed: ${_COMPUTE_ERROR}"
+  else
+      action_die "queue deletion underway: $queue" 0
+  fi
 }
 
 setup

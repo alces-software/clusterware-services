@@ -38,6 +38,9 @@ setup() {
 
 main() {
   # list queues
+  if ! compute_list; then
+      action_die "${_COMPUTE_ERROR}"
+  fi
 }
 
 setup

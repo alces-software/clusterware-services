@@ -39,11 +39,25 @@ setup() {
 main() {
   local queue min max desired
   queue="$1"
-  min="$2"
-  max="$3"
-  desired="$4"
 
-  compute_call POST "${queue}" "${desired}" "${min}" "${max}"
+  if [ -z "$queue" ]; then
+      action_die "no queue specified"
+  elif ! compute_valid_queue "$queue"; then
+      action_die "invalid queue: ${queue}"
+  fi
+
+  desired="$2"
+  min="$3"
+  max="$4"
+  if [ -z "$desired" -o -z "$max" -o -z "$min" ]; then
+      action_die "queue sizing parameters required (desired, min, max)"
+  fi
+
+  if ! compute_call POST "${queue}" "${desired}" "${min}" "${max}"; then
+      action_die "queue modification failed: ${_COMPUTE_ERROR}"
+  else
+      action_die "queue modification accepted"
+  fi
 }
 
 setup

@@ -1,6 +1,6 @@
 #!/bin/bash
 #==============================================================================
-# Copyright (C) 2016 Stephen F. Norledge and Alces Software Ltd.
+# Copyright (C) 2017 Stephen F. Norledge and Alces Software Ltd.
 #
 # This file/package is part of Alces Clusterware.
 #
@@ -27,7 +27,7 @@ main() {
     shift
 
     case $action in
-        help|list|push|pull|add|remove|purge)
+        help|list|addq|delq|modq|expand|reduce|shoot)
             help_for_${action}
             ;;
         ?*)
@@ -41,30 +41,16 @@ main() {
     esac
 }
 
-help_for_add() {
-    cat <<EOF
-  SYNOPSIS:
-
-    alces sync add <name> <directory>
-
-  DESCRIPTION:
-
-    Add a synchronization configuration called <name> that handles
-    synchronization from/to <directory>.
-
-EOF
-}
-
 help_for_help() {
     cat <<EOF
   SYNOPSIS:
 
-    alces sync help [<command>]
+    alces compute help [<command>]
 
   DESCRIPTION:
 
-    Get help with sync commands.  If no <command> is specified, show
-    some general help.
+    Get help with compute commands.  If no <command> is specified,
+    show some general help.
 
 EOF
 }
@@ -73,77 +59,103 @@ help_for_list() {
     cat <<EOF
   SYNOPSIS:
 
-    alces sync list
+    alces compute list
 
   DESCRIPTION:
 
-    List current synchronization configurations.
+    List current compute queue configurations.
 
 EOF
 }
 
-help_for_pull() {
+help_for_addq() {
     cat <<EOF
   SYNOPSIS:
 
-    alces sync pull [OPTIONS] [<name>]
+    alces compute addq <queue> [<size> [<min> [<max>]]]
 
   DESCRIPTION:
 
-    Pull files from remote storage using the synchronization
-    configuration with the given <name>.  If no <name> is given use
-    the synchronization configuration named 'default'.
+    Add <queue> with the specified <size>, <min> and <max> number of
+    nodes.
 
-  OPTIONS:
-
-    --ignore-missing
-      Don't emit an error if nothing is held in remote storage.
-
-    --ignore-failing-attrs
-      Don't emit an error if POSIX attributes can't be updated.
+    <size> will default to 0 if not supplied.
 
 EOF
 }
 
-help_for_purge() {
+help_for_delq() {
     cat <<EOF
   SYNOPSIS:
 
-    alces sync purge <name>
+    alces compute delq <queue>
 
   DESCRIPTION:
 
-    Remove all files currently held within remote storage for the
-    synchronization configuration with the given <name>.  You will be
-    asked to confirm this action before it is performed.
+    Remove the specified <queue>.
 
 EOF
 }
 
-help_for_push() {
+help_for_modq() {
     cat <<EOF
   SYNOPSIS:
 
-    alces sync push [<name>]
+    alces compute modq <queue> <size> <min> <max>
 
   DESCRIPTION:
 
-    Push files to remote storage using the synchronization
-    configuration with the given <name>.  If no <name> is given use
-    the synchronization configuration named 'default'.
+    Modify the configuration of <queue> to set the current <size>, the
+    <min> size and the <max> size for the queue.
 
 EOF
 }
 
-help_for_remove() {
+help_for_expand() {
     cat <<EOF
   SYNOPSIS:
 
-    alces sync remove <name>
+    alces compute expand <queue> <size>
 
   DESCRIPTION:
 
-    Remove the synchronization configuration with the given <name>.
+    Expand <queue> so it contains <size> nodes.
+
+    It is considered an error if expanding to the supplied <size>
+    would take the queue capacity beyond its maximum size.
+
+EOF
+}
+
+help_for_reduce() {
+    cat <<EOF
+  SYNOPSIS:
+
+    alces compute reduce <queue> <size>
+
+  DESCRIPTION:
+
+    Reduce <queue> so it contains <size> nodes.
+
+    It is considered an error if reducing to the supplied <size> would
+    take the queue capacity below its minimum size.
+
+EOF
+}
+
+help_for_shoot() {
+    cat <<EOF
+  SYNOPSIS:
+
+    alces compute shoot <queue> <node>
+
+  DESCRIPTION:
+
+    Terminate currently running <node> in <queue>.  This will
+    automatically decrement the current number of desired nodes.
+
+    It is considered an error if the queue is already at its minimum
+    size.
 
 EOF
 }
@@ -158,18 +170,19 @@ general_help() {
 
   DESCRIPTION:
 
-    Manage the storage and retrieval of synchronized directories.
+    Create, delete and manage compute queues.
 
   COMMANDS:
 
 EOF
 printf "    %-22s  %s\n" "$cw_BINNAME help" "More help about this command."
-printf "    %-22s  %s\n" "$cw_BINNAME list" "List remote sync configurations."
-printf "    %-22s  %s\n" "$cw_BINNAME push" "Push a directory to remote storage."
-printf "    %-22s  %s\n" "$cw_BINNAME pull" "Pull a directory from remote storage."
-printf "    %-22s  %s\n" "$cw_BINNAME add" "Configure a remote sync target."
-printf "    %-22s  %s\n" "$cw_BINNAME remove" "Remove configuration for a remote sync target."
-printf "    %-22s  %s\n" "$cw_BINNAME purge" "Purge files held within remote storage."
+printf "    %-22s  %s\n" "$cw_BINNAME list" "List compute queue configurations."
+printf "    %-22s  %s\n" "$cw_BINNAME addq" "Add a compute queue."
+printf "    %-22s  %s\n" "$cw_BINNAME delq" "Remove a compute queue."
+printf "    %-22s  %s\n" "$cw_BINNAME modq" "Modify a compute queue."
+printf "    %-22s  %s\n" "$cw_BINNAME expand" "Add one or more nodes to a compute queue."
+printf "    %-22s  %s\n" "$cw_BINNAME reduce" "Remove one or more nodes to a compute queue."
+printf "    %-22s  %s\n" "$cw_BINNAME shoot" "Terminate a node within a compute queue."
 cat <<EOF
 
 Please report bugs to support@alces-software.com

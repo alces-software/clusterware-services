@@ -36,20 +36,54 @@ setup() {
     kernel_load
 }
 
+_say_done() {
+    if [ -z "$cw_UI_disable_spinner" ]; then
+	toggle_spin
+    fi
+    if [ $1 -gt 0 ]; then
+        echo '[31mFAIL[0m'
+    else
+        echo '[32mOK[0m '
+    fi
+}
+
+_queue_accepted() {
+    _say_done "$1"
+    if [ "$1" == "0" ]; then
+	doing 'Awaiting queue details'
+    fi
+}
+
+_queue_created() {
+    _say_done "$1"
+}
+
 main() {
   local queue min max desired
   queue="$1"
-  min="$2"
-  max="$3"
-  desired="$4"
 
-  compute_call PUT "${queue}" "${min}" "${max}" "${desired}"
+  if [ -z "$queue" ]; then
+      action_die "no queue specified"
+  fi
+  desired="${2:-0}"
+  min="${3:-0}"
+  max="${4:-1}"
+
+  doing 'Requesting queue creation'
+  _COMPUTE_ACCEPTED_HOOK=_queue_accepted
+  _COMPUTE_CREATED_HOOK=_queue_created
+  if ! compute_call PUT "${queue}" "${desired}" "${min}" "${max}"; then
+      action_die "queue creation failed: ${_COMPUTE_ERROR}"
+  else
+      action_die "queue creation underway: $queue" 0
+  fi
 }
 
 setup
 
 require action
 require process
+require ui
 
 process_reexec_sudo "$@"
 

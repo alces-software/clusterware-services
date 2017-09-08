@@ -39,17 +39,27 @@ setup() {
 main() {
   local queue size
   queue="$1"
+  if [ -z "$queue" ]; then
+      action_die "no queue specified"
+  elif ! compute_valid_queue "$queue"; then
+      action_die "invalid queue: ${queue}"
+  fi
+
   size="$2"
+  if [ -z "$size" ]; then
+      action_die "desired queue size required"
+  fi
 
   current_size=$(compute_size "${queue}")
   min=$(compute_min "${queue}")
   max=$(compute_max "${queue}")
-  if [ "$current_size" -gte "$size" ]; then
-      echo "already large enough"
+  if [ "$current_size" -ge "$size" ]; then
+      action_die "refusing to expand: queue already has capacity (currently: $current_size)"
   elif [ "$max" -lt "$size" ]; then
-      echo "max not big enough"
+      action_die "cannot expand: requested size ($size) exceeds maximum ($max)"
   else
-    compute_call POST "${queue}" "${size}" "${min}" "${max}"
+      compute_call POST "${queue}" "${size}" "${min}" "${max}"
+      action_die "queue expanded from ${current_size} to ${size}" 0
   fi
 }
 

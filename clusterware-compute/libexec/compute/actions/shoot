@@ -39,9 +39,21 @@ setup() {
 main() {
   local queue node_id
   queue="$1"
+  if [ -z "$queue" ]; then
+      action_die "no queue specified"
+  elif ! compute_valid_queue "$queue"; then
+      action_die "invalid queue: ${queue}"
+  fi
   node_id="$2"
+  if [ -z "$node_id" ]; then
+      action_die "no node specified"
+  fi
 
-  compute_shoot "${queue}" "${node_id}"
+  if compute_shoot "${queue}" "${node_id}"; then
+      action_die "node shot: ${queue}/${node_id}" 0
+  else
+      action_die "unable to shoot node: ${_COMPUTE_ERROR}"
+  fi
 }
 
 setup
