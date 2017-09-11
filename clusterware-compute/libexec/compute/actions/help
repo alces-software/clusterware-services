@@ -1,0 +1,193 @@
+#!/bin/bash
+#==============================================================================
+# Copyright (C) 2017 Stephen F. Norledge and Alces Software Ltd.
+#
+# This file/package is part of Alces Clusterware.
+#
+# Alces Clusterware is free software: you can redistribute it and/or
+# modify it under the terms of the GNU Affero General Public License
+# as published by the Free Software Foundation, either version 3 of
+# the License, or (at your option) any later version.
+#
+# Alces Clusterware is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this package.  If not, see <http://www.gnu.org/licenses/>.
+#
+# For more information on the Alces Clusterware, please visit:
+# https://github.com/alces-software/clusterware
+#==============================================================================
+require action
+
+main() {
+    action=$1
+    shift
+
+    case $action in
+        help|list|addq|delq|modq|expand|reduce|shoot)
+            help_for_${action}
+            ;;
+        ?*)
+            echo "${cw_BINNAME}: no such topic: ${action}"
+            echo ""
+            general_help
+            ;;
+        *)
+            general_help
+            ;;
+    esac
+}
+
+help_for_help() {
+    cat <<EOF
+  SYNOPSIS:
+
+    alces compute help [<command>]
+
+  DESCRIPTION:
+
+    Get help with compute commands.  If no <command> is specified,
+    show some general help.
+
+EOF
+}
+
+help_for_list() {
+    cat <<EOF
+  SYNOPSIS:
+
+    alces compute list
+
+  DESCRIPTION:
+
+    List current compute queue configurations.
+
+EOF
+}
+
+help_for_addq() {
+    cat <<EOF
+  SYNOPSIS:
+
+    alces compute addq <queue> [<size> [<min> [<max>]]]
+
+  DESCRIPTION:
+
+    Add <queue> with the specified <size>, <min> and <max> number of
+    nodes.
+
+    <size> will default to 0 if not supplied.
+
+EOF
+}
+
+help_for_delq() {
+    cat <<EOF
+  SYNOPSIS:
+
+    alces compute delq <queue>
+
+  DESCRIPTION:
+
+    Remove the specified <queue>.
+
+EOF
+}
+
+help_for_modq() {
+    cat <<EOF
+  SYNOPSIS:
+
+    alces compute modq <queue> <size> <min> <max>
+
+  DESCRIPTION:
+
+    Modify the configuration of <queue> to set the current <size>, the
+    <min> size and the <max> size for the queue.
+
+EOF
+}
+
+help_for_expand() {
+    cat <<EOF
+  SYNOPSIS:
+
+    alces compute expand <queue> <size>
+
+  DESCRIPTION:
+
+    Expand <queue> so it contains <size> nodes.
+
+    It is considered an error if expanding to the supplied <size>
+    would take the queue capacity beyond its maximum size.
+
+EOF
+}
+
+help_for_reduce() {
+    cat <<EOF
+  SYNOPSIS:
+
+    alces compute reduce <queue> <size>
+
+  DESCRIPTION:
+
+    Reduce <queue> so it contains <size> nodes.
+
+    It is considered an error if reducing to the supplied <size> would
+    take the queue capacity below its minimum size.
+
+EOF
+}
+
+help_for_shoot() {
+    cat <<EOF
+  SYNOPSIS:
+
+    alces compute shoot <queue> <node>
+
+  DESCRIPTION:
+
+    Terminate currently running <node> in <queue>.  This will
+    automatically decrement the current number of desired nodes.
+
+    It is considered an error if the queue is already at its minimum
+    size.
+
+EOF
+}
+
+general_help() {
+    local binname
+    binname="${cw_BINNAME% *}"
+    cat <<EOF
+  NAME:
+
+    ${binname}
+
+  DESCRIPTION:
+
+    Create, delete and manage compute queues.
+
+  COMMANDS:
+
+EOF
+printf "    %-22s  %s\n" "$cw_BINNAME help" "More help about this command."
+printf "    %-22s  %s\n" "$cw_BINNAME list" "List compute queue configurations."
+printf "    %-22s  %s\n" "$cw_BINNAME addq" "Add a compute queue."
+printf "    %-22s  %s\n" "$cw_BINNAME delq" "Remove a compute queue."
+printf "    %-22s  %s\n" "$cw_BINNAME modq" "Modify a compute queue."
+printf "    %-22s  %s\n" "$cw_BINNAME expand" "Add one or more nodes to a compute queue."
+printf "    %-22s  %s\n" "$cw_BINNAME reduce" "Remove one or more nodes to a compute queue."
+printf "    %-22s  %s\n" "$cw_BINNAME shoot" "Terminate a node within a compute queue."
+cat <<EOF
+
+Please report bugs to support@alces-software.com
+Alces Software home page: <http://alces-software.com>
+EOF
+}
+
+main "$@"
