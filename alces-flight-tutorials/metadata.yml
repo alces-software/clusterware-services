@@ -6,6 +6,16 @@ install:
     require distro
     if distro_enable_repository epel; then
       yum install -y -e0 nodejs npm
+      if [ $? -ne 0 ] ; then
+        # The epel repository no longer contains the http-parser dependency
+        # for nodejs.  For Centos7.4 the package will be available in the base
+        # repo, but that hasn't been released at the time of commenting, so
+        # let's workaroudn the failure.
+        #
+        # See https://bugs.centos.org/view.php?id=13669&nbn=1 for more details.
+        rpm -ivh https://kojipkgs.fedoraproject.org//packages/http-parser/2.7.1/3.el7/x86_64/http-parser-2.7.1-3.el7.x86_64.rpm
+        yum install -y -e0 nodejs npm
+      fi
     else
       echo "Sorry, the EPEL repository is not available."
       exit 1
