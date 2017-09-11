@@ -322,6 +322,10 @@ compute_list() {
 	ruby_run <<RUBY
 require 'json'
 queues = JSON.parse('${result}')
+if queues.empty?
+  puts "No queues."
+  exit 0
+end
 queues.each do |queue|
   spec = queue['spec']
   nodes = []
