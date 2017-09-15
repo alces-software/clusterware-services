@@ -135,6 +135,16 @@ build:
     tar -C "${dest}" --strip-components=1 -xzf /tmp/alces-web-terminal.tar.gz
 
     pushd "${dest}"
+
+    # Update configuration values.
+    _JQ="${cw_ROOT}"/opt/jq/bin/jq
+    tmpfile="$(mktemp /tmp/alces-web-terminal.XXXXXXXX)"
+    $_JQ --arg port 26399 --arg path "/terminal/socket.io" \
+        '.port = $port | .socketIO.path = $path' \
+        config.json > "${tmpfile}"
+    chmod a+r "${tmpfile}"
+    mv "${tmpfile}" config.json
+
     rm -rf node_modules
     npm install
     popd

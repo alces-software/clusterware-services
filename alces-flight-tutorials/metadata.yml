@@ -1,18 +1,25 @@
 ---
 install:
+  el6: |
+    yum install -y -e0 nodejs npm
+  el7: |
+    require distro
+    if distro_enable_repository epel; then
+      yum install -y -e0 nodejs npm
+    else
+      echo "Sorry, the EPEL repository is not available."
+      exit 1
+    fi
+  ubuntu1604: |
+    apt-get install -y -e0 nodejs npm
   _: |
     service_root=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
     require handler
     require serviceware
-
-    serviceware_install alces-web-terminal
     serviceware_add alces-flight-tutorials
-
     if serviceware_is_installed alces-flight-www; then
-        ln -s \
-          "${cw_ROOT}"/opt/alces-flight-tutorials/public/static \
-          "${cw_ROOT}/var/lib/alces-flight-www/flight/tutorials"
-        cp -R etc/alces-flight-www/* "${cw_ROOT}/etc/alces-flight-www"
+        cp "${service_root}"/etc/alces-flight-www/alces-flight-tutorials.conf.tpl \
+          "${cw_ROOT}"/etc/alces-flight-www/server-https.d/alces-flight-tutorials.conf
     fi
     if handler_is_enabled cluster-www; then
         "${cw_ROOT}"/libexec/share/www-add-attributes \
@@ -20,8 +27,32 @@ install:
     fi
 
 component-base:
+  el6: |
+    enable_alces_flight_tutorials() {
+        sed -e "s,_cw_ROOT_,${cw_ROOT},g" \
+            init/sysv/clusterware-alces-flight-tutorials.el6 \
+            > /etc/init.d/clusterware-alces-flight-tutorials
+        chmod 755 /etc/init.d/clusterware-alces-flight-tutorials
+        chkconfig clusterware-alces-flight-tutorials on
+    }
+  el7: |
+    enable_alces_flight_tutorials() {
+        sed -e "s,_cw_ROOT_,${cw_ROOT},g" \
+            init/systemd/clusterware-alces-flight-tutorials.service \
+            > /etc/systemd/system/clusterware-alces-flight-tutorials.service
+        systemctl enable clusterware-alces-flight-tutorials.service
+    }
+  ubuntu1604: |
+    enable_alces_flight_tutorials() {
+        sed -e "s,_cw_ROOT_,${cw_ROOT},g" \
+            init/systemd/clusterware-alces-flight-tutorials.service \
+            > /etc/systemd/system/clusterware-alces-flight-tutorials.service
+        systemctl enable clusterware-alces-flight-tutorials.service
+    }
   _: |
     require distro
+    enable_alces_flight_tutorials
+    distro_start_service clusterware-alces-flight-tutorials
     distro_restart_service clusterware-alces-flight-www
 
 build:
@@ -39,20 +70,31 @@ build:
     apt-get install -y -e0 nodejs npm g++
   _: |
     dest="${cw_ROOT}"/opt/alces-flight-tutorials
-    build_dir=/tmp/alces-flight-tutorials-client
 
     alces module load services/git
 
     curl -L \
+      "https://github.com/alces-software/flight-tutorials-server/tarball/master" \
+      -o /tmp/alces-flight-tutorials-server.tar.gz
+    rm -rf "${dest}"
+    mkdir -p "${dest}"
+    tar -C "${dest}" --strip-components=1 -xzf /tmp/alces-flight-tutorials-server.tar.gz
+
+    curl -L \
       "https://github.com/alces-software/flight-tutorials-client/tarball/master" \
       -o /tmp/alces-flight-tutorials-client.tar.gz
-    mkdir -p "${build_dir}"
-    tar -C "${build_dir}" --strip-components=1 -xzf /tmp/alces-flight-tutorials-client.tar.gz
+    mkdir -p /tmp/alces-flight-tutorials-client
+    tar -C /tmp/alces-flight-tutorials-client --strip-components=1 -xzf /tmp/alces-flight-tutorials-client.tar.gz
 
-    pushd "${build_dir}"
+    pushd /tmp/alces-flight-tutorials-client
     npm install
     npm run build
     cp -a \
       demo/dist/ \
       "${dest}"/public/static/
+    popd
+
+    pushd "${dest}"
+    rm -rf node_modules
+    npm install
     popd
