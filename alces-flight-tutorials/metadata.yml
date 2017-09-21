@@ -14,12 +14,16 @@ install:
     apt-get install -y -e0 nodejs npm
   _: |
     service_root=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+    require handler
     require serviceware
     serviceware_add alces-flight-tutorials
     if serviceware_is_installed alces-flight-www; then
-        cp etc/alces-flight-www/alces-flight-tutorials.conf.tpl \
+        cp "${service_root}"/etc/alces-flight-www/alces-flight-tutorials.conf.tpl \
           "${cw_ROOT}"/etc/alces-flight-www/server-https.d/alces-flight-tutorials.conf
-        "${cw_ROOT}"/libexec/share/www-add-resource "${service_root}"/resource/alces-flight-www/alces-flight-tutorials
+    fi
+    if handler_is_enabled cluster-www; then
+        "${cw_ROOT}"/libexec/share/www-add-attributes \
+                    "${service_root}"/var/alces-flight-www/tutorials/attributes.json.tpl
     fi
 
 component-base:
