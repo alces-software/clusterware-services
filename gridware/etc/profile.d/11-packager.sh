@@ -10,7 +10,7 @@ for a in modules modulerc; do
     fi
 done
 
-if [ ! -d ~/gridware/personal ] && [ $UID -ne 0 ]; then
+if [ ! -d ~/gridware/personal ] && [ $UID -ne 0 ] && [ -d /opt/gridware ]; then
   pushd ~ >/dev/null 2>&1
   "$(_cw_root)/bin/alces" gridware init
   popd >/dev/null 2>&1
