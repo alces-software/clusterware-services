@@ -26,22 +26,55 @@ require distro
 _COMPUTE_JO=${cw_ROOT}/opt/jo/bin/jo
 _COMPUTE_JQ=${cw_ROOT}/opt/jq/bin/jq
 
+_compute_load_personality() {
+  if [ -z "${_COMPUTE_PERSONALITY_LOADED}" ]; then
+    eval $(_compute_extract_personality)
+    _COMPUTE_PERSONALITY_LOADED=true
+  fi
+}
+
+_compute_extract_personality() {
+  ruby_run <<RUBY
+require 'yaml'
+p_file = '${cw_ROOT}/etc/personality.yml'
+begin
+  if File.exists?(p_file)
+    personality = YAML.load_file(p_file)
+    if compute_config = personality['compute']
+      if compute_config.key?('cluster')
+        puts "_COMPUTE_cluster_name=#{compute_config['cluster']}"
+      end
+      if compute_config.key?('auth_user')
+        puts "_COMPUTE_auth_user=#{compute_config['auth_user']}"
+      end
+    end
+  end
+end
+RUBY
+}
+
 _compute_auth() {
+  _compute_load_personality
   if [ -z "${cw_CLUSTER_auth_token}" ]; then
       files_load_config auth config/cluster
   fi
   if [ -z "${cw_NETWORK_domain}" ]; then
       files_load_config network
   fi
-  user=$(echo "${cw_NETWORK_domain}" | cut -f1-2 -d'.')
+  user=${_COMPUTE_auth_user:-$(echo "${cw_NETWORK_domain}" | cut -f1-2 -d'.')}
   echo "${user}:${cw_CLUSTER_auth_token}"
 }
 
 _compute_cluster() {
-  if [ -z "${cw_CLUSTER_name}" ]; then
-      files_load_config config config/cluster
+  _compute_load_personality
+  if [ -z "${_COMPUTE_cluster_name}" ]; then
+    if [ -z "${cw_CLUSTER_name}" ]; then
+        files_load_config config config/cluster
+    fi
+    echo "${cw_CLUSTER_name}"
+  else
+    echo "${_COMPUTE_cluster_name}"
   fi
-  echo "${cw_CLUSTER_name}"
 }
 
 _compute_endpoint() {
