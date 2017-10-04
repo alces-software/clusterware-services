@@ -6,7 +6,7 @@
 ################################################################################
 for a in modules modulerc; do
     if [ ! -f "$HOME/.$a" ]; then
-        cp "$(_cw_root)"/etc/skel/$a "$HOME/.$a"
+        sed -e "s#%NULL_MODULE_PATH%#$(_cw_root)/etc/modules/#" "$(_cw_root)"/etc/skel/$a > "$HOME/.$a"
     fi
 done
 

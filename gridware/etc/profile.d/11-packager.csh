@@ -6,7 +6,7 @@
 ################################################################################
 foreach a ( modules modulerc )
     if ( ! -f "$HOME/.$a" ) then
-        cp _ROOT_/etc/skel/$a "$HOME/.$a"
+        sed -e "s#%NULL_MODULE_PATH%#$(_cw_root)/etc/modules/#" _ROOT_/etc/skel/$a > "$HOME/.$a"
     endif
 end
 
