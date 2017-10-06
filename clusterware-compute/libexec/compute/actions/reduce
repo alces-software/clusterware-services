@@ -55,8 +55,8 @@ main() {
   max=$(compute_max "${queue}")
   if [ "$current_size" -le "$size" ]; then
       action_die "refusing to reduce: queue already satisfies capacity (currently: $current_size)"
-  elif [ "$min" -lt "$size" ]; then
-      action_die "cannot expand: requested size ($size) under minimum ($min)"
+  elif [ "$min" -gt "$size" ]; then
+      action_die "cannot reduce: requested size ($size) under minimum ($min)"
   else
     compute_call POST "${queue}" "${size}" "${min}" "${max}"
     action_die "queue reduced to ${size}" 0
