@@ -6,11 +6,11 @@
 ################################################################################
 foreach a ( modules modulerc )
     if ( ! -f "$HOME/.$a" ) then
-        cp _ROOT_/etc/skel/$a "$HOME/.$a"
+        sed -e "s#%NULL_MODULE_PATH%#$(_cw_root)/etc/modules/#" _ROOT_/etc/skel/$a > "$HOME/.$a"
     endif
 end
 
-if ( ! -d ~/gridware/personal && $USER != "root" ) then
+if ( ! -d ~/gridware/personal && $USER != "root" && -d /opt/gridware ) then
   pushd ~ >/dev/null 2>&1
   _ROOT_/bin/alces gridware init
   popd >/dev/null 2>&1
