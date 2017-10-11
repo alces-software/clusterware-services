@@ -26,6 +26,9 @@ require distro
 _COMPUTE_JO=${cw_ROOT}/opt/jo/bin/jo
 _COMPUTE_JQ=${cw_ROOT}/opt/jq/bin/jq
 
+files_load_config --optional instance-aws config/cluster
+_COMPUTE_REGION="${cw_INSTANCE_aws_region:-eu-west-1}"
+
 _compute_load_personality() {
   if [ -z "${_COMPUTE_PERSONALITY_LOADED}" ]; then
     eval $(_compute_extract_personality)
@@ -268,7 +271,7 @@ compute_call() {
   fi
 
   if [ "$method" == "DELETE" ]; then
-      result=$(webapi_delete "${endpoint}" --emit-code --auth "${auth}" --mimetype "application/json")
+      result=$(webapi_delete "${endpoint}" --emit-code --auth "${auth}" --mimetype "application/json" -H "X-Aws-Region: ${_COMPUTE_REGION}")
       eval $(echo "$result" | grep '^code=')
       if [ "$code" == "204" ]; then
           _compute_removeq "${queue}"
@@ -277,10 +280,10 @@ compute_call() {
 	  return 1
       fi
   elif [ "$method" == "GET" ]; then
-      webapi_send "${method}" "${endpoint}" --auth "${auth}" --mimetype "application/json" --skip-payload
+      webapi_send "${method}" "${endpoint}" --auth "${auth}" --mimetype "application/json" --skip-payload -H "X-Aws-Region: ${_COMPUTE_REGION}"
   else
       result=$(_compute_payload "${size}" "${min}" "${max}" | \
-          webapi_send "${method}" "${endpoint}" --emit-code --auth "${auth}" --mimetype "application/json")
+          webapi_send "${method}" "${endpoint}" --emit-code --auth "${auth}" --mimetype "application/json" -H "X-Aws-Region: ${_COMPUTE_REGION}")
       eval $(echo "$result" | grep '^code=')
       if [ "$code" == "202" ]; then
 	  [ "${_COMPUTE_ACCEPTED_HOOK}" ] && $_COMPUTE_ACCEPTED_HOOK 0
@@ -314,7 +317,7 @@ compute_shoot() {
   node_id="$2"
   endpoint="$(_compute_endpoint "${queue}")"
   auth="$(_compute_auth)"
-  result=$(webapi_delete "${endpoint}"/nodes/${node_id} --emit-code --auth "${auth}" --mimetype "application/json")
+  result=$(webapi_delete "${endpoint}"/nodes/${node_id} --emit-code --auth "${auth}" --mimetype "application/json" -H "X-Aws-Region: ${_COMPUTE_REGION}")
   eval $(echo "$result" | grep '^code=')
   if [ "$code" == "204" ]; then
       _compute_loadq "${queue}"
