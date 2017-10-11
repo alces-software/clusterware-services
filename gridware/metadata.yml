@@ -37,7 +37,7 @@ install:
     cp -R etc/* "${cw_ROOT}"/etc
     cp -R docs/guides/* "${cw_ROOT}"/var/lib/docs/base/guides
 
-    sed -i -e "s,_ROOT_,${cw_ROOT},g" "${cw_ROOT}/etc/profile.d/05-packager.csh" \
+    sed -i -e "s,_ROOT_,${cw_ROOT},g" "${cw_ROOT}/etc/profile.d/11-packager.csh" \
         "${cw_ROOT}"/etc/sudoers.d/*
     chmod 0400 "${cw_ROOT}"/etc/sudoers.d/*
     mkdir -p /var/cache/gridware/{archives,archives/depots,src} /var/log/gridware
@@ -135,7 +135,7 @@ build:
     cp -R etc/* "${cw_ROOT}"/etc
     cp -R docs/guides/* "${cw_ROOT}"/var/lib/docs/base/guides
 
-    sed -i -e "s,_ROOT_,${cw_ROOT},g" "${cw_ROOT}/etc/profile.d/05-packager.csh" \
+    sed -i -e "s,_ROOT_,${cw_ROOT},g" "${cw_ROOT}/etc/profile.d/11-packager.csh" \
         "${cw_ROOT}"/etc/sudoers.d/*
     chmod 0400 "${cw_ROOT}"/etc/sudoers.d/*
     mkdir -p /var/cache/gridware/{archives,archives/depots,src} /var/log/gridware
