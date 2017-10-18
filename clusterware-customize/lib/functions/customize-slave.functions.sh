@@ -115,7 +115,7 @@ customize_slave_add() {
   if ( _customize_slave_data_include_profile $profile $data ); then
     action_die "Profile already added"
   fi
-  _customize_slave_update_profile $profile $data
+  _customize_slave_update_profile $data $profile
 }
 
 customize_slave_remove() {
