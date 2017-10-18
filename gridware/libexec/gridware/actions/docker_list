@@ -43,10 +43,6 @@ main() {
         suffix='*'"${suffix}"'*'
         resuffix='.*'"${suffix}"'.*'
     fi
-    echo "Remote (${_REGISTRY}/${_REGISTRY_USER}):"
-    docker search "${_REGISTRY}"/${_REGISTRY_USER}/gridware-${suffix} --limit 100 --no-trunc | \
-        tail -n+2 | cut -f1 -d" " | cut -c16- | sort | sed 's/^/  /g'
-    echo ""
     echo "Local (* indicates shared):"
     for img in `docker images --no-trunc --format "{{.Repository}}:{{.ID}}" | grep "/gridware-${resuffix}" | cut -f1 -d" " | cut -f2- -d'-' | sort`; do
       tag=${img%%:*}
