@@ -211,7 +211,7 @@ _compute_removeq() {
       # (if nodes are up, this will happen automatically when the
       # final node member leaves.)
       if [ "${upcount}" == "0" ]; then
-	  "${cw_ROOT}"/libexec/share/trigger-event --local autoscaling-prune-group "${queue}"
+          "${cw_ROOT}"/libexec/share/trigger-event --local autoscaling-prune-group "${queue}"
       fi
   fi
 }
@@ -227,7 +227,7 @@ _compute_updateq() {
   if [ -z "$_COMPUTE_QUEUE_LOADED" ]; then
       if ! _compute_loadq "${queue}"; then
           # unable to load; this is a new queue
-	  new_queue=true
+          new_queue=true
           if ! _compute_setupq "${queue}" "${group}" "${max}"; then
               # unable to set up queue! ouch!
               return 1
@@ -276,8 +276,8 @@ compute_call() {
       if [ "$code" == "204" ]; then
           _compute_removeq "${queue}"
       else
-	  _COMPUTE_ERROR=$(echo "$result" | grep -v '^code=' | ${_COMPUTE_JQ} -r '.errors[0]')
-	  return 1
+          _COMPUTE_ERROR=$(echo "$result" | grep -v '^code=' | ${_COMPUTE_JQ} -r '.errors[0]')
+          return 1
       fi
   elif [ "$method" == "GET" ]; then
       webapi_send "${method}" "${endpoint}" --auth "${auth}" --mimetype "application/json" --skip-payload -H "X-Aws-Region: ${_COMPUTE_REGION}"
@@ -286,16 +286,16 @@ compute_call() {
           webapi_send "${method}" "${endpoint}" --emit-code --auth "${auth}" --mimetype "application/json" -H "X-Aws-Region: ${_COMPUTE_REGION}")
       eval $(echo "$result" | grep '^code=')
       if [ "$code" == "202" ]; then
-	  [ "${_COMPUTE_ACCEPTED_HOOK}" ] && $_COMPUTE_ACCEPTED_HOOK 0
+          [ "${_COMPUTE_ACCEPTED_HOOK}" ] && $_COMPUTE_ACCEPTED_HOOK 0
           # we loop here, waiting for creation to complete.
-	  # XXX - consider bellman?
+          # XXX - consider bellman?
           group=$(_compute_get_group "${queue}")
-	  [ "${_COMPUTE_CREATED_HOOK}" ] && $_COMPUTE_CREATED_HOOK 0
+          [ "${_COMPUTE_CREATED_HOOK}" ] && $_COMPUTE_CREATED_HOOK 0
           _compute_updateq "${queue}" "${size}" "${min}" "${max}" "${group}"
       else
-	  [ "${_COMPUTE_ACCEPTED_HOOK}" ] && $_COMPUTE_ACCEPTED_HOOK 1
-	  _COMPUTE_ERROR=$(echo "$result" | grep -v '^code=' | ${_COMPUTE_JQ} -r '.errors[0]')
-	  return 1
+          [ "${_COMPUTE_ACCEPTED_HOOK}" ] && $_COMPUTE_ACCEPTED_HOOK 1
+          _COMPUTE_ERROR=$(echo "$result" | grep -v '^code=' | ${_COMPUTE_JQ} -r '.errors[0]')
+          return 1
       fi
   fi
 }
@@ -321,7 +321,7 @@ compute_shoot() {
   eval $(echo "$result" | grep '^code=')
   if [ "$code" == "204" ]; then
       _compute_loadq "${queue}"
-      group="$(compute_group_from_label)"
+      group="$(compute_group_from_label "${queue}")"
       _compute_updateq "${queue}" "$(($_COMPUTE_SIZE-1))" \
                            "${_COMPUTE_MIN}" "${_COMPUTE_MAX}" \
                            "${group}"
@@ -355,7 +355,7 @@ compute_max() {
 compute_list() {
     local result
     if result=$(compute_call GET); then
-	ruby_run <<RUBY
+        ruby_run <<RUBY
 require 'json'
 queues = JSON.parse('${result}')
 if queues.empty?
@@ -380,8 +380,8 @@ queues.each do |queue|
 end
 RUBY
     else
-	_COMPUTE_ERROR="unable to reach compute management service"
-	return 1
+        _COMPUTE_ERROR="unable to reach compute management service"
+        return 1
     fi
 }
 
