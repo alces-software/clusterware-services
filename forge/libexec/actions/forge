@@ -28,9 +28,9 @@
 
 shift  # get rid of "forge" from args
 
-if [ ! -d /opt/forge/bin ]; then
-  echo "Forge is not installed in /opt/forge!"
+if [ ! -d ${cw_ROOT}/opt/forge/bin ]; then
+  echo "Forge is not installed in ${cw_ROOT}/opt/forge!"
   exit 1
 fi
 
-/opt/forge/bin/forge "$@"
+${cw_ROOT}/opt/forge/bin/forge "$@"
