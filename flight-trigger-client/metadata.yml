@@ -22,15 +22,6 @@
 ---
 install:
   _: |
-    mkdir -p "${cw_ROOT}"/opt/clusterware-ssh
+    mkdir -p "${cw_ROOT}"/opt/flight-trigger-client/bin
 
-    cp -pR etc/* "${cw_ROOT}"/etc
-    cp -pR libexec/* "${cw_ROOT}"/libexec
-
-    # modify PAM configuration
-    if [ "$1" == "--modify-pam" ]; then
-      if ! grep -q 'account \[default=ignore success=1\] pam_succeed_if.so quiet user ingroup adm' /etc/pam.d/sshd; then
-        sed -i '/^account\s*required\s*pam_nologin.so/i account [default=ignore success=1] pam_succeed_if.so quiet user ingroup adm' \
-          /etc/pam.d/sshd
-      fi
-    fi
+    cp -pR bin/* "${cw_ROOT}"/opt/flight-trigger-client/bin
