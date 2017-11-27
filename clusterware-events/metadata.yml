@@ -24,7 +24,7 @@ install:
   el7: |
     install_startup_hooks() {
       local a
-      for a in "${source}/dist/init/systemd"/*; do
+      for a in "dist/init/systemd"/*; do
           if [ "${a##*.}" == 'inactive' ]; then
               cp $a /etc/systemd/system/$(basename "$a" .inactive) || return 1
           else
@@ -37,7 +37,7 @@ install:
   el6: |
     install_startup_hooks() {
       local target_init_script a
-      for a in "${source}/dist/init/sysv"/*.el6; do
+      for a in "dist/init/sysv"/*.el6; do
           target_init_script="$(basename "$a" .el6)"
           if [ "${target_init_script##*.}" == 'inactive' ]; then
               cp $a /etc/init.d/$(basename "${target_init_script}" .inactive) && \
@@ -53,7 +53,7 @@ install:
     }
   ubuntu1604: |
     install_startup_hooks() {
-        for a in "${source}/dist/init/systemd"/*; do
+        for a in "dist/init/systemd"/*; do
             if [ "${a##*.}" == 'inactive' ]; then
                 cp $a /etc/systemd/system/$(basename "$a" .inactive) || return 1
             else
@@ -94,7 +94,7 @@ build:
   el7: |
     install_startup_hooks() {
       local a
-      for a in "${source}/dist/init/systemd"/*; do
+      for a in "dist/init/systemd"/*; do
           if [ "${a##*.}" == 'inactive' ]; then
               cp $a /etc/systemd/system/$(basename "$a" .inactive) || return 1
           else
@@ -107,7 +107,7 @@ build:
   el6: |
     install_startup_hooks() {
       local target_init_script a
-      for a in "${source}/dist/init/sysv"/*.el6; do
+      for a in "dist/init/sysv"/*.el6; do
           target_init_script="$(basename "$a" .el6)"
           if [ "${target_init_script##*.}" == 'inactive' ]; then
               cp $a /etc/init.d/$(basename "${target_init_script}" .inactive) && \
@@ -123,7 +123,7 @@ build:
     }
   ubuntu1604: |
     install_startup_hooks() {
-        for a in "${source}/dist/init/systemd"/*; do
+        for a in "dist/init/systemd"/*; do
             if [ "${a##*.}" == 'inactive' ]; then
                 cp $a /etc/systemd/system/$(basename "$a" .inactive) || return 1
             else
