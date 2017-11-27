@@ -27,3 +27,4 @@ install:
     cp -pR libexec/* "${cw_ROOT}"/libexec
     cp -pR lib/* "${cw_ROOT}"/lib
     cp -pR etc/* "${cw_ROOT}"/etc
+    chmod 0600 "${cw_ROOT}"/etc/naming.rc
