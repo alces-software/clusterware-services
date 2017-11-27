@@ -26,6 +26,7 @@ install:
     serviceware_add clusterware-docs
     cp -pR libexec/* "${cw_ROOT}"/libexec
     cp -pR lib/* "${cw_ROOT}"/lib
+    cp -pR etc/* "${cw_ROOT}"/etc
 build:
   _: |
     PATH="${cw_ROOT}"/opt/git/bin:"${cw_ROOT}"/opt/ruby/bin:$PATH
