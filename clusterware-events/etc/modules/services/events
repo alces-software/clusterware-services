@@ -1,0 +1,74 @@
+#%Module1.0#####################################################################
+##
+## Alces HPC Software Stack - Service module file
+## Copyright (c) 2017 Alces Software Ltd
+##
+## path: services/events
+################################################################################
+if { [info exists ::env(ALCES_TRACE)] } {
+    puts stderr " -> $::ModulesCurrentModulefile"
+}
+
+if { [namespace exists alces] == 0 } {
+    if { [info exists ::env(MODULES_ALCES_TCL)] } {
+        source $::env(MODULES_ALCES_TCL)
+    } else {
+        # compatibility mode for module use without availability of Alces tools
+        proc ::process {body} { eval $body }
+        proc ::depend {module {version ""} {_ ""}} {
+            set req [regsub {\-} $module {/}]/$version
+            if { [catch { prereq $req }] } {
+                puts stderr "Could not satisfy prereq: $req"
+                break
+            }
+        }
+        proc ::alces {_ module} { return $module }
+        proc ::search {_ _ _} { }
+    }
+}
+
+proc ModulesHelp { } {
+    puts stderr "
+               ========= Events Utils ==========
+          Useful utilities for Alces Clusterware Events
+             ======================================
+
+This module sets up your environment for the use of the 'events'
+service.
+
+
+>> SYNOPSIS <<
+
+This is a utility modulefile to make it easy to access the core
+utilities provided by Alces Events.
+
+
+>> FURTHER INFORMATION <<
+
+For further details regarding this module, including the environment
+modifications it will apply, execute:
+
+\tmodule show services/events
+
+"
+}
+
+set     appdir  _ROOT_/opt
+
+module-whatis   "
+
+            Title: Alces Clusterware Events Utils
+          Summary: Easy to access the utilities provided by events serviceware
+            Group: Alces/Services
+
+             Name: events
+           Module: [alces pretty services/events]
+      Module path: _ROOT_/etc/modules/services/events
+
+For further information, execute:
+
+\tmodule help services/events
+"
+
+prepend-path PATH ${appdir}/pluginhook/bin
+prepend-path PATH ${appdir}/serf/bin
