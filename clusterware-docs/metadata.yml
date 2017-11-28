@@ -29,6 +29,7 @@ install:
     cp -pR etc/* "${cw_ROOT}"/etc
 build:
   _: |
+    yum install -y -e0 gmp-devel
     PATH="${cw_ROOT}"/opt/git/bin:"${cw_ROOT}"/opt/ruby/bin:$PATH
     mkdir -p "${cw_ROOT}"/opt/clusterware-docs
     cd "${cw_ROOT}"/opt/clusterware-docs
