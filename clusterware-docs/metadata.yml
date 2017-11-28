@@ -79,4 +79,4 @@ build:
     BUNDLED WITH
        1.10.6
     EOF
-    bundle install --local --without="development test" --path=vendor
+    bundle install --without="development test" --path=vendor
