@@ -22,7 +22,7 @@
 ---
 install:
   _: |
-    mkdir -p "${cw_ROOT}"/opt/clusterware-configure
+    mkdir -p "${cw_ROOT}"/opt/clusterware-config
 
     cp -pR libexec/* "${cw_ROOT}"/libexec
     cp -pR lib/* "${cw_ROOT}"/lib
