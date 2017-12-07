@@ -22,4 +22,7 @@
 ---
 install:
   _: |
+    require serviceware
+    serviceware_add forge
+
     cp -pR libexec/* "${cw_ROOT}"/libexec
