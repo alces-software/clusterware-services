@@ -1,0 +1,23 @@
+################################################################################
+##
+## Alces Clusterware - Shell configuration
+## Copyright (c) 2017 Alces Software Ltd
+##
+################################################################################
+cw_FS_lowest_uid=500
+cw_FS_skip_users="root"
+cw_FS_roots=(sharedscratch localscratch)
+
+# Set scheme variables to one of:
+#  'username' - create username-specific directory
+#  'direct'   - skip creation and link directly to root
+
+cw_FS_sharedscratch_desc="Shared Scratch"
+cw_FS_sharedscratch_root="/sharedscratch/users"
+cw_FS_sharedscratch_mode="700"
+cw_FS_sharedscratch_scheme="username"
+
+cw_FS_localscratch_desc="Local Scratch"
+cw_FS_localscratch_root="/localscratch/users"
+cw_FS_localscratch_mode="700"
+cw_FS_localscratch_scheme="username"
