@@ -40,19 +40,71 @@ setup() {
     kernel_load
 }
 
+join_by() {
+  local d=$1
+  shift
+  echo -n "$1"
+  shift
+  printf "%s" "${@/#/$d}"
+}
+
 main() {
-    local image work_dir input_dir output_dir job_uuid launcher entrypoint interactive workload
+    local image work_dir input_dir output_dir job_uuid launcher entrypoint interactive
+    local m mount_src mount_dest mounts
     image="$1"
     work_dir="$2"
-    input_dir="${3:-$work_dir}"
-    output_dir="${4:-$work_dir}"
-    run_args=("${@:5}")
+    input_dir="${3}"
+    output_dir="${4}"
+
+    shift 4
 
     if [ -z "$work_dir" ]; then
-        action_die "please specify work directory and, optionally, input and output directories"
+        action_die "please specify work directory."
+    fi
+    if [ -z "$input_dir" ]; then
+        action_die "please specify input directory."
+    fi
+    if [ -z "$output_dir" ]; then
+        action_die "please specify output directory."
     fi
 
     job_uuid=$(uuid)
+
+    mounts=("$work_dir:$_INTERNAL_ROOT/work" "$input_dir:$_INTERNAL_ROOT/input" "$output_dir:$_INTERNAL_ROOT/output")
+
+    while [[ "$1" == "--mount" ]]; do
+      if [ -z "$2" ]; then
+        action_die "--mount option requires an argument."
+      fi
+
+      mount_src=${2%:*}
+      mount_dest=${2#*:}
+
+      if [[ "$mount_src" == "$2" ]]; then
+        action_die "Volume mounts should be specified as /path/on/host:/path/in/container."
+      fi
+
+      for m in "work" "input" "output"; do
+        if [[ "$mount_dest" == "${_INTERNAL_ROOT}/${m}" || "$mount_dest" == "${_INTERNAL_ROOT}/${m}/"* ]]; then
+          action_die "Cannot override mount point ${_INTERNAL_ROOT}/${m}."
+        fi
+      done
+
+      mounts+=("${mount_src}:${mount_dest}")
+      shift 2
+    done
+
+    run_args=("${@}")
+
+    if [[ "${run_args[0]}" == "--mpi"* ]]; then
+      use_mpi="--network gridware-mpi"
+      if [[ ${run_args[0]#*=} != ${run_args[0]} ]]; then
+        # a number of slaves has been specified
+        mpi_slaves=${run_args[0]#*=}
+      fi
+      run_args=(${run_args[@]:1})
+    fi
+
     if [ "${run_args[0]}" == "--interactive" ]; then
         interactive="-it"
         if [ "${run_args[1]}" ]; then
@@ -71,38 +123,106 @@ main() {
         fi
     fi
 
-    docker run \
-           --entrypoint "" \
-           --name $job_uuid \
-           "${image}" \
-           useradd -m -u $SUDO_UID $SUDO_USER \
-           >> $work_dir/docker.log
+    cat <<EOF >$work_dir/Dockerfile
+FROM ${image}
 
-    docker commit \
-           $(docker ps -aq --filter name=${job_uuid}$) \
-           $job_uuid \
-           >> $work_dir/docker.log
+RUN useradd -m -u $SUDO_UID $SUDO_USER
 
-    docker rm $job_uuid >> $work_dir/docker.log
+EOF
+
+   if [[ ! -z "$use_mpi" ]]; then
+     # set up SSH key for sshd in container so that all copies of the temp image
+     # can log into each other
+     mkdir -p $work_dir/ssh
+     ssh-keygen -t rsa -f $work_dir/ssh/id_rsa -N '' >> $work_dir/docker.log
+     cp $work_dir/ssh/id_rsa.pub $work_dir/ssh/authorized_keys
+     cat <<EOF > $work_dir/ssh/config
+ Host *
+   IdentityFile %d/.ssh/id_rsa
+   StrictHostKeyChecking  no
+EOF
+     cat <<EOF >>$work_dir/Dockerfile
+     COPY ssh /home/$SUDO_USER/.ssh
+     RUN chown -R $_UID:$_GID /home/$SUDO_USER/.ssh
+     RUN for m in \`cat /opt/gridware/etc/defaults\`; do echo "module load \$m" >> /home/$SUDO_USER/.modules; done && \
+         chown $_UID:$_GID /home/$SUDO_USER/.modules
+EOF
+   fi
+
+    docker build -t $job_uuid $work_dir >> $work_dir/docker.log
+
+    if [[ ! -z "$use_mpi" ]]; then
+      # Share temporary image with slave nodes
+      docker save -o "${cw_GRIDWARE_root:-/opt/gridware}/docker/exports/${job_uuid}" "${job_uuid}"
+      chmod 0644 "${cw_GRIDWARE_root:-/opt/gridware}/docker/exports/${job_uuid}"
+
+      for node in $(docker node ls -f "role=worker" | tail -n -1 | cut -d ' ' -f6); do
+        # Force each node to import the image!
+        ssh $node docker load -i "${cw_GRIDWARE_root:-/opt/gridware}/docker/exports/${job_uuid}"
+      done
+
+      # This step currently gives some scary-looking errors that aren't actually errors
+      docker service create --network gridware-mpi --replicas ${mpi_slaves:-2} --name ${job_uuid}-service ${job_uuid} --mpi >> $work_dir/docker.log
+      # Now wait until all replicas have been created
+      while true; do
+        replicas=$(docker service ls --filter name=${job_uuid}-service | tail -n -1 | sed -e "s/ \+/ /g" | cut -d' ' -f4)
+        ready=${replicas%/*}
+        total=${replicas#*/}
+        echo "${ready} of ${total} slaves ready"
+        if [[ "$ready" == "$total" ]]; then break; fi
+        sleep 5
+      done
+
+      sleep 5  # wait for containers to get their IP addresses from Docker
+      # Assemble a hosts file
+      ruby_run <<RUBY
+
+require 'json'
+
+network = JSON.parse(IO.popen("docker network inspect --verbose gridware-mpi").read)[0]
+
+containers = network["Services"]["${job_uuid}-service"]["Tasks"]
+
+File.open("$work_dir/hosts", "w") { |hosts|
+
+  File.open("$work_dir/hostlist", "w") { |hostlist|
+
+    containers.each { |container|
+      hostlist.write("#{container["EndpointIP"]}\n")
+      hosts.write("#{container["Name"]} #{container["EndpointIP"]}\n")
+    }
+
+  }
+
+}
+
+RUBY
+
+    fi
 
     set +e
     docker run $interactive --rm=true \
-           -v "$work_dir:$_INTERNAL_ROOT/work" \
-           -v "$input_dir:$_INTERNAL_ROOT/input" \
-           -v "$output_dir:$_INTERNAL_ROOT/output" \
+           -v $(join_by " -v " "${mounts[@]}") \
            --env "WORK_DIR=$_INTERNAL_ROOT/work" \
            --env "INPUT_DIR=$_INTERNAL_ROOT/input" \
            --env "OUTPUT_DIR=$_INTERNAL_ROOT/output" \
+           --env "OMPI_MCA_btl_tcp_if_include=eth0" \
            --user "$_UID:$_GID" \
+           $use_mpi \
            $job_uuid \
            "${launcher[@]}"
 
-    docker rmi $job_uuid >> $work_dir/docker.log
+    if [[ ! -z "$use_mpi" ]]; then
+      docker service rm ${job_uuid}-service >> $work_dir/docker.log
+      rm "${cw_GRIDWARE_root:-/opt/gridware}/docker/exports/${job_uuid}"
+    fi
+    docker rmi --force $job_uuid >> $work_dir/docker.log
 }
 
 setup
 require action
 require process
+require ruby
 
 if ! process_reexec_sg docker --plain "$@"; then
    action_die "unable to find group: docker"

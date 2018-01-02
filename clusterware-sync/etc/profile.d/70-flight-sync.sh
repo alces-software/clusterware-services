@@ -22,6 +22,7 @@ EOF
 :source: :home
 :exclude:
 - ".*"
+- "gridware/*"
 :include:
 - ".bash*"
 - ".config/clusterware/*.rc"

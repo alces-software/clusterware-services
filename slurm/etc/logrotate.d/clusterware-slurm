@@ -8,3 +8,13 @@
   notifempty
   copytruncate
 }
+
+/var/log/slurm/accounting {
+  missingok
+  size 100M
+  rotate 20
+  dateext
+  notifempty
+  nocompress
+  copytruncate
+}

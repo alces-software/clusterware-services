@@ -43,65 +43,147 @@ _build_base() {
     docker build -t "$tag:latest" "${cw_ROOT}"/var/lib/gridware/docker/gridware-base
 }
 
+join_by () {
+  local IFS="$1"
+  shift
+  echo "$*"
+}
+
 main() {
-    local app name tag
-    if [ "$1" == "--base" ]; then
+  local arg base_image default_script display_name name package packages pkg_name provided_name variant
+  packages=()
+
+  # default base image and name
+  base_image="$_REGISTRY/$_REGISTRY_USER/gridware-base"
+  name="gridware"
+
+  while [ "$1" ]; do
+
+    arg="$1"
+    shift
+
+    case $arg in
+      --base)
         _build_base
-    else
-        if [ "$1" == "--from" ]; then
-            base_image="$_REGISTRY/$2"
-            shift 2
+        exit 0
+      ;;
+      --from)
+        if [ "$1" ]; then
+          base_image="$_REGISTRY/$1"
+          shift
         else
-            base_image="$_REGISTRY/$_REGISTRY_USER/gridware-base"
+          action_die "from parameter requires a value"
         fi
-        app="$1"
-        if [ -z "$app" ]; then
+        ;;
+      --name)
+        if [ "$1" ]; then
+          provided_name=$(echo "$1" | tr '/' '-' )
+          if [[ "$provided_name" != "$1" ]]; then
+            echo "Using name ${provided_name} rather than specified ${1}"
+          fi
+          shift
+        else
+          action_die "from parameter requires a value"
+        fi
+        ;;
+      --script)
+        if [ ! -z "$1" ]; then
+          default_script="$1"
+          shift
+        else
+          action_die "script parameter requires a value"
+        fi
+        ;;
+      --*)
+        action_die "Unknown argument: $arg"
+        ;;
+      *)
+
+        # Assume everything else is supposed to be an app
+
+        if [ -z "$arg" ]; then
             action_die "please specify a package"
-        elif ! echo "$app" | grep -q '.*/.*/.*'; then
+        elif ! echo "$arg" | grep -q '.*/.*/.*'; then
             action_die "please specify the package using the format <type>/<name>/<version>"
-        elif [ "$($_ALCES gridware list "${_GRIDWARE_REPO}/$app" | wc -l)" != "1" ]; then
-            action_die "package not found: $app"
+        elif [ "$($_ALCES gridware list "${_GRIDWARE_REPO}/$arg" | wc -l)" != "1" ]; then
+            action_die "package not found: $arg"
         fi
 
-        if [ "$2" == "--variant" ]; then
-            if [ "$3" ]; then
-                variant="--variant $3"
-                name=gridware-$(echo "$app" | sed "s,\(.*\)/\(.*\)/,\1/\2_$3/,g" | tr '/' '-' | tr '[A-Z]' '[a-z]')
-            else
-                action_die "variant parameter requires a value"
-            fi
+        if [[ "$1" == "--variant" ]]; then
+          if [ "$2" ]; then
+            package="$arg:$2"
+            shift 2
+          else
+            action_die "variant parameter requires a value"
+          fi
         else
-            name=gridware-$(echo "$app" | tr '/' '-' | tr '[A-Z]' '[a-z]')
+          package="$arg"
+          name="${name}-$(echo "$arg" | tr '/' '-' | tr '[A-Z]' '[a-z]')"
         fi
+        display_name="${display_name}${arg}, "
+        packages+=($package)
+    esac
 
-        tag="$_REGISTRY/$_REGISTRY_USER/$name"
+  done
 
-        action_emit "Building Gridware container '$name'..."
-        echo ""
+  if [ ! -z "$provided_name" ]; then
+    if [[ "$provided_name" != "gridware-"* ]]; then
+      # Image names must be prefixed with "gridware-" to be used with Gridware.
+      name="gridware-${provided_name}"
+    else
+      name="$provided_name"
+    fi
+  fi
 
-        build_dir="$(mktemp -d /tmp/gridware.docker.build.XXXXXXXX)"
-        cat <<EOF > "${build_dir}"/Dockerfile
+  tag="$_REGISTRY/$_REGISTRY_USER/$name"
+
+  action_emit "Building Gridware container '$name'..."
+  echo ""
+
+  build_dir="$(mktemp -d /tmp/gridware.docker.build.XXXXXXXX)"
+  cat <<EOF > "${build_dir}"/Dockerfile
 FROM ${base_image}
-MAINTAINER Alces Software Ltd. <support@alces-software.com>
-LABEL Alces Gridware - $app
+LABEL maintainer="Alces Software Ltd. <support@alces-software.com>" \
+      description="Alces Gridware - ${display_name%%, }" \
+      alces.gridware.packages="$(join_by , "${packages[@]}")" \
+      build-date="$(date "+%Y%m%d")"
+EOF
 
+  for package in "${packages[@]}"; do
+    # Include a gridware install command for each package
+    variant=${package#*:}
+    pkg_name=${package%:*}
+    if [[ "$variant" != "$pkg_name" ]]; then
+      variant="--variant ${variant}"
+    else
+      variant=""
+    fi
+
+    cat <<EOF >> "${build_dir}"/Dockerfile
 RUN /opt/clusterware/bin/alces gridware install \
 --binary --binary-only --binary-depends \
 --non-interactive --yes $variant \
-${_GRIDWARE_REPO}/$app && \
-yum clean all
-
-RUN echo "$app" >> /opt/gridware/etc/defaults
+${_GRIDWARE_REPO}/$pkg_name && \
+yum clean all && \
+echo "$pkg_name" >> /opt/gridware/etc/defaults
 EOF
-        set -o pipefail
-        if ! docker build -t "$tag:latest" "$build_dir" 2>&1 | sed 's/^/  >>> /g'; then
-            rm -rf "$build_dir"
-            echo ""
-            action_die "unable to build Gridware container '$name'"
-        else
-            rm -rf "$build_dir"
-        fi
-    fi
+  done
+
+  if [ ! -z "$default_script" ]; then
+    # User has specified a default script to run
+    cp "${default_script}" "${build_dir}/default-cmd.sh"
+    chmod a+x "${build_dir}/default-cmd.sh"
+    echo "COPY default-cmd.sh /opt/gridware/bin/default-cmd.sh" >> "${build_dir}"/Dockerfile
+  fi
+
+  set -o pipefail
+  if ! docker build -t "$tag:latest" "$build_dir" 2>&1 | sed 's/^/  >>> /g'; then
+      rm -rf "$build_dir"
+      echo ""
+      action_die "unable to build Gridware container '$name'"
+  else
+      rm -rf "$build_dir"
+  fi
 }
 
 cw_BINNAME="alces gridware"

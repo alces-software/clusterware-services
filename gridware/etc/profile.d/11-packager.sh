@@ -6,9 +6,15 @@
 ################################################################################
 for a in modules modulerc; do
     if [ ! -f "$HOME/.$a" ]; then
-        cp "$(_cw_root)"/etc/skel/$a "$HOME/.$a"
+        sed -e "s#%NULL_MODULE_PATH%#$(_cw_root)/etc/modules/#" "$(_cw_root)"/etc/skel/$a > "$HOME/.$a"
     fi
 done
+
+if [ ! -d ~/gridware/personal ] && [ $UID -ne 0 ] && [ -d /opt/gridware ]; then
+  pushd ~ >/dev/null 2>&1
+  "$(_cw_root)/bin/alces" gridware init
+  popd >/dev/null 2>&1
+fi
 
 if [ -d "$(_cw_root)"/opt/modules ]; then
     module() { alces module "$@" ; }
@@ -152,7 +158,7 @@ fi;;
         "$(_cw_root)"/bin/alces gridware depot list -1 2>&1 | sed '
                 s#^\(.*\)/\(.\+\)(default)#\1\n\1\/\2#;
                 s#/*$##g; s#^base/##g;'
- 
+
     }
 
     _alces_list_cache_expired() {
@@ -164,12 +170,15 @@ fi;;
             return 1
         fi
     }
-    
+
     _alces_gridware() {
         local cur="$1" prev="$2" cmds opts
-        cmds="clean default help info install list purge update import export depot search requires"
+        cmds="clean default dependencies docker help info install list purge update import export depot search requires requests"
         if ((COMP_CWORD > 2)); then
             case "$prev" in
+                reque*)
+                    COMPREPLY=( $(compgen -W "list install" -- "$cur") )
+                    ;;
                 in*|r*)
                     if ((COMP_CWORD > 3)); then
                       if [ -z "$cw_DEPOT_LIST" ] || _alces_list_cache_expired $cw_DEPOT_LIST_MTIME; then
@@ -189,8 +198,11 @@ fi;;
                     # for purge, clean and default, we provide a module list
                     COMPREPLY=( $(compgen -W "$(_module_avail_specific)" -- "$cur") )
                     ;;
-                dep*)
+                depo*)
                     COMPREPLY=( $(compgen -W "list enable disable update info install purge init" -- "$cur") )
+                    ;;
+                do*)
+                   COMPREPLY=( $(compgen -W "build help list pull push run share start-registry" -- "$cur") )
                     ;;
                 *)
                     # for purge, clean and default, we provide a module list

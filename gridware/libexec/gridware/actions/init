@@ -67,6 +67,24 @@ _create_default_depot() {
 }
 
 _create_gridware_configuration() {
+  if [ "$cw_GRIDWARE_userspace" ]; then
+    cat <<EOF > "${cw_GRIDWARE_root}"/etc/gridware.yml
+################################################################################
+##
+## Alces Clusterware - Gridware packager configuration
+## Copyright (c) 2017 Alces Software Ltd
+##
+################################################################################
+---
+:repo_paths:
+# - ${HOME}/gridware/repos/example
+#:user_email: someone@example.com
+EOF
+    if [ ! -d ${HOME}/gridware/repos/example ]; then
+      mkdir -p ${HOME}/gridware/repos
+      cp -r ${cw_ROOT}/etc/gridware/reposkel ${HOME}/gridware/repos/example
+    fi
+  else
     cat <<EOF > "${cw_GRIDWARE_root}"/etc/gridware.yml
 ################################################################################
 ##
@@ -95,6 +113,7 @@ _create_gridware_configuration() {
 :update_period: 3
 :last_update_filename: .last_update
 EOF
+  fi
     cat <<EOF > "${cw_GRIDWARE_root}"/etc/params.yml
 'apps/example':
   :optimize: true
@@ -104,16 +123,17 @@ EOF
 }
 
 _update_modulespath() {
-    local name
+    local name modulespath_file
     name="$1"
-    if ! grep -q "${cw_GRIDWARE_root}/${name}/\$cw_DIST/etc/modules" "${cw_ROOT}"/etc/modulerc/modulespath; then
+    modulespath_file=${cw_GRIDWARE_modulespath_file:-"${cw_ROOT}"/etc/modulerc/modulespath}
+    if ! grep -q "${cw_GRIDWARE_root}/${name}/\$cw_DIST/etc/modules" "${modulespath_file}"; then
         sed -e "/^#=Alces Gridware Depots/a ${cw_GRIDWARE_root}/${name}/\$cw_DIST/etc/modules" \
-            -i "${cw_ROOT}"/etc/modulerc/modulespath
+            -i "${modulespath_file}"
     fi
 }
 
 _initialize_depot() {
-    local depot name
+    local depot name uuid
     depot="$1"
     name="$2"
 
@@ -144,13 +164,59 @@ DataMapper.repository(:'${name}') do
 end
 RUBY
 
-    chmod -R g+rw "${depot}"
     find "${depot}" -type d -exec chmod 2775 {} \;
-    chgrp -R gridware "${depot}"
+
+  if [ "$cw_GRIDWARE_userspace" ]; then
+    # symlink this repo under /opt/gridware/depots/u so binary patching works
+    uuid=$(uuid -v4 | head -c6)
+    while [ -d "${cw_GRIDWARE_rooty_root}/depots/u/${uuid}" ]; do
+      uuid=$(uuid -v4 | head -c6)
+    done
+    ln -s `readlink -f "${depot}"` "${cw_GRIDWARE_rooty_root}/depots/u/${uuid}"
+    ln -s "${cw_GRIDWARE_rooty_root}/depots/u/${uuid}" "${depot}"/.gridware-userspace
+  fi
+}
+
+configure_userspace() {
+  if [ $UID -ne 0 ]; then
+    cw_GRIDWARE_default_depot="personal"
+    cw_GRIDWARE_rooty_root="$cw_GRIDWARE_root"
+    cw_GRIDWARE_root="$HOME/gridware"
+    cw_GRIDWARE_modulespath_file="$HOME/.modulespath"
+    cw_GRIDWARE_userspace=$USER
+
+    if [ ! -f "$cw_GRIDWARE_modulespath_file" ]; then
+      cat <<EOF > "$cw_GRIDWARE_modulespath_file"
+################################################################################
+##
+## Alces Clusterware - Environment modules initialization file
+## Copyright (c) 2008-2017 Alces Software Ltd
+##
+################################################################################
+#
+#  User MODULEPATH setup file
+#  ============================
+#
+#  This file defines the user-specific portion of the module files search path.
+#
+#  Comments may be added anywhere, which begin on # and continue until the
+#     end of the line
+#  Each line containing a single path will be added to the MODULEPATH
+#     environment variable. You may add as many as you want - just
+#     limited by the maximum variable size of your shell.
+#
+#  Please do not remove lines prefixed with \`#=\`.
+#
+#=Alces Gridware Depots
+EOF
+    fi
+  fi
 }
 
 main() {
     local depot name update_config
+
+    configure_userspace
 
     if [ "$1" == "--update-config" ]; then
         update_config=true
@@ -196,6 +262,8 @@ main() {
         say_done $?
     done
 
+  if [ ! "$cw_GRIDWARE_userspace" ]; then
+
     title "Setting up local package repository"
     if [ -d "${cw_GRIDWARE_root}/etc/repos" ]; then
         doing 'Detect'
@@ -205,8 +273,6 @@ main() {
         cp -R "${cw_ROOT}/etc/gridware/reposkel" "${cw_GRIDWARE_root}/etc/repos/local"
         chmod -R g+rw "${cw_GRIDWARE_root}"/etc
         find "${cw_GRIDWARE_root}"/etc -type d -exec chmod 2775 {} \;
-        chgrp -R gridware "${cw_GRIDWARE_root}"/etc
-        chgrp gridware "${cw_GRIDWARE_root}" "${cw_GRIDWARE_root}"/depots
         chmod g+rws "${cw_GRIDWARE_root}" "${cw_GRIDWARE_root}"/depots
     fi
     say_done $?
@@ -220,9 +286,9 @@ main() {
         cp -R "${cw_ROOT}/etc/gridware/reposkel.depots" "${cw_GRIDWARE_root}/etc/depots/local"
         chmod -R g+rw "${cw_GRIDWARE_root}"/etc/depots
         find "${cw_GRIDWARE_root}"/etc/depots -type d -exec chmod 2775 {} \;
-        chgrp -R gridware "${cw_GRIDWARE_root}"/etc/depots
     fi
     say_done $?
+  fi
 }
 
 setup
@@ -231,6 +297,7 @@ require distro
 require ui
 require files
 require ruby
+require process
 
 files_load_config gridware
 files_load_config --optional gridware config/gridware

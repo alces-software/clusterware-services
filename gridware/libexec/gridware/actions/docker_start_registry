@@ -1,0 +1,80 @@
+#!/bin/bash
+#==============================================================================
+# Copyright (C) 2017 Stephen F. Norledge and Alces Software Ltd.
+#
+# This file/package is part of Alces Clusterware.
+#
+# Alces Clusterware is free software: you can redistribute it and/or
+# modify it under the terms of the GNU Affero General Public License
+# as published by the Free Software Foundation, either version 3 of
+# the License, or (at your option) any later version.
+#
+# Alces Clusterware is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this package.  If not, see <http://www.gnu.org/licenses/>.
+#
+# For more information on the Alces Clusterware, please visit:
+# https://github.com/alces-software/clusterware
+#==============================================================================
+setup() {
+    local a xdg_config
+    IFS=: read -a xdg_config <<< "${XDG_CONFIG_HOME:-$HOME/.config}:${XDG_CONFIG_DIRS:-/etc/xdg}"
+    for a in "${xdg_config[@]}"; do
+        if [ -e "${a}"/clusterware/config.vars.sh ]; then
+            source "${a}"/clusterware/config.vars.sh
+            break
+        fi
+    done
+    if [ -z "${cw_ROOT}" ]; then
+        echo "$0: unable to locate clusterware configuration"
+        exit 1
+    fi
+    kernel_load
+}
+
+main() {
+  local registry_volume
+
+  files_load_config config config/cluster
+
+  registry_volume="${cw_GRIDWARE_root}/docker/registry"
+  mkdir -p "$registry_volume"
+
+  docker run -d -p 5000:5000 --name registry \
+    -v "$registry_volume":/var/lib/registry \
+    -v "$cw_GRIDWARE_root/docker/certificates/private":/certs \
+    -e REGISTRY_HTTP_TLS_CERTIFICATE="/certs/cert.pem" \
+    -e REGISTRY_HTTP_TLS_KEY="/certs/key.pem" \
+    registry:2
+
+  if [[ $? -eq 0 ]]; then
+    echo "Started Docker repository at ${cw_CLUSTER_hostname}:5000"
+  fi
+
+}
+
+cw_BINNAME="alces gridware"
+
+setup
+require action
+require files
+require handler
+require process
+
+# root is required to read the SSL certificates
+process_reexec_sudo "$@"
+
+r=$(type -p docker)
+if [ $? != 0 -o ! -x "$r" ]; then
+    action_die "unable to locate Docker installation"
+elif ! process_reexec_sg docker --plain "$@"; then
+    action_die "unable to find Docker group"
+fi
+
+files_load_config gridware
+
+main "$@"

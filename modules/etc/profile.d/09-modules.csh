@@ -6,6 +6,12 @@
 ################################################################################
 alias | grep "^module\b" > /dev/null
 if ( $? == 1 ) then
+    foreach a ( modules )
+      if ( ! -f "$HOME/.$a" ) then
+          sed -e "s#%NULL_MODULE_PATH%#$(_cw_root)/etc/modules/#" _ROOT_/etc/skel/$a > "$HOME/.$a"
+      endif
+    end
+
     if ($?tcsh) then
         set modules_shell="tcsh"
     else
@@ -48,5 +54,10 @@ if ( $? == 1 ) then
 
     if (! $?LOADEDMODULES ) then
         setenv LOADEDMODULES ""
+    endif
+
+    #source modules file from home dir
+    if ( -r ~/.modules ) then
+      source ~/.modules
     endif
 endif

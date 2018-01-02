@@ -11,9 +11,7 @@ cw_silence_modules >& /dev/null
 # recommended way of managing this line is to use the modules init
 # commands, such as 'module initadd' and 'modules initrm'.  See
 # 'modules --help' or 'man module' for more information.
-module load null
+module load %NULL_MODULE_PATH%null
 
 # Re-enable enhanced modules output
 cw_desilence_modules >& /dev/null
-
-

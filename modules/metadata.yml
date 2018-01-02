@@ -33,7 +33,7 @@ install:
 
     cp -R etc/* "${cw_ROOT}"/etc
     sed -i -e "s,_ROOT_,${cw_ROOT},g" "${cw_ROOT}/etc/modulerc/modulespath" \
-        "${cw_ROOT}/etc/profile.d/10-modules.csh"
+        "${cw_ROOT}/etc/profile.d/09-modules.csh"
 build:
   el6: |
     yum -e0 -y install tcl-devel
@@ -61,4 +61,4 @@ build:
 
     cp -R etc/* "${cw_ROOT}"/etc
     sed -i -e "s,_ROOT_,${cw_ROOT},g" "${cw_ROOT}/etc/modulerc/modulespath" \
-        "${cw_ROOT}/etc/profile.d/10-modules.csh"
+        "${cw_ROOT}/etc/profile.d/09-modules.csh"
