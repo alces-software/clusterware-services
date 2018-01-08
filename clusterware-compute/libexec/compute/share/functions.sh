@@ -47,8 +47,8 @@ begin
       if compute_config.key?('cluster')
         puts "_COMPUTE_cluster_name=#{compute_config['cluster']}"
       end
-      if compute_config.key?('auth_user')
-        puts "_COMPUTE_auth_user=#{compute_config['auth_user']}"
+      compute_config.each do |key, value|
+        puts "_COMPUTE_#{key}=#{value}"
       end
     end
   end
@@ -81,20 +81,22 @@ _compute_cluster() {
 }
 
 _compute_endpoint() {
+  _compute_load_personality
   local cluster queue
   queue="$1"
   cluster="$(_compute_cluster)"
   if [ "${queue}" ]; then
-      echo "${_COMPUTE_ENDPOINT_URL:-https://tracon.alces-flight.com}/clusters/${cluster}/queues/${queue}"
+      echo "${_COMPUTE_endpoint_url:-https://tracon.alces-flight.com}/clusters/${cluster}/queues/${queue}"
   else
-      echo "${_COMPUTE_ENDPOINT_URL:-https://tracon.alces-flight.com}/clusters/${cluster}/queues"
+      echo "${_COMPUTE_endpoint_url:-https://tracon.alces-flight.com}/clusters/${cluster}/queues"
   fi
 }
 
 _compute_endpoint_available() {
+    _compute_load_personality
     local endpoint
     endpoint="$1"
-    webapi_send HEAD "${_COMPUTE_ENDPOINT_URL:-https://tracon.alces-flight.com}/ping" --skip-payload
+    webapi_send HEAD "${_COMPUTE_endpoint_url:-https://tracon.alces-flight.com}/ping" --skip-payload
 }
 
 _compute_payload() {
