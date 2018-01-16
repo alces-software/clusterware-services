@@ -30,6 +30,7 @@ process_reexec_sudo "$@"
 
 require files
 files_load_config instance config/cluster
+files_load_config --optional forge
 
 if [ "$cw_INSTANCE_role" != "master" ]; then
   echo "Alces Forge must be run from the cluster master node."
