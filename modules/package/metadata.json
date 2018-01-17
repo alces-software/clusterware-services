@@ -1,0 +1,14 @@
+{
+	"id": "00000000-0000-0000-0000-000000000003",
+	"type": "packages",
+	"attributes": {
+		"name": "modules",
+		"version": "0.0.1-dev",
+		"username": "alces"
+	},
+	"relationships": {
+		"dependencies": {
+			"data": []
+		}
+	}
+}
