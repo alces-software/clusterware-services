@@ -1,0 +1,9 @@
+{
+	"type": "packages",
+	"attributes": {
+		"name": "serf",
+		"version": "0.6.4+clusterware0",
+		"username": "alces",
+		"dependencies": []
+	}
+}
