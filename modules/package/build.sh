@@ -1,5 +1,9 @@
 #!/bin/bash
 
+if [ -f modules.zip ]; then
+  rm modules.zip
+fi
+
 temp_dir=$(mktemp -d /tmp/gridware-build-XXXXX)
 
 mkdir "${temp_dir}/data"
