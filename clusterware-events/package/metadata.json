@@ -1,0 +1,12 @@
+{
+	"type": "packages",
+	"attributes": {
+		"name": "clusterware-events",
+		"version": "2018.1.0",
+		"username": "alces",
+		"dependencies": [
+			"alces/serf",
+			"alces/pluginhook"
+		]
+	}
+}
