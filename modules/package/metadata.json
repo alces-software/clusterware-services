@@ -4,11 +4,7 @@
 	"attributes": {
 		"name": "modules",
 		"version": "0.0.1-dev",
-		"username": "alces"
-	},
-	"relationships": {
-		"dependencies": {
-			"data": []
-		}
+		"username": "alces",
+		"dependencies": []
 	}
 }
