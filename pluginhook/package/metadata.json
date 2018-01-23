@@ -1,0 +1,9 @@
+{
+	"type": "packages",
+	"attributes": {
+		"name": "pluginhook",
+		"version": "0.0.1+clusterware0",
+		"username": "alces",
+		"dependencies": []
+	}
+}
