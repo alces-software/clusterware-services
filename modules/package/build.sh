@@ -9,6 +9,7 @@ temp_dir=$(mktemp -d /tmp/gridware-build-XXXXX)
 mkdir "${temp_dir}/data"
 cp -r * "${temp_dir}"
 cp -r ../etc "${temp_dir}/data"
+cp -r ../libexec "${temp_dir}/data"
 
 pushd "$temp_dir/data" > /dev/null
 
