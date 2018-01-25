@@ -37,4 +37,4 @@ if [ "$cw_INSTANCE_role" != "master" ]; then
   exit 1
 fi
 
-cw_FORGE_API_URL="${cw_FORGE_API_URL}" cw_FORGE_SSO_URL="${cw_FORGE_SSO_URL} ${cw_RUBY} ${cw_ROOT}/opt/forge/bin/forge "$@"
+cw_FORGE_API_URL="${cw_FORGE_API_URL}" cw_FORGE_SSO_URL="${cw_FORGE_SSO_URL}" ${cw_RUBY} ${cw_ROOT}/opt/forge/bin/forge "$@"
