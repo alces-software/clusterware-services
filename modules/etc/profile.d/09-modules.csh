@@ -6,7 +6,7 @@
 ################################################################################
 alias | grep "^module\b" > /dev/null
 if ( $? == 1 ) then
-    foreach a ( modules )
+    foreach a ( modules modulerc )
       if ( ! -f "$HOME/.$a" ) then
           sed -e "s#%NULL_MODULE_PATH%#$(_cw_root)/etc/modules/#" _ROOT_/etc/skel/$a > "$HOME/.$a"
       endif
@@ -48,16 +48,39 @@ if ( $? == 1 ) then
     unset prefix
     unset postfix
 
-    if (! $?MODULEPATH ) then
-        setenv MODULEPATH `sed -n 's/[        #].*$//; /./H; $ { x; s/^\n//; s/\n/:/g; p; }' _ROOT_/etc/modulerc/modulespath`
-    endif
-
-    if (! $?LOADEDMODULES ) then
-        setenv LOADEDMODULES ""
-    endif
-
-    #source modules file from home dir
-    if ( -r ~/.modules ) then
-      source ~/.modules
-    endif
 endif
+
+if (! $?MODULEPATH ) then
+    setenv MODULEPATH `sed -n 's/[      #].*$//; /./H; $ { x; s/^\n//; s/\n/:/g; p; }' _ROOT_/etc/modulerc/modulespath`
+    if ( -f "$HOME/.modulespath" ) then
+      set usermodulepath = `sed -n 's/[     #].*$//; /./H; $ { x; s/^\n//; s/\n/:/g; p; }' "$HOME/.modulespath"`
+      setenv MODULEPATH "$usermodulepath":"$MODULEPATH"
+    endif
+    setenv MODULEPATH `eval echo $MODULEPATH`
+endif
+
+if (! $?LOADEDMODULES ) then
+  setenv LOADEDMODULES ""
+endif
+
+alias mod 'module'
+
+if (! $?cw_MODULES_RECORD ) then
+  setenv cw_MODULES_RECORD 0
+endif
+
+alias cw_silence_modules 'setenv cw_MODULES_VERBOSE_ORIGINAL "$cw_MODULES_VERBOSE"; setenv cw_MODULES_VERBOSE 0; setenv cw_MODULES_RECORD_ORIGINAL "$cw_MODULES_RECORD"; setenv cw_MODULES_RECORD 0'
+alias cw_desilence_modules 'setenv cw_MODULES_VERBOSE "$cw_MODULES_VERBOSE_ORIGINAL"; unsetenv cw_MODULES_VERBOSE_ORIGINAL; setenv cw_RECORD_VERBOSE "$cw_MODULES_RECORD_ORIGINAL"; unsetenv cw_MODULES_RECORD_ORIGINAL'
+
+if (! $?cw_MODULES_VERBOSE ) then
+    setenv cw_MODULES_VERBOSE 1
+endif
+
+#source modules file from home dir
+if ( -r ~/.modules ) then
+  source ~/.modules
+endif
+
+unset exec_prefix
+unset prefix
+unset postfix
