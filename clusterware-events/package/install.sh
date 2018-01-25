@@ -14,23 +14,23 @@ case "$cw_DIST" in
         if [ "${target_init_script##*.}" == 'inactive' ]; then
           cp $a /etc/init.d/$(basename "${target_init_script}" .inactive) && \
             chmod 755 /etc/init.d/$(basename "${target_init_script}" .inactive) || \
-            return 1
+            exit 1
         else
           cp $a /etc/init.d/${target_init_script} && \
             chmod 755 /etc/init.d/${target_init_script} && \
             chkconfig "${target_init_script}" on || \
-            return 1
+            exit 1
         fi
     done
 ;;
   "el7"|"ubuntu1604")
-  for a in "dist/init/systemd"/*; do
+  for a in "data/dist/init/systemd"/*; do
     if [ "${a##*.}" == 'inactive' ]; then
       cp $a /etc/systemd/system/$(basename "$a" .inactive) || return 1
     else
       cp $a /etc/systemd/system && \
-          systemctl enable "$(basename $a)" || \
-          return 1
+        systemctl enable "$(basename $a)" || \
+        exit 1
     fi
   done
 ;;
