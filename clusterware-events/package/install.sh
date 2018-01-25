@@ -23,8 +23,7 @@ case "$cw_DIST" in
         fi
     done
 ;;
-  "el7")
-  "ubuntu1604")
+  "el7"|"ubuntu1604")
   for a in "dist/init/systemd"/*; do
     if [ "${a##*.}" == 'inactive' ]; then
       cp $a /etc/systemd/system/$(basename "$a" .inactive) || return 1
