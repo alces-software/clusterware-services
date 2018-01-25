@@ -28,8 +28,8 @@ mkdir -p build
 export GOPATH=$(pwd)/build
 go get "golang.org/x/crypto/ssh/terminal" &> /dev/null
 go build -o pluginhook
-mkdir -p "${temp_dir}"/opt/pluginhook/bin
-cp pluginhook "${temp_dir}"/opt/pluginhook/bin
+mkdir -p "${temp_dir}"/data/opt/pluginhook/bin
+cp pluginhook "${temp_dir}"/data/opt/pluginhook/bin
 
 popd > /dev/null
 
