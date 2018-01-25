@@ -4,6 +4,8 @@
 		"name": "serf",
 		"version": "0.6.4+clusterware0",
 		"username": "alces",
+		"summary": "Serf is a tool for cluster membership, failure detection, and orchestration that is decentralized, fault-tolerant and highly available.",
+		"tagNames": ["clusterware_core"],
 		"dependencies": []
 	}
 }

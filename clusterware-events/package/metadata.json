@@ -4,6 +4,8 @@
 		"name": "clusterware-events",
 		"version": "2018.1.0",
 		"username": "alces",
+		"summary": "Clusterware event handler framework",
+		"tagNames": ["clusterware_core"],
 		"dependencies": [
 			"alces/serf",
 			"alces/pluginhook"
