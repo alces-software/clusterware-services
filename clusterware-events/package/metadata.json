@@ -8,7 +8,8 @@
 		"tagNames": ["clusterware_core"],
 		"dependencies": [
 			"alces/serf",
-			"alces/pluginhook"
+			"alces/pluginhook",
+			"alces/modules"
 		]
 	}
 }
