@@ -1,0 +1,11 @@
+{
+  "type": "packages",
+  "attributes": {
+    "name": "aws",
+		"version": "1.10.19+clusterware0",
+		"summary": "The AWS Command Line Interface (CLI), a unified tool to manage AWS services",
+    "dependencies": [
+      "alces/modules"
+    ]
+  }
+}
