@@ -1,0 +1,10 @@
+{
+  "type": "packages",
+  "attributes": {
+    "name": "clusterware-hosts",
+		"version": "0.0.1",
+		"summary": "Clusterware host management libraries",
+    "dependencies": [
+    ]
+  }
+}
