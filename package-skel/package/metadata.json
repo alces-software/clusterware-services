@@ -1,0 +1,10 @@
+{
+  "type": "packages",
+  "attributes": {
+    "name": "package-skel",
+		"version": "0.0.1",
+		"summary": "Package skeleton",
+    "dependencies": [
+    ]
+  }
+}
