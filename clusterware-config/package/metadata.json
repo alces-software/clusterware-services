@@ -1,0 +1,10 @@
+{
+  "type": "packages",
+  "attributes": {
+    "name": "clusterware-config",
+		"version": "0.0.1",
+		"summary": "Utilities for configuring Clusterware nodes",
+    "dependencies": [
+    ]
+  }
+}
