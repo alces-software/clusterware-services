@@ -1,9 +1,9 @@
 {
   "type": "packages",
   "attributes": {
-    "name": "package-skel",
-		"version": "0.0.1",
-		"summary": "Package skeleton",
+    "name": "websockify",
+		"version": "0.7.0+clusterware0",
+		"summary": "WebSockets support for any application/server",
     "dependencies": [
     ]
   }
