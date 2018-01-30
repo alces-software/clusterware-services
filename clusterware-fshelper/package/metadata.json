@@ -3,7 +3,7 @@
   "attributes": {
     "name": "clusterware-fshelper",
     "version": "0.0.1",
-		"summary": "Clusterware filesystem helper",
+    "summary": "Clusterware filesystem helper",
     "dependencies": [
     ]
   }

@@ -2,8 +2,8 @@
   "type": "packages",
   "attributes": {
     "name": "websockify",
-		"version": "0.7.0+clusterware0",
-		"summary": "WebSockets support for any application/server",
+    "version": "0.7.0+clusterware0",
+    "summary": "WebSockets support for any application/server",
     "dependencies": [
     ]
   }
