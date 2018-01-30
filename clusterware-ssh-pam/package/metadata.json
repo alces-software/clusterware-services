@@ -1,0 +1,11 @@
+{
+  "type": "packages",
+  "attributes": {
+    "name": "clusterware-ssh-pam",
+    "version": "0.0.1",
+    "summary": "PAM configuration for Clusterware SSH",
+    "dependencies": [
+      "alces/clusterware-ssh"
+    ]
+  }
+}

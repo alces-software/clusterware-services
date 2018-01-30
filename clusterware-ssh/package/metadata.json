@@ -1,0 +1,10 @@
+{
+  "type": "packages",
+  "attributes": {
+    "name": "clusterware-ssh",
+    "version": "0.0.1",
+    "summary": "Clusterware SSH key management",
+    "dependencies": [
+    ]
+  }
+}
