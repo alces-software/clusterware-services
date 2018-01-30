@@ -1,0 +1,13 @@
+{
+  "type": "packages",
+  "attributes": {
+    "name": "clusterware-sessions",
+    "version": "0.0.1",
+    "summary": "Clusterware session support",
+    "dependencies": [
+      "alces/tigervnc",
+      "alces/websockify",
+      "alces/xwd"
+    ]
+  }
+}
