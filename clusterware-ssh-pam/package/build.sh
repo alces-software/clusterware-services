@@ -1,6 +1,6 @@
 #!/bin/bash
 
-package_name='package-skel'
+package_name='clusterware-ssh-pam'
 
 if [ -f ./${package_name}.zip ]; then
   echo "Replacing existing ${package_name}.zip in this directory"
