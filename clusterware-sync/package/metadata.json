@@ -1,0 +1,11 @@
+{
+  "type": "packages",
+  "attributes": {
+    "name": "clusterware-sync",
+    "version": "0.0.1",
+    "summary": "Clusterware profile sync utility",
+    "dependencies": [
+      "alces/s3cmd"
+    ]
+  }
+}
