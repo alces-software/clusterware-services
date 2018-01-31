@@ -1,0 +1,11 @@
+{
+  "type": "packages",
+  "attributes": {
+    "name": "s3cmd",
+    "version": "2.0.1+clusterware0",
+    "summary": "Command line tool for managing Amazon S3 and CloudFront services",
+    "dependencies": [
+      "alces/modules"
+    ]
+  }
+}
