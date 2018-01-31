@@ -1,0 +1,10 @@
+{
+  "type": "packages",
+  "attributes": {
+    "name": "munge",
+    "version": "0.5.12+clusterware0",
+    "summary": "An authentication service for creating and validating credentials",
+    "dependencies": [
+    ]
+  }
+}
