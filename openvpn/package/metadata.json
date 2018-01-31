@@ -1,0 +1,10 @@
+{
+  "type": "packages",
+  "attributes": {
+    "name": "openvpn",
+    "version": "2.3.10+clusterware0",
+    "summary": "Open-source VPN",
+    "dependencies": [
+    ]
+  }
+}
