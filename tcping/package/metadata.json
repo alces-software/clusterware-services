@@ -1,0 +1,10 @@
+{
+  "type": "packages",
+  "attributes": {
+    "name": "tcping",
+    "version": "0.1.0",
+    "summary": "Check if a desired port is reachable via TCP",
+    "dependencies": [
+    ]
+  }
+}
