@@ -1,0 +1,11 @@
+{
+  "type": "packages",
+  "attributes": {
+    "name": "pdsh",
+    "version": "2.33.0+clusterware0",
+    "summary": "A high performance, parallel remote shell utility",
+    "dependencies": [
+      "alces/modules"
+    ]
+  }
+}
