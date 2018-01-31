@@ -1,0 +1,12 @@
+{
+  "type": "packages",
+  "attributes": {
+    "name": "slurm-common",
+    "version": "16.5.0+1clusterware0",
+    "summary": "Slurm: A Highly Scalable Workload Manager (common components)",
+    "dependencies": [
+      "alces/modules",
+      "alces/munge"
+    ]
+  }
+}
