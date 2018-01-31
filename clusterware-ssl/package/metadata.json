@@ -1,0 +1,10 @@
+{
+  "type": "packages",
+  "attributes": {
+    "name": "clusterware-ssl",
+    "version": "0.0.1",
+    "summary": "Clusterware support functions for SSL",
+    "dependencies": [
+    ]
+  }
+}
