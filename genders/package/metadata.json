@@ -2,7 +2,7 @@
   "type": "packages",
   "attributes": {
     "name": "genders",
-    "version": "0.0.1",
+    "version": "1.22.0+clusterware0",
     "summary": "A static cluster configuration database used for cluster configuration management",
     "dependencies": [
     ]
