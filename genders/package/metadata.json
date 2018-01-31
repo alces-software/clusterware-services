@@ -1,0 +1,10 @@
+{
+  "type": "packages",
+  "attributes": {
+    "name": "genders",
+    "version": "0.0.1",
+    "summary": "A static cluster configuration database used for cluster configuration management",
+    "dependencies": [
+    ]
+  }
+}
