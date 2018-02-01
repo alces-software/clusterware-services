@@ -1,0 +1,11 @@
+{
+  "type": "packages",
+  "attributes": {
+    "name": "slurm-compute",
+    "version": "16.5.0+1clusterware0",
+    "summary": "Slurm scheduler - compute node configuration",
+    "dependencies": [
+      "alces/slurm-common"
+    ]
+  }
+}
