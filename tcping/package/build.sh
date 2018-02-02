@@ -11,7 +11,7 @@ sudo yum install -y -e0 glibc-static
 
 temp_dir=$(mktemp -d /tmp/forge-${package_name}-build-XXXXX)
 
-cp install.sh "${temp_dir}"
+cp install.sh metadata.json "${temp_dir}"
 
 mkdir -p "${temp_dir}/data/opt/tcping/"{bin,doc}
 
