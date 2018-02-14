@@ -110,9 +110,9 @@ install:
     fi
 build:
   el6: |
-    yum install -y gcc-c++ gmp-devel sqlite-devel
+    yum install -y gcc-c++ gmp-devel sqlite-devel cmake libcurl-devel openssl-devel
   el7: |
-    yum install -y gcc-c++ gmp-devel sqlite-devel
+    yum install -y gcc-c++ gmp-devel sqlite-devel cmake libcurl-devel openssl-devel
   ubuntu1604: |
     apt-get install -y libsqlite3-dev
   _: |
