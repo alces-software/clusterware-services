@@ -9,12 +9,17 @@ for a in modules modulerc; do
         sed -e "s#%NULL_MODULE_PATH%#$(_cw_root)/etc/modules/#" "$(_cw_root)"/etc/skel/$a > "$HOME/.$a"
     fi
 done
+unset a
 
-if [ ! -d ~/gridware/personal ] && [ $UID -ne 0 ] && [ -d /opt/gridware ]; then
-  pushd ~ >/dev/null 2>&1
-  "$(_cw_root)/bin/alces" gridware init
-  popd >/dev/null 2>&1
+allow_users="$(cd $(_cw_root); bash -c 'source etc/gridware.rc 2> /dev/null && echo ${cw_GRIDWARE_allow_users}')"
+if [ "${allow_users}" != "false" ]; then
+    if [ ! -d ~/gridware/personal ] && [ $UID -ne 0 ] && [ -d /opt/gridware ]; then
+        pushd ~ >/dev/null 2>&1
+        "$(_cw_root)/bin/alces" gridware init
+        popd >/dev/null 2>&1
+    fi
 fi
+unset allow_users
 
 if [ -d "$(_cw_root)"/opt/modules ]; then
     module() { alces module "$@" ; }

@@ -9,12 +9,17 @@ foreach a ( modules modulerc )
         sed -e "s#%NULL_MODULE_PATH%#$(_cw_root)/etc/modules/#" _ROOT_/etc/skel/$a > "$HOME/.$a"
     endif
 end
+unset a
 
-if ( ! -d ~/gridware/personal && $USER != "root" && -d /opt/gridware ) then
-  pushd ~ >/dev/null 2>&1
-  _ROOT_/bin/alces gridware init
-  popd >/dev/null 2>&1
+set allow_users=`bash -c 'source _ROOT_/etc/gridware.rc 2> /dev/null && echo ${cw_GRIDWARE_allow_users}'`
+if ( "${allow_users}" != "false" ) then
+    if ( ! -d ~/gridware/personal && $USER != "root" && -d /opt/gridware ) then
+        pushd ~ >& /dev/null
+        _ROOT_/bin/alces gridware init
+        popd >& /dev/null
+    endif
 endif
+unset allow_users
 
 set exec_prefix='_ROOT_/opt/modules/bin'
 
