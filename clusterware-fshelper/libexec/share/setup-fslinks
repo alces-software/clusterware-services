@@ -1,0 +1,151 @@
+#!/bin/bash
+#==============================================================================
+# Copyright (C) 2017 Stephen F. Norledge and Alces Software Ltd.
+#
+# This file/package is part of Alces Clusterware.
+#
+# Alces Clusterware is free software: you can redistribute it and/or
+# modify it under the terms of the GNU Affero General Public License
+# as published by the Free Software Foundation, either version 3 of
+# the License, or (at your option) any later version.
+#
+# Alces Clusterware is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this package.  If not, see <http://www.gnu.org/licenses/>.
+#
+# For more information on the Alces Clusterware, please visit:
+# https://github.com/alces-software/clusterware
+#==============================================================================
+setup() {
+    local a xdg_config
+    IFS=: read -a xdg_config <<< "${XDG_CONFIG_HOME:-$HOME/.config}:${XDG_CONFIG_DIRS:-/etc/xdg}"
+    for a in "${xdg_config[@]}"; do
+        if [ -e "${a}"/clusterware/config.rc ]; then
+            source "${a}"/clusterware/config.rc
+            break
+        fi
+    done
+    if [ -z "${cw_ROOT}" ]; then
+        echo "$0: unable to locate clusterware configuration"
+        exit 1
+    fi
+    kernel_load
+}
+
+is_target_user() {
+    if [ ${cw_FS_lowest_uid} -gt ${UID} ]; then
+        return 1
+    fi
+    for u in ${cw_FS_skip_users}; do
+        if [ "$(id -un)" ==  "${u}" ]; then
+            return 1
+        fi
+    done
+}
+
+userdir_for() {
+  local root scheme
+  root="$1"
+  scheme="$2"
+  case $scheme in
+    username)
+      echo "$root"/"${USER}"
+      ;;
+    direct)
+      echo "$root"
+      ;;
+    *)
+      echo ""
+      ;;
+  esac
+}
+
+add_warning() {
+  warnings="⚠️  $(echo "$1" | fold -s -w70 | sed -e '2,$ s/^/   /')
+$warnings"
+}
+
+add_notice() {
+  notices="$(echo -e "\e[1;32m")✔$(echo -e "\e[0m")  $(echo "$1" | fold -s -w70 | sed -e '2,$ s/^/   /')
+$notices"
+}
+
+create_userpath() {
+  local name desc_var root_var mode_var scheme_var desc root mode scheme
+  local target_dir target_link
+  name="$1"
+
+  root_var="cw_FS_${name}_root"
+  root=${!root_var}
+
+  desc_var="cw_FS_${name}_desc"
+  desc=${!desc_var}
+  desc=${desc:-${name}}
+
+  mode_var="cw_FS_${name}_mode"
+  mode=${!mode_var}
+  mode=${mode:-700}
+
+  scheme_var="cw_FS_${name}_scheme"
+  scheme=${!scheme_var}
+  scheme=${scheme:-username}
+
+  if [ -n "${root}" ]; then
+      target_dir=$(userdir_for "$root" "$scheme")
+      if [ "${target_dir}" ]; then
+          if [ ! -d "${target_dir}" -a -w "${root}" ]; then
+              add_notice "Created user directory for '$desc' filesystem."
+              mkdir -m $mode -p "${target_dir}"
+          fi
+          target_link="${HOME}/${name}"
+          if [ -d "${target_dir}" ]; then
+              if [ ! -f "${target_link}" -a ! -L "${target_link}" -a ! -d "${target_link}" ]; then
+                  add_notice "Created home directory link for '$desc' filesystem."
+                  if ! ln -sn "${target_dir}" "${target_link}" 1>&2; then
+                      add_warning "A directory is available for the '$desc' filesystem but a link cannot be created on this node."
+                  fi
+              fi
+          elif [ -L "${target_link}" ]; then
+              add_warning "A link exists for the '$desc' filesystem but the target is not available on this node."
+          fi
+      fi
+  fi
+}
+
+main() {
+  local a warnings notices
+  if is_target_user; then
+      for a in "${cw_FS_roots[@]}"; do
+        create_userpath $a
+      done
+  fi
+  if [ "$warnings" ]; then
+      cat <<EOF >&2
+$(echo -e "\e[1;31m")=========
+ WARNING
+=========$(echo -e "\e[0m")
+$warnings
+EOF
+  fi
+  if [ "$notices" ]; then
+      cat <<EOF >&2
+$(echo -e "\e[1;33m")========
+ NOTICE
+========$(echo -e "\e[0m")
+$notices
+EOF
+  fi
+}
+
+setup
+require files
+files_load_config --optional fshelper
+
+cw_FS_lowest_uid=${cw_FS_lowest_uid:-500}
+cw_FS_skip_users="${cw_FS_skip_users:-root}"
+
+main

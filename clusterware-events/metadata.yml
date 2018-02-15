@@ -71,23 +71,23 @@ install:
     mkdir -p "${cw_ROOT}"/opt/clusterware-events
 
     cp -pR etc/* "${cw_ROOT}"/etc
+    rm -f "${cw_ROOT}"/etc/handlers/.gitkeep
     cp -pR libexec/* "${cw_ROOT}"/libexec
     cp -pR lib/* "${cw_ROOT}"/lib
 
-    # title "Setting up handler base repository"
-    # if [ -d "${target}/var/lib/handler/repos" ]; then
-    #     doing 'Detect'
-    # else
-    #     doing 'Initialize'
-    #     if [ "$cw_BUILD_repos_url" ]; then
-    #         mkdir -p "${target}"/var/lib/handler/repos/base
-    #         tar -C "${target}"/var/lib/handler/repos/base -xvzf "${source}"/clusterware-handlers.tar.gz &> "${dep_logs}/handler-init.log"
-    #     else
-    #         export cw_HANDLER_rev cw_HANDLER_track
-    #         "${target}/bin/alces" handler update &>> "${dep_logs}/handler-init.log"
-    #     fi
-    # fi
-    # say_done $?
+    echo "Setting up handler base repository"
+    if [ -d "${cw_ROOT}/var/lib/handler/repos" ]; then
+        echo 'Detected existing repository.'
+    else
+        echo 'Initializing repository:'
+        if [ -f /tmp/clusterware-handlers.tar.gz ]; then
+            mkdir -p "${cw_ROOT}"/var/lib/handler/repos/base
+            tar -C "${cw_ROOT}"/var/lib/handler/repos/base -xzf /tmp/clusterware-handlers.tar.gz
+        else
+            export cw_HANDLER_rev cw_HANDLER_track
+            "${cw_ROOT}/bin/alces" handler update
+        fi
+    fi
 
     install_startup_hooks
 build:
@@ -155,5 +155,19 @@ build:
     cp -pR etc/* "${cw_ROOT}"/etc
     cp -pR libexec/* "${cw_ROOT}"/libexec
     cp -pR lib/* "${cw_ROOT}"/lib
+
+    echo "Setting up handler base repository"
+    if [ -d "${cw_ROOT}/var/lib/handler/repos" ]; then
+        echo 'Detected existing repository.'
+    else
+        echo 'Initializing repository:'
+        if [ -f /tmp/clusterware-handlers.tar.gz ]; then
+            mkdir -p "${cw_ROOT}"/var/lib/handler/repos/base
+            tar -C "${cw_ROOT}"/var/lib/handler/repos/base -xzf /tmp/clusterware-handlers.tar.gz
+        else
+            export cw_HANDLER_rev cw_HANDLER_track
+            "${cw_ROOT}/bin/alces" handler update
+        fi
+    fi
 
     install_startup_hooks
