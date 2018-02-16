@@ -129,6 +129,9 @@ build:
     bundle install --local --without="development test" --path=vendor
 
     rm -rf Rakefile vendor/cache bin .gitignore README.md
+    rm -rf vendor/ruby/2.2.0/bundler/gems/rugged-*/{test,ext,.git,vendor/libgit2} \
+      vendor/ruby/2.2.0/bundler/gems/extensions \
+      vendor/ruby/2.2.0/cache
     popd
 
     cp -pR libexec/* "${cw_ROOT}"/libexec
