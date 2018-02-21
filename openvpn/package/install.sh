@@ -11,7 +11,7 @@ fi
 cp -R data/opt "${cw_ROOT}"
 
 case "$cw_DIST" in
-  "(el7|ubuntu1610)")
+  "el7"|"ubuntu1610")
     sed -e "s,_cw_ROOT_,${cw_ROOT},g" \
       data/init/systemd/clusterware-openvpn@.service \
       > /etc/systemd/system/clusterware-openvpn@.service
