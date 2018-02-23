@@ -2,7 +2,7 @@
   "type": "packages",
   "attributes": {
     "name": "clusterware-ssl",
-    "version": "0.0.1",
+    "version": "2.0.0-dev",
     "summary": "Clusterware support functions for SSL",
     "dependencies": [
     ]

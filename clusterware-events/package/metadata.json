@@ -2,7 +2,7 @@
   "type": "packages",
   "attributes": {
     "name": "clusterware-events",
-    "version": "2018.1.0",
+    "version": "2.0.0-dev",
     "username": "alces",
     "summary": "Clusterware event handler framework",
     "tagNames": ["clusterware_core"],
