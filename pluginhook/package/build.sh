@@ -26,6 +26,7 @@ pushd /tmp/pluginhook-7b91f7692d3ec494d4945f27d6b88864cd2f4bde > /dev/null
 
 mkdir -p build
 export GOPATH=$(pwd)/build
+PATH=/opt/clusterware/opt/git/bin:$PATH
 go get "golang.org/x/crypto/ssh/terminal" &> /dev/null
 go build -o pluginhook
 mkdir -p "${temp_dir}"/data/opt/pluginhook/bin
