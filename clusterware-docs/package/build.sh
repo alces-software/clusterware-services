@@ -1,6 +1,7 @@
 #!/bin/bash
 
 package_name='clusterware-docs'
+cw_ROOT=${cw_ROOT:-/opt/clusterware}
 
 if [ -f ./${package_name}.zip ]; then
   echo "Replacing existing ${package_name}.zip in this directory"
