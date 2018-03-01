@@ -26,6 +26,7 @@ cp -r ../libexec "${temp_dir}/data"
 pushd "${temp_dir}/data/opt/clusterware-docs" > /dev/null
   PATH="${cw_ROOT}"/opt/ruby/bin:$PATH
   bundle install --without="development test" --path=vendor
+  rm -rf vendor/ruby/2.2.0/cache
 popd > /dev/null
 
 pushd "${temp_dir}" > /dev/null
