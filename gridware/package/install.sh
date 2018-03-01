@@ -3,9 +3,9 @@ require files
 files_load_config distro
 
 if [[ "$cw_DIST" == "el6" || "$cw_DIST" == "el7" ]]; then
-  yum install -y -e0 gcc-c++ gmp-devel sqlite-devel cmake libcurl-devel openssl-devel
+  yum install -y -e0 wget sqlite patch bzip2 xz file which sudo uuid curl openssl
 elif [[ "$cw_DIST" == "ubuntu1604" ]]; then
-  apt-get install -y libsqlite3-dev
+  apt-get install -y gawk wget sqlite3 patch xz-utils debianutils sudo libcurl3 uuid
 fi
 
 cp -R data/opt/clusterware/* "${cw_ROOT}"
