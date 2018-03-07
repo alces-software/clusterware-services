@@ -286,6 +286,9 @@ main() {
         cp -R "${cw_ROOT}/etc/gridware/reposkel.depots" "${cw_GRIDWARE_root}/etc/depots/local"
         chmod -R g+rw "${cw_GRIDWARE_root}"/etc/depots
         find "${cw_GRIDWARE_root}"/etc/depots -type d -exec chmod 2775 {} \;
+
+        mkdir -p "${cw_GRIDWARE_root:-/opt/gridware}"/depots/u
+        chmod 1777 "${cw_GRIDWARE_root:-/opt/gridware}"/depots/u
     fi
     say_done $?
   fi
