@@ -14,3 +14,5 @@ cat <<EOF > /etc/tmpfiles.d/clusterware-slurm.conf
 # Clusterware Slurm runtime directory
 d /run/slurm 0755 slurm root -
 EOF
+
+systemctl enable clusterware-slurm-slurmd.service

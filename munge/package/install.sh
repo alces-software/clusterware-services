@@ -17,6 +17,11 @@ sed -e "s,_cw_ROOT_,${cw_ROOT},g" \
   data/init/systemd/clusterware-slurm-munged.service \
   > /etc/systemd/system/clusterware-slurm-munged.service
 
+# munged is fussy about these permissions
+chmod g-w "${cw_ROOT}/opt/"
+
+systemctl enable clusterware-slurm-munged.service
+
 # Create MUNGE user and group.
 getent group munge &>/dev/null || groupadd --gid 363 munge
 getent passwd munge &>/dev/null || useradd --uid 363 --gid 363 \
