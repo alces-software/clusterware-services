@@ -11,6 +11,22 @@ temp_dir=$(mktemp -d /tmp/forge-${package_name}-build-XXXXX)
 
 cp -r * "${temp_dir}"
 
+# Build MUNGE. If you change this next line be sure to change the equivalent in munge's build.sh too
+MUNGE_SOURCE='https://github.com/dun/munge/archive/munge-0.5.12.zip'
+MUNGE_PATH="/opt/clusterware/opt/munge"
+rm -rf "${MUNGE_PATH}" # Get rid of any old version of MUNGE so not building on top of.
+curl -L "${MUNGE_SOURCE}" -o /tmp/munge.zip
+unzip -d /tmp /tmp/munge.zip
+pushd /tmp/munge-munge-* > /dev/null
+./configure \
+  --prefix="${MUNGE_PATH}" \
+  --sysconfdir="${MUNGE_PATH}/etc" \
+  --localstatedir="${MUNGE_PATH}/var"
+make
+sudo make install
+
+popd > /dev/null
+
 # Build Slurm.
 SLURM_SOURCE='https://github.com/SchedMD/slurm/archive/slurm-16-05-0-1.zip'
 SLURM_PATH="/opt/clusterware/opt/slurm"
@@ -25,7 +41,8 @@ sudo make install
 popd > /dev/null
 
 mkdir -p "${temp_dir}"/data/opt
-sudo mv "${SLURM_PATH}" "${temp_dir}"/data/opt
+sudo mv "${SLURM_PATH}" "${temp_dir}"/data/
+rm -rf "${MUNGE_PATH}"
 
 pushd "${temp_dir}" > /dev/null
 zip -r ${package_name}.zip *
