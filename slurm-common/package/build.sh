@@ -41,7 +41,7 @@ sudo make install
 popd > /dev/null
 
 mkdir -p "${temp_dir}"/data/opt
-sudo mv "${SLURM_PATH}" "${temp_dir}"/data/
+sudo mv "${SLURM_PATH}" "${temp_dir}"/data/opt
 rm -rf "${MUNGE_PATH}"
 
 pushd "${temp_dir}" > /dev/null
