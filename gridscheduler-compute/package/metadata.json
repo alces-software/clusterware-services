@@ -1,0 +1,13 @@
+{
+  "type": "packages",
+  "attributes": {
+    "name": "gridscheduler-compute",
+    "version": "2011.11.0+p1clusterware0",
+    "summary": "Sun Grid Engine - a facility for executing UNIX jobs on remote machines - compute node configuration",
+    "dependencies": [
+      "alces/modules",
+      "alces/gridscheduler-common"
+    ],
+    "username": "alces"
+  }
+}
