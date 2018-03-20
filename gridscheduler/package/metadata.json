@@ -1,0 +1,12 @@
+{
+  "type": "packages",
+  "attributes": {
+    "name": "gridscheduler-common",
+    "version": "2011.11.0+p1clusterware0",
+    "summary": "Package skeleton",
+    "dependencies": [
+      "alces/modules"
+    ],
+    "username": "alces"
+  }
+}
