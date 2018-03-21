@@ -58,11 +58,11 @@ appdir="${cw_ROOT}"/opt/gridscheduler
 PATH=$PATH:${appdir}/bin/linux-x64
 LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${appdir}/lib/linux-x64
 
-SGE_ROOT=${appdir}
-SGE_CELL=etc
-SGE_CLUSTER_NAME=cluster
-SGE_QMASTER_PORT=6444
-SGE_EXECD_PORT=6445
+export SGE_ROOT=${appdir}
+export SGE_CELL=etc
+export SGE_CLUSTER_NAME=cluster
+export SGE_QMASTER_PORT=6444
+export SGE_EXECD_PORT=6445
 
 # unpack /var/spool/gridscheduler
 tar -C / -xzf data/var-spool-gridscheduler.tar.gz
