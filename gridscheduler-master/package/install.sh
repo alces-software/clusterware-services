@@ -52,11 +52,17 @@ if [ -z "$hn" ]; then
   exit 1
 fi
 
-$_ALCES module purge
-$_ALCES module use "${cw_ROOT}"/etc/modules
-$_ALCES module load services/gridscheduler
+# FSR modules don't work here, so let's manually set these variables
+appdir="${cw_ROOT}"/opt/gridscheduler
 
-PATH=$PATH:${GRIDSCHEDULERBIN}  # Not sure why module doesn't do this for us...
+PATH=$PATH:${appdir}/bin/linux-x64
+LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${appdir}/lib/linux-x64
+
+SGE_ROOT=${appdir}
+SGE_CELL=etc
+SGE_CLUSTER_NAME=cluster
+SGE_QMASTER_PORT=6444
+SGE_EXECD_PORT=6445
 
 # unpack /var/spool/gridscheduler
 tar -C / -xzf data/var-spool-gridscheduler.tar.gz
