@@ -26,8 +26,4 @@ cp data/motd.sh "${cw_ROOT}"/etc/motd.d/00-tips-10-gridscheduler.sh
 
 sed -e 's,^module load \(.*\),module load services/gridscheduler \1,g' -i "${cw_ROOT}"/etc/skel/modules
 
-mkdir -p "${cw_ROOT}"/var/lib/docs/gridscheduler
-cp -R docs/templates "${cw_ROOT}"/var/lib/docs/gridscheduler
-cp -R docs/guides "${cw_ROOT}"/var/lib/docs/gridscheduler
-
 mkdir -p "${cw_ROOT}"/var/lib/scheduler
