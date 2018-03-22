@@ -1,0 +1,11 @@
+{
+  "type": "packages",
+  "attributes": {
+    "name": "openlava-common",
+    "version": "3.3.0+clusterware0",
+    "summary": "An open source workload job scheduling software for a cluster of computers",
+    "dependencies": [
+      "alces/modules"
+    ]
+  }
+}
