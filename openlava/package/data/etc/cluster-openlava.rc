@@ -1,0 +1,8 @@
+################################################################################
+##
+## Alces Clusterware - Shell configuration
+## Copyright (c) 2016 Alces Software Ltd
+##
+################################################################################
+cw_CLUSTER_OPENLAVA_log=/var/log/clusterware/cluster-openlava.log
+cw_CLUSTER_OPENLAVA_cleanup_on_leave=true
