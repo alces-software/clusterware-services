@@ -1,0 +1,82 @@
+#!/bin/sh
+################################################################################
+##
+## Alces Clusterware - SysVInit service file
+## Copyright (c) 2018 Alces Software Ltd
+##
+################################################################################
+### BEGIN INIT INFO
+# Required-Start:
+# Required-Stop:
+# Default-Start: 2 3 4 5
+# Default-Stop: 0 1 6
+### END INIT INFO
+#
+# swapspace - this script starts and stops the swapspace daemon
+#
+# chkconfig: 2345 99 1
+# description:  serf
+# processname: serf
+# pidfile:     /var/run/serf.pid
+
+# Source function library.
+. /etc/rc.d/init.d/functions
+
+prog=swapspace
+cmd="_cw_ROOT_/opt/swapspace/bin/${prog} -d -v"
+pidfile="/var/run/${prog}.pid"
+lockfile="/var/lock/subsys/${prog}"
+
+start() {
+    echo -n $"Starting $prog: "
+    daemon --pidfile=$pidfile "${cmd} >> /var/log/swapspace.log 2>&1 &"
+    retval=$?
+    ps -ef | grep -F "${cmd}" | grep -v 'grep' | awk '{print $2}' > ${pidfile}
+    [ $retval -eq 0 ] && touch $lockfile && success
+    echo
+    return $retval
+}
+
+stop() {
+    echo -n $"Stopping $prog: "
+    killproc -p $pidfile $prog -INT
+    retval=$?
+    echo
+    [ $retval -eq 0 ] && rm -f $lockfile
+    return $retval
+}
+
+rh_status() {
+    status $prog
+}
+
+rh_status_q() {
+    rh_status >/dev/null 2>&1
+}
+
+restart() {
+    stop
+    sleep 5
+    start
+}
+
+case "$1" in
+start)
+    rh_status_q && exit 0
+    $1
+    ;;
+stop)
+    #rh_status_q && exit 0
+    $1
+    ;;
+restart)
+    $1
+    ;;
+status|status_q)
+    rh_$1
+    ;;
+*)
+    echo "Usage: $0 {start|stop|restart|status}"
+    exit 2
+esac
+exit 0

@@ -1,0 +1,10 @@
+{
+  "type": "packages",
+  "attributes": {
+    "name": "swapspace",
+    "version": "1.10.0+clusterware0",
+    "summary": "A Dynamic Swap Manager for GNU/Linux",
+    "dependencies": [
+    ]
+  }
+}
