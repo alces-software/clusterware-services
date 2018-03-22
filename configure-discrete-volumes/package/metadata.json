@@ -1,0 +1,11 @@
+{
+  "type": "packages",
+  "attributes": {
+    "name": "discrete-volumes-aws",
+    "version": "2.0.0-dev",
+    "summary": "Configure a node to mount home and apps as discrete volumes on AWS-based clusters",
+    "dependencies": [
+    ],
+    "username": "alces"
+  }
+}
