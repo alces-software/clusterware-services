@@ -1,0 +1,4 @@
+This dummy package exists to make the set of required packages consistent across all schedulers,
+and to pull in the required -common package.
+
+If at some point we need to add OpenLava-master-specific configuration it can live here.

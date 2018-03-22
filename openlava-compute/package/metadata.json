@@ -1,0 +1,11 @@
+{
+  "type": "packages",
+  "attributes": {
+    "name": "openlava-compute",
+    "version": "3.3.0+clusterware0",
+    "summary": "OpenLava scheduler - compute node configuration",
+    "dependencies": [
+      "alces/openlava-common"
+    ]
+  }
+}
