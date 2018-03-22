@@ -1,0 +1,12 @@
+{
+  "type": "packages",
+  "attributes": {
+    "name": "ephemeral-disks-aws",
+    "version": "2.0.0-dev",
+    "summary": "Configure ephemeral disks on an AWS-based cluster",
+    "dependencies": [
+      "alces/swapspace",
+      "alces/clusterware-events"
+    ]
+  }
+}

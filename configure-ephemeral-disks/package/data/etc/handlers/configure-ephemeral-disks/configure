@@ -1,0 +1,179 @@
+#!/bin/bash
+#==============================================================================
+# Copyright (C) 2017 Stephen F. Norledge and Alces Software Ltd.
+#
+# This file/package is part of Alces Clusterware.
+#
+# Alces Clusterware is free software: you can redistribute it and/or
+# modify it under the terms of the GNU Affero General Public License
+# as published by the Free Software Foundation, either version 3 of
+# the License, or (at your option) any later version.
+#
+# Alces Clusterware is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this package.  If not, see <http://www.gnu.org/licenses/>.
+#
+# For more information on the Alces Clusterware, please visit:
+# https://github.com/alces-software/clusterware
+#==============================================================================
+setup() {
+    local a xdg_config
+    IFS=: read -a xdg_config <<< "${XDG_CONFIG_HOME:-$HOME/.config}:${XDG_CONFIG_DIRS:-/etc/xdg}"
+    for a in "${xdg_config[@]}"; do
+        if [ -e "${a}"/clusterware/config.rc ]; then
+            source "${a}"/clusterware/config.rc
+            break
+        fi
+    done
+    if [ -z "${cw_ROOT}" ]; then
+        echo "$0: unable to locate clusterware configuration"
+        exit 1
+    fi
+    kernel_load
+}
+
+_set_swappiness() {
+    if [ ! -d /var/lib/swapspace ]; then
+        # if this directory is not present we assume we have no swap
+        # space so set swappiness appropriately.
+        echo "No swap detected: setting vm.swappiness=0"
+        sysctl -w vm.swappiness=0
+    fi
+}
+
+_mount_ephemeral() {
+    if [ "${cw_CLUSTER_ephemeral_swap}" != "skip" -a -b /dev/mapper/ephemeral-swap ]; then
+        swapon -L ephemeral
+    else
+        _set_swappiness
+    fi
+    if [ "${cw_CLUSTER_ephemeral_scratch}" != "skip" -a -b /dev/mapper/ephemeral-scratch ]; then
+        mount -onoatime,nodiratime,nobarrier /dev/mapper/ephemeral-scratch /localscratch
+    fi
+}
+
+_configure_scratch() {
+    mkdir /localscratch
+    if [ "${cw_CLUSTER_ephemeral_scratch}" != "ext4" ]; then
+        mkfs.xfs -l version=2,su=128k -isize=512 /dev/mapper/ephemeral-scratch
+    else
+        mkfs.ext4 -i 2048 -I 512 -J size=400 -Odir_index,filetype /dev/mapper/ephemeral-scratch
+        tune2fs -o user_xattr /dev/mapper/ephemeral-scratch
+    fi
+}
+
+_configure_swap() {
+    mkswap -L ephemeral /dev/mapper/ephemeral-swap
+}
+
+main() {
+    local hook role nr_devs devs vg_total swap_size vg_remain
+    hook="$1"
+    role="$2"
+
+    files_load_config config config/cluster
+
+    if [ "${cw_CLUSTER_ephemeral_swap}" == "skip" -a "${cw_CLUSTER_ephemeral_scratch}" == "skip" ]; then
+        # Configured to skip both scratch and swap.
+        _set_swappiness
+        return
+    elif [ -d "${cw_ROOT}"/etc/config/configure-ephemeral ]; then
+        # already configured - mount at boot
+        _mount_ephemeral
+        return
+    fi
+    mkdir "${cw_ROOT}"/etc/config/configure-ephemeral
+
+    nr_devs=0
+    for a in a b c d e f g h i j k l m n o p q r s t u v w x; do
+        if [ -b /dev/xvdc$a ]; then
+            nr_devs=$(($nr_devs+1))
+            devs="$devs /dev/xvdc$a"
+            if [ "$(cat /sys/block/xvdc$a/queue/rotational)" == "0" ]; then
+                echo deadline > /sys/block/xvdc$a/queue/scheduler
+            fi
+            umount /dev/xvdc$a &>/dev/null
+        fi
+    done
+
+    # Check for NVMe devices (such as on i3 and f1 instances).
+    for a in 0 1 2 3 4 5 6 7; do
+      if [ -b /dev/nvme${a}n1 ]; then
+          # check that the NVMe device isn't mounted as the rootfs (such as on c5 instances).
+          rootdev=$(findmnt -T / -o SOURCE -n)
+          if [[ "${rootdev}" != "/dev/nvme${a}n1"* ]]; then
+              nr_devs=$(($nr_devs+1))
+              devs="$devs /dev/nvme${a}n1"
+              umount /dev/nvme${a}n1 &>/dev/null
+          fi
+      fi
+    done
+
+    if [ "$nr_devs" == "0" ]; then
+        if [ "${cw_CLUSTER_ephemeral_swap}" == "always" ]; then
+            echo "No ephemeral storage detected. Activatating automated swap space fulfilment."
+            ${_ALCES} service install swapspace
+            ${_ALCES} service enable swapspace
+            distro_start_service clusterware-swapspace
+        else
+            echo "No ephemeral storage detected. Swap not activated."
+            _set_swappiness
+        fi
+        return
+    elif [ "$nr_devs" == "1" ]; then
+        yum install -y -e0 lvm2
+        pvcreate -f ${devs}
+        vgcreate ephemeral ${devs}
+    else
+        yum install -y -e0 mdadm lvm2
+        mdadm --create 0 --level=0 --run --force --raid-devices=${nr_devs} ${devs}
+        pvcreate -f /dev/md/0
+        vgcreate ephemeral /dev/md/0
+    fi
+
+    if [ "${cw_CLUSTER_ephemeral_swap}" == "skip" ]; then
+        # configured to skip swap, so 100% for scratch
+        lvcreate -f -n scratch -l 100%FREE ephemeral
+        _configure_scratch
+    else
+        vg_total=$(vgdisplay -c ephemeral | awk -F ':' '{print $12}')
+        if [ "${cw_CLUSTER_ephemeral_swap_size_mib}" ]; then
+            cw_CLUSTER_ephemeral_swap_size_kib=$((${cw_CLUSTER_ephemeral_swap_size_mib}*1024))
+            cw_CLUSTER_ephemeral_swap_max_kib=$((${cw_CLUSTER_ephemeral_swap_max_mib}*1024))
+        fi
+        if [ "${cw_CLUSTER_ephemeral_swap_size_kib:-0}" == 0 ]; then
+            swap_size=$(cat /proc/meminfo | grep MemTotal | awk '{print $2}')
+        else
+            swap_size=${cw_CLUSTER_ephemeral_swap_size_kib}
+        fi
+        if [ "${cw_CLUSTER_ephemeral_swap_max_kib:-0}" -gt 0 -a "${swap_size}" -gt "${cw_CLUSTER_ephemeral_swap_max_kib:-0}" ]; then
+            swap_size=${cw_CLUSTER_ephemeral_swap_max_kib}
+        fi
+        vg_remain=$(( ${vg_total} - ${swap_size} ))
+        # See if we have more than 1GiB available after enabling swap.
+        if (( ${vg_remain} < 1073741824 )); then
+            echo "Skipping scratch creation: ${swap_size}KiB for swap leaves only ${vg_remain}KiB for scratch (less than 1GiB)"
+            lvcreate -Wy -n swap -l 100%FREE ephemeral
+        else
+            lvcreate -Wy -n swap -L ${swap_size}K ephemeral
+            if [ "${cw_CLUSTER_ephemeral_scratch}" != "skip" ]; then
+                lvcreate -n scratch -l 100%FREE ephemeral
+                _configure_scratch
+            fi
+        fi
+        _configure_swap
+    fi
+    _mount_ephemeral
+}
+
+setup
+require files
+require distro
+
+_ALCES="${cw_ROOT}"/bin/alces
+
+main "$@"
