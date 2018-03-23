@@ -36,7 +36,8 @@ popd
 
 chmod 4755 "${cw_ROOT}"/opt/pbspro/sbin/pbs_iff "${cw_ROOT}"/opt/pbspro/sbin/pbs_rcp
 
-mv "${cw_ROOT}"/opt "${temp_dir}"/data
+mkdir -p "${temp_dir}"/data/opt
+mv "${cw_ROOT}"/opt/pbspro "${temp_dir}"/data
 
 pushd "${temp_dir}" > /dev/null
 zip -r ${package_name}.zip *
