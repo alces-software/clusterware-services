@@ -1,0 +1,11 @@
+{
+  "type": "packages",
+  "attributes": {
+    "name": "pbspro-master",
+    "version": "14.1.0+clusterware0",
+    "summary": "Industry-leading workload manager and job scheduler for high-performance computing - master node configuration",
+    "dependencies": [
+      "alces/pbspro-common"
+    ]
+  }
+}
