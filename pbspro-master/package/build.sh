@@ -1,10 +1,6 @@
 #!/bin/bash
 
 package_name='pbspro-master'
-cw_ROOT=${cw_ROOT:-/opt/clusterware}
-
-yum install -e0 -y openssl-devel tcl-devel libXt-devel postgresql-devel \
-      libedit-devel hwloc-devel libical-devel tk-devel python-devel
 
 if [ -f ./${package_name}.zip ]; then
   echo "Replacing existing ${package_name}.zip in this directory"
