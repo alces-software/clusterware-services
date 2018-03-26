@@ -1,0 +1,12 @@
+{
+  "type": "packages",
+  "attributes": {
+    "name": "torque-master",
+    "version": "6.0.1+clusterware0",
+    "summary": "TORQUE Resource Manager - master node configuration",
+    "dependencies": [
+      "alces/torque-common",
+      "alces/torque-submit"
+    ]
+  }
+}

@@ -13,5 +13,5 @@ if [ ! -d /var/spool/torque ]; then
 fi
 
 sed -e "s,_cw_ROOT_,${cw_ROOT},g" \
-  data/init/systemd/clusterware-torque-mom.service \
-  > /etc/systemd/system/clusterware-torque-mom.service
+  data/init/systemd/clusterware-torque-trqauthd.service \
+  > /etc/systemd/system/clusterware-torque-trqauthd.service
