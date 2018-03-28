@@ -1,6 +1,6 @@
 #!/bin/bash
 
-cp -R data/* "${cw_ROOT}"
+cp -pR data/* "${cw_ROOT}"
 
 if [ ! -d "${cw_ROOT}/etc/config/cluster" ]; then
   echo "Cluster not yet configured. Deferring ephemeral disk configuration until next boot."
